@@ -1,8 +1,8 @@
 # Roster
 
-A personal crew schedule viewer built for **Aircalin crew members**. It reads the iCalendar (ICS) feed that [Alexis](https://alexis.aircalin.nc) — Aircalin's crew management portal — exposes for each crew member, and presents your schedule in a richer, more readable format than the default portal view. It runs entirely in the browser — no server, no accounts, no data leaves your device.
+A personal crew schedule viewer built for crew members using the **Alexis** crew management portal. It reads the iCalendar (ICS) feed that Alexis exposes for each crew member, and presents your schedule in a richer, more readable format than the default portal view. It runs entirely in the browser — no server, no accounts, no data leaves your device.
 
-> **What is Alexis?** Alexis is the web portal at `alexis.aircalin.nc` where Aircalin crew members view their roster. It provides a personal ICS feed URL (found in the portal under your account settings) that this app subscribes to.
+> **What is Alexis?** Alexis is the crew web portal (at `alexis.[domainname]`) where crew members view their roster. It provides a personal ICS feed URL (found in the portal under your account settings) that this app subscribes to.
 
 ## What it does
 
@@ -24,7 +24,7 @@ Roster parses your crew ICS feed and presents your schedule with richer context 
 ### Without background photos
 
 1. Open `roster.html` in any modern browser — no build step needed.
-2. On first launch, enter your ICS feed URL in the URL panel. Your personal ICS link is available in the Alexis portal (`alexis.aircalin.nc`) under your account — it looks like `https://alexis.aircalin.nc/crew-web/ics?trig=AIR&…`.
+2. On first launch, enter your ICS feed URL in the URL panel. Your personal ICS link is available in the Alexis portal under your account — it looks like `https://alexis.[domainname]/crew-web/ics?trig=AIR&…`.
 3. The app caches the feed locally; use the refresh button to pull updates.
 
 ### With Pexels background photos (optional)
