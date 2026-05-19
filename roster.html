@@ -998,7 +998,7 @@ const ROLES = {
 };
 
 /* ── PEXELS BACKGROUND PHOTOS ───────────────────────────────── */
-const PEXELS_KEY = 'WLhs65Ea3iewgjUwPhWgriKPb4qTS9WSToIHeoHoZWu7d9mwTZROXK5A';
+const PEXELS_KEY = '__PEXELS_API_KEY__';
 const PEXELS_QUERIES = {
   NOU:'Noumea New Caledonia',  SIN:'Singapore city skyline',
   CDG:'Paris France city',     BKK:'Bangkok Thailand',
@@ -1012,6 +1012,7 @@ const PEXELS_QUERIES = {
 };
 
 async function fetchPexelsPhoto(iata) {
+  if (!PEXELS_KEY || /^__.*__$/.test(PEXELS_KEY)) return null;
   var query = PEXELS_QUERIES[iata];
   if (!query && AIRPORTS[iata]) query = AIRPORTS[iata].split('—')[0].split('–')[0].trim();
   if (!query) query = iata + ' city';
