@@ -36,6 +36,7 @@
       --red:      #f05252;
       --red-dim:  rgba(240,82,82,.13);
       --red-glow: rgba(240,82,82,.22);
+      --teal:     #2dd4bf;
     }
     :root[data-theme="light"] {
       --bg:        #f0f4f9;
@@ -63,6 +64,7 @@
       --red:      #c72828;
       --red-dim:  rgba(199,40,40,.10);
       --red-glow: rgba(199,40,40,.18);
+      --teal:     #0d9488;
     }
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 
@@ -248,6 +250,35 @@
     .cm-code{font-size:11px;font-weight:700;color:var(--txt-dim);min-width:40px;font-variant-numeric:tabular-nums}
     .cm-name{color:var(--txt)}
     .cm-note{font-size:11px;color:var(--blue);font-style:italic}
+
+    /* Flight-plan route (Jeppesen) */
+    .fp-route{margin-top:14px;padding:14px 16px;background:var(--surf1);border:1px solid var(--bdr);border-radius:12px}
+    .fp-route-hd{display:flex;align-items:center;justify-content:space-between;gap:8px 14px;flex-wrap:wrap;margin-bottom:12px}
+    .fp-route-ttl{display:flex;align-items:center;gap:8px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--txt-dim)}
+    .fp-route-ttl svg{color:var(--blue);flex-shrink:0}
+    .fp-enr{color:var(--txt-md);font-weight:700;letter-spacing:.3px;text-transform:none;font-size:11px}
+    .fp-altn{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+    .fp-altn-lbl{font-size:9px;font-weight:800;letter-spacing:1px;color:var(--txt-dim)}
+    .fp-altn-chip{font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px;background:var(--gold-dim);color:var(--gold);border:1px solid rgba(242,185,44,.28);font-variant-numeric:tabular-nums;cursor:default}
+    .fp-tokens{display:flex;flex-wrap:wrap;align-items:center;gap:6px 7px;line-height:1.7}
+    .fp-tk{font-size:12.5px;font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:.2px;white-space:nowrap}
+    .fp-grp{display:inline-flex;align-items:baseline;white-space:nowrap}
+    .fp-wpt{color:var(--txt)}
+    .fp-coord{color:var(--txt-md)}
+    .fp-awy{color:var(--blue);font-weight:700}
+    .fp-dct{color:var(--txt-dim);font-size:10px;font-weight:700;letter-spacing:.5px}
+    .fp-sid{background:var(--green-dim);color:var(--green);border:1px solid rgba(62,207,142,.32);padding:2px 8px;border-radius:6px;font-weight:800}
+    .fp-star{background:var(--orange-dim);color:var(--orange);border:1px solid rgba(249,115,22,.32);padding:2px 8px;border-radius:6px;font-weight:800}
+    .fp-proc{background:var(--surf2);color:var(--txt);padding:2px 8px;border-radius:6px;font-weight:700}
+    .fp-perf{margin-left:1px;font-weight:800}
+    .fp-spd{color:var(--teal)}
+    .fp-lvl{color:var(--lavender);margin-left:1px}
+    .fp-slash{color:var(--txt-dim);font-weight:600}
+    /* Flight-plan config panel */
+    .fp-field{display:flex;flex-direction:column;gap:5px;margin-bottom:10px}
+    .fp-field label{font-size:11px;font-weight:600;color:var(--txt-md);letter-spacing:.2px}
+    .fp-status{font-size:11px;color:var(--txt-md);margin-top:6px;min-height:15px}
+    .fp-status.err{color:var(--red)}
 
     /* HOT/OFF cards */
     .duty-icon{font-size:24px;margin-bottom:10px}
@@ -553,14 +584,14 @@
 
     /* ─── TIMEZONE BAR ─── */
     .tz-bar{display:flex;justify-content:center;align-items:center;padding:8px 16px;background:var(--bg);border-bottom:1px solid var(--bdr);position:sticky;top:0;z-index:100;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
-    .tz-seg{display:inline-flex;border:1px solid var(--bdr);border-radius:8px;overflow:hidden}
+    .tz-seg{display:inline-flex;flex-wrap:wrap;justify-content:center;max-width:100%;border:1px solid var(--bdr);border-radius:8px;overflow:hidden}
     .tz-seg-btn{padding:4px 13px;border:none;border-right:1px solid var(--bdr);background:transparent;color:var(--txt-md);font-size:11px;font-weight:700;cursor:pointer;letter-spacing:.5px;transition:background .15s,color .15s}
     .tz-seg-btn:last-child{border-right:none}
     .tz-seg-btn:hover{background:var(--bg3);color:var(--txt)}
     .tz-seg-btn.on{background:var(--blue);color:#fff}
     .tz-month-label{
       font-size:15px;font-weight:800;letter-spacing:-.4px;white-space:nowrap;
-      pointer-events:none;opacity:0;margin-right:10px;
+      pointer-events:none;opacity:0;position:absolute;left:16px;top:9px;
     }
     .tz-month-label .tz-m-yr{color:var(--blue)}
     /* ─── SOURCE MANAGEMENT ─── */
@@ -697,6 +728,15 @@
     </span>
     <span class="btn-lbl">History</span>
   </button>
+  <button class="refresh-btn" id="fpBtn" onclick="toggleFP()" title="Flight plan routes (Jeppesen)">
+    <span class="ri">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="6" cy="6" r="2.2"/><circle cx="18" cy="18" r="2.2"/>
+        <path d="M8 6h6a3 3 0 0 1 0 6H10a3 3 0 0 0 0 6h6"/>
+      </svg>
+    </span>
+    <span class="btn-lbl">Routes</span>
+  </button>
   <button class="refresh-btn" id="refreshBtn" onclick="load()">
     <span class="ri" id="refreshIcon">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
@@ -750,6 +790,32 @@
   </div>
   <div class="imp-note" style="margin-top:10px">
     Saved in this browser only — never sent anywhere else.
+  </div>
+</div>
+
+<div id="fpPanel" class="imp-panel">
+  <div class="imp-ttl"><span style="color:var(--teal)">✦</span> Flight Plan Routes</div>
+  <div class="fp-field">
+    <label for="fpFilter">Filter</label>
+    <input type="text" id="fpFilter" class="url-input" autocomplete="off" placeholder="ACI%">
+  </div>
+  <div class="fp-field">
+    <label for="fpUser">Username</label>
+    <input type="text" id="fpUser" class="url-input" autocomplete="off" placeholder="username">
+  </div>
+  <div class="fp-field">
+    <label for="fpPass">Password</label>
+    <input type="password" id="fpPass" class="url-input" autocomplete="new-password" placeholder="password">
+  </div>
+  <div style="display:flex;gap:8px;align-items:center;margin-top:4px">
+    <button class="url-save" onclick="saveFP()" type="button">Save &amp; fetch</button>
+    <span class="url-saved" id="fpSaved">Saved ✓</span>
+  </div>
+  <div class="fp-status" id="fpStatus"></div>
+  <div class="imp-note">
+    Routes load in the background when online and appear above the crew list on matching flights
+    (flight number + origin + departure date must all match), and are saved in this browser for offline use.<br>
+    Credentials are stored in this browser only and forwarded to the flight-plan provider on each request.
   </div>
 </div>
 
@@ -833,6 +899,38 @@ const LS_DISCLAIMER     = 'schedule_disclaimer_agreed';
 const HOME_TZ           = 11; // Pacific/Noumea UTC+11 (used for date-only ICS values)
 const MAX_SNAPSHOTS   = 30;
 const PROXY           = 'https://corsproxy.io/?';
+
+// ─── FLIGHT PLANS (Jeppesen FliteBrief) ──────────────────────────────────────
+const LS_FP_FILTER     = 'schedule_fp_filter';
+const LS_FP_USER       = 'schedule_fp_user';
+const LS_FP_PASS       = 'schedule_fp_pass';
+const LS_FP_CACHE      = 'schedule_fp_cache';
+const LS_FP_CACHE_TIME = 'schedule_fp_cache_time';
+const LS_PANEL_FP      = 'schedule_panel_fp';
+// Same-origin Apache proxy → Jeppesen FliteBrief (see README). The Filter (e.g. ACI%) is
+// appended to this base. Credentials are injected from .env at build time — never in tracked source.
+const FP_PROXY_BASE = '/roster/api/jeppesen/flightPlanQuery?filter=';
+const FP_PRESET_AIRCALIN = {
+  filter: 'ACI%',
+  user: '__JEPPESEN_USER__',
+  pass: '__JEPPESEN_PASS__'
+};
+// ICAO → IATA for the Aircalin network (departures, arrivals, alternates)
+const ICAO_IATA = {
+  NWWW:'NOU', WSSS:'SIN', VTBS:'BKK', LFPG:'CDG', YSSY:'SYD', YMML:'MEL',
+  NZAA:'AKL', NTAA:'PPT', RJTT:'HND', RJAA:'NRT', KLAX:'LAX', EGLL:'LHR',
+  OMDB:'DXB', RJBB:'KIX', VHHH:'HKG', YBBN:'BNE', NFFN:'NAN',
+  NVVV:'VLI', WAAA:'UPG', YBCG:'OOL', NCRG:'RAR', NZWN:'WLG',
+  WMKK:'KUL', YBCS:'CNS', YPDN:'DRW', NLWW:'WLS', YBRK:'ROK', YSCB:'CBR'
+};
+const IATA_ICAO = (function(){ var m={}; for(var k in ICAO_IATA) m[ICAO_IATA[k]]=k; return m; })();
+// Names for airports not already in AIRPORTS (used for alternate tooltips)
+const FP_APT_NAME = {
+  VLI:'Port Vila — Bauerfield', WLS:'Wallis — Hihifo', UPG:'Makassar — Sultan Hasanuddin',
+  OOL:'Gold Coast', RAR:'Rarotonga — International', WLG:'Wellington', KUL:'Kuala Lumpur',
+  CNS:'Cairns', DRW:'Darwin', KIX:'Osaka — Kansai', ROK:'Rockhampton', CBR:'Canberra'
+};
+let fpPlans = [];
 
 function getSources() {
   var raw = localStorage.getItem(LS_ICS_SOURCES);
@@ -1305,6 +1403,58 @@ function saveSnapshotIfChanged(rawIcs) {
     }
     return false;
   }
+}
+
+/* ── PERSISTENT EVENT ARCHIVE ─────────────────────────────────────
+   The crew portal serves only a rolling window, so past months drop out
+   of the ICS. We keep every event ever seen (per source) in the browser
+   so history is never lost. Within the window the fresh API data is
+   authoritative (reschedules replace cleanly, no ghosts); events that
+   fall outside the window are retained. Seeded once from snapshot
+   history so recently-dropped months can be recovered. */
+function archiveKey(){ return 'schedule_events_archive_' + activeSourceKey(); }
+function getArchive(){
+  try{ return JSON.parse(localStorage.getItem(archiveKey())||'[]'); }catch(_){ return []; }
+}
+function snapshotsEvents(){
+  const map=new Map();
+  for(const snap of getSnapshots()){
+    try{ for(const r of parseICS(snap.raw)) map.set(evKey(r), r); }catch(_){}
+  }
+  return Array.from(map.values());
+}
+function persistArchive(arr){
+  const key=archiveKey();
+  let a=arr;
+  for(let i=0;i<8;i++){
+    try{ localStorage.setItem(key, JSON.stringify(a)); return; }
+    catch(e){
+      // Under quota pressure, drop the oldest slice (keep recent) and retry.
+      if(e && e.name==='QuotaExceededError' && a.length>50){ a=a.slice(Math.ceil(a.length*0.15)); }
+      else { console.warn('[Schedule] event archive not saved:', e && e.name); return; }
+    }
+  }
+}
+// Merge fresh raw events into the persistent archive; returns the full merged list.
+function mergeIntoArchive(fresh){
+  fresh = fresh || [];
+  // Time bounds of the authoritative (fresh) window.
+  let lo=Infinity, hi=-Infinity;
+  for(const r of fresh){ const d=parseDate(r.DTSTART); if(d){ const t=d.getTime(); if(t<lo)lo=t; if(t>hi)hi=t; } }
+  const arch = getArchive();
+  const prior = arch.length ? arch : snapshotsEvents(); // first run: recover from snapshots
+  const map=new Map();
+  for(const r of prior){
+    const d=parseDate(r.DTSTART); const t=d?d.getTime():null;
+    // Inside the fresh window the API is the source of truth — skip prior copies there.
+    if(t!==null && lo!==Infinity && t>=lo && t<=hi) continue;
+    map.set(evKey(r), r);
+  }
+  for(const r of fresh) map.set(evKey(r), r);
+  const merged=Array.from(map.values());
+  merged.sort(function(a,b){ const A=parseDate(a.DTSTART), B=parseDate(b.DTSTART); return (A?A.getTime():0)-(B?B.getTime():0); });
+  persistArchive(merged);
+  return merged;
 }
 
 /* ── DIFF ────────────────────────────────────────────────────── */
@@ -1788,6 +1938,7 @@ function cardFLT(e){
         ${ltBtnLabel}
       </button>
     </div>
+    ${fpRouteHTML(e)}
     ${e.crew&&e.crew.length?`
     <button class="crew-toggle" onclick="toggleCrew('${id}')">
       <span class="crew-arrow" id="arr_${id}">▶</span> ${crewSummary}
@@ -2082,6 +2233,10 @@ function buildEntity(e) {
   const st    = flightStatus(e);
   const isActual = st === 'completed' || st === 'active';
 
+  // Attach the planned route (ICAO) when a matching flight plan is available.
+  const plan  = fpFindPlan(e);
+  const route = plan && plan.route ? plan.route : '';
+
   return {
     entity_name: "Flight",
     flight_key: `${e.flight}-${flightDate}-${e.from}`,
@@ -2090,6 +2245,7 @@ function buildEntity(e) {
     flight_TotalTime: tft,
     flight_from: e.from || '',
     flight_to: e.to || '',
+    flight_route: route,
     flight_scheduledDepartureTime: isActual ? '' : fmtLT(depDt),
     flight_scheduledArrivalTime:   isActual ? '' : fmtLT(arrDt),
     flight_actualDepartureTime:    isActual ? fmtLT(depDt) : '',
@@ -2344,8 +2500,9 @@ async function load(){
     return;
   }
 
-  allEvents=parseICS(text).map(enrich);
-  console.log('%c[Schedule] parsed events: '+allEvents.length+' | last: '+(allEvents.length?allEvents[allEvents.length-1].dtstart?.toISOString().slice(0,10):'—'), 'color:#2fa4e7');
+  // Merge the fresh window into the persistent archive so past months are never lost.
+  allEvents=mergeIntoArchive(parseICS(text)).map(enrich);
+  console.log('%c[Schedule] events: '+allEvents.length+' (archived) | range: '+(allEvents.length?allEvents[0].dtstart?.toISOString().slice(0,10)+' → '+allEvents[allEvents.length-1].dtstart?.toISOString().slice(0,10):'—'), 'color:#2fa4e7');
   updateImportCount();
 
   // Default to current month; if no events, go to first event's month
@@ -2355,8 +2512,10 @@ async function load(){
     return s.getUTCMonth()===curMonth&&s.getUTCFullYear()===curYear;
   });
   if(!hasThis&&allEvents.length){
-    const first=allEvents.filter(e=>e.dtstart).sort((a,b)=>a.dtstart-b.dtstart)[0];
-    if(first){var fs=new Date(first.dtstart.getTime()+displayTz*3600000);curMonth=fs.getUTCMonth();curYear=fs.getUTCFullYear();}
+    // Land on the month with events nearest to today (archive may span far into the past).
+    const now=Date.now();
+    const near=allEvents.filter(e=>e.dtstart).sort((a,b)=>Math.abs(a.dtstart-now)-Math.abs(b.dtstart-now))[0];
+    if(near){var fs=new Date(near.dtstart.getTime()+displayTz*3600000);curMonth=fs.getUTCMonth();curYear=fs.getUTCFullYear();}
   }
   render();
   if(is503){
@@ -2517,11 +2676,224 @@ function closeCalModal() {
 }
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeCalModal(); });
 
+/* ── FLIGHT PLANS (Jeppesen FliteBrief) ──────────────────────────── */
+// Digits-only flight number, so roster IATA "SB600" matches Jeppesen ICAO "ACI600".
+function fpFlightNum(f){ var d=String(f||'').replace(/\D/g,''); return d?String(parseInt(d,10)):''; }
+
+function fpParse(xml){
+  var out=[];
+  try{
+    var doc=new DOMParser().parseFromString(xml,'application/xml');
+    if(doc.getElementsByTagName('parsererror').length) return out;
+    var plans=doc.getElementsByTagName('FlightPlan');
+    for(var i=0;i<plans.length;i++){
+      var fp=plans[i];
+      var g=function(n){ var el=fp.getElementsByTagName(n)[0]; return el?el.textContent.trim():''; };
+      var alts=[], apc=fp.getElementsByTagName('AlternatePoints')[0];
+      if(apc){ var pts=apc.getElementsByTagName('Point'); for(var j=0;j<pts.length;j++){ var v=pts[j].textContent.trim(); if(v) alts.push(v);} }
+      out.push({
+        flightId:g('FlightID')||g('CallSign'),
+        std:g('ScheduledTimeOfDeparture'),
+        dep:g('PointOfDeparture'), arr:g('PointOfArrival'),
+        route:g('Route'), alts:alts, enroute:g('TimeEnroute'),
+        model:g('AircraftModel'), reg:g('AircraftID')
+      });
+    }
+  }catch(_){}
+  return out;
+}
+
+// Match a roster FLT event to a flight plan: flight number + origin + departure date.
+function fpFindPlan(e){
+  if(!fpPlans.length || !e || e.type!=='FLT') return null;
+  var num=fpFlightNum(e.flight); if(!num) return null;
+  var depDt=buildDt(e.dtstart, e.times&&e.times.departure?e.times.departure.utc:null)||e.dtstart;
+  if(!depDt) return null;
+  var rIcao=IATA_ICAO[e.from];
+  var best=null, bestDiff=Infinity;
+  for(var i=0;i<fpPlans.length;i++){
+    var p=fpPlans[i];
+    if(fpFlightNum(p.flightId)!==num) continue;
+    // Origin must match when we can map either side.
+    var pIata=ICAO_IATA[p.dep], originOk;
+    if(rIcao)      originOk=(p.dep===rIcao);
+    else if(pIata) originOk=(pIata===e.from);
+    else           originOk=true;
+    if(!originOk) continue;
+    if(!p.std) continue;
+    var pd=new Date(p.std); if(isNaN(pd)) continue;
+    // Departure date must match (allow a few hours slack across UTC midnight).
+    var sameDay=pd.toISOString().slice(0,10)===depDt.toISOString().slice(0,10);
+    var diff=Math.abs(pd-depDt);
+    if(!sameDay && diff>6*3600000) continue;
+    if(diff<bestDiff){ bestDiff=diff; best=p; }
+  }
+  return best;
+}
+
+var FP_RE_PROC  = /^[A-Z]{3,5}\d+[A-Z]?$/;   // SID/STAR e.g. VAITE4E, NISAS2A, MESUS2
+var FP_RE_AWY   = /^[A-Z]{1,2}\d+$/;         // airway   e.g. B578, Q144, UM767
+var FP_RE_COORD = /^\d{2,4}[NS]\d{3,5}[EW]$/;// lat/long e.g. 18S155W, 2201S17834W
+
+function fpPerfHTML(p){
+  var m=p.match(/^([NMK]\d{3,4})(.*)$/);
+  if(!m) return '<span class="fp-spd">'+esc(p)+'</span>';
+  return '<span class="fp-spd">'+esc(m[1])+'</span>'+(m[2]?'<span class="fp-lvl">'+esc(m[2])+'</span>':'');
+}
+function fpFixHTML(tok,i,firstSig,lastSig){
+  if(FP_RE_PROC.test(tok)){
+    var cls=(i===firstSig)?'fp-sid':(i===lastSig)?'fp-star':'fp-proc';
+    return '<span class="fp-tk '+cls+'">'+esc(tok)+'</span>';
+  }
+  if(FP_RE_AWY.test(tok))   return '<span class="fp-tk fp-awy">'+esc(tok)+'</span>';
+  if(FP_RE_COORD.test(tok)) return '<span class="fp-tk fp-coord">'+esc(tok)+'</span>';
+  return '<span class="fp-tk fp-wpt">'+esc(tok)+'</span>';
+}
+function fpTokHTML(tok,i,firstSig,lastSig){
+  if(tok==='DCT') return '<span class="fp-tk fp-dct">DCT</span>';
+  var s=tok.indexOf('/');
+  if(s>0){
+    return '<span class="fp-tk fp-grp">'+fpFixHTML(tok.slice(0,s),i,firstSig,lastSig)
+      +'<span class="fp-perf"><span class="fp-slash">/</span>'+fpPerfHTML(tok.slice(s+1))+'</span></span>';
+  }
+  return fpFixHTML(tok,i,firstSig,lastSig);
+}
+function fpRouteTokensHTML(route){
+  var toks=String(route||'').trim().split(/\s+/).filter(Boolean);
+  if(!toks.length) return '';
+  var firstSig=-1,lastSig=-1;
+  for(var i=0;i<toks.length;i++){ if(toks[i]!=='DCT'){ if(firstSig<0)firstSig=i; lastSig=i; } }
+  return toks.map(function(t,i){ return fpTokHTML(t,i,firstSig,lastSig); }).join('');
+}
+function fpFmtEnroute(s){
+  if(!s||!/^\d{3,4}$/.test(s)) return '';
+  var h=parseInt(s.slice(0,s.length-2),10), m=s.slice(-2);
+  return h+'h'+m;
+}
+function fpRouteHTML(e){
+  var p=fpFindPlan(e);
+  if(!p||!p.route) return '';
+  var seen={}, alts=[];
+  (p.alts||[]).forEach(function(a){ var k=a.toUpperCase(); if(!seen[k]){ seen[k]=1; alts.push(a); } });
+  var altHTML=alts.length?('<div class="fp-altn"><span class="fp-altn-lbl">ALTN</span>'+alts.map(function(a){
+    var iata=ICAO_IATA[a]||a, nm=AIRPORTS[iata]||FP_APT_NAME[iata]||'';
+    return '<span class="fp-altn-chip" title="'+esc(nm||a)+'">'+esc(iata)+'</span>';
+  }).join('')+'</div>'):'';
+  var enr=fpFmtEnroute(p.enroute);
+  var enrHTML=enr?'<span class="fp-enr">⏱ '+enr+'</span>':'';
+  return '<div class="fp-route">'
+    +'<div class="fp-route-hd">'
+      +'<div class="fp-route-ttl"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="2.2"/><circle cx="18" cy="18" r="2.2"/><path d="M8 6h6a3 3 0 0 1 0 6H10a3 3 0 0 0 0 6h6"/></svg> Flight plan route '+enrHTML+'</div>'
+      +altHTML
+    +'</div>'
+    +'<div class="fp-tokens">'+fpRouteTokensHTML(p.route)+'</div>'
+  +'</div>';
+}
+
+function fpSetStatus(msg,isErr){
+  var el=document.getElementById('fpStatus');
+  if(!el) return;
+  el.textContent=msg||'';
+  el.classList.toggle('err',!!isErr);
+}
+function fpIsAircalin(){ return (activeUrl()||'').toLowerCase().indexOf('aircalin')>=0; }
+// Drop values left as unsubstituted build placeholders (e.g. when roster.html is opened unbuilt).
+function fpVal(v){ return (v && v.indexOf('__')!==0) ? v : ''; }
+// Auto-fill the Aircalin endpoint + login when the active roster is Aircalin and nothing is set yet.
+// Effective request URL = proxy base + the saved Filter (e.g. ACI%). Empty when no filter set.
+function fpUrl(){
+  var f=(localStorage.getItem(LS_FP_FILTER)||'').trim();
+  return f ? FP_PROXY_BASE+f : '';
+}
+function fpAutoPreset(){
+  if(localStorage.getItem(LS_FP_FILTER)) return;
+  if(!fpIsAircalin()) return;
+  localStorage.setItem(LS_FP_FILTER, FP_PRESET_AIRCALIN.filter);
+  localStorage.setItem(LS_FP_USER,fpVal(FP_PRESET_AIRCALIN.user));
+  localStorage.setItem(LS_FP_PASS,fpVal(FP_PRESET_AIRCALIN.pass));
+}
+function fpFillInputs(){
+  var fl=document.getElementById('fpFilter'); if(fl)fl.value=localStorage.getItem(LS_FP_FILTER)||'';
+  var us=document.getElementById('fpUser');  if(us)us.value=localStorage.getItem(LS_FP_USER)||'';
+  var pw=document.getElementById('fpPass');  if(pw)pw.value=localStorage.getItem(LS_FP_PASS)||'';
+  var t=Number(localStorage.getItem(LS_FP_CACHE_TIME)||0);
+  if(fpPlans.length) fpSetStatus(fpPlans.length+' flight plans cached'+(t?' · updated '+fmtAge(Date.now()-t):''));
+  else fpSetStatus(localStorage.getItem(LS_FP_FILTER)?'No flight plans loaded yet.':'Not configured.');
+}
+function toggleFP(){
+  var panel=document.getElementById('fpPanel'), btn=document.getElementById('fpBtn');
+  var open=panel.classList.toggle('open');
+  if(btn) btn.classList.toggle('active',open);
+  localStorage.setItem(LS_PANEL_FP, open?'1':'0');
+  if(open) fpFillInputs();
+}
+function saveFP(){
+  var filter=(document.getElementById('fpFilter')||{}).value||'';
+  var user=(document.getElementById('fpUser')||{}).value||'';
+  var pass=(document.getElementById('fpPass')||{}).value||'';
+  filter=filter.trim(); user=user.trim();
+  if(filter) localStorage.setItem(LS_FP_FILTER,filter); else localStorage.removeItem(LS_FP_FILTER);
+  localStorage.setItem(LS_FP_USER,user);
+  localStorage.setItem(LS_FP_PASS,pass);
+  var s=document.getElementById('fpSaved');
+  if(s){ s.classList.add('show'); clearTimeout(saveFP._t); saveFP._t=setTimeout(function(){s.classList.remove('show');},1500); }
+  fpLoad();
+}
+// Prime plan list from cache so saved routes show on first paint (and offline).
+function fpLoadCache(){
+  var c=localStorage.getItem(LS_FP_CACHE);
+  if(c){ try{ fpPlans=fpParse(c); }catch(_){} }
+}
+// Fetch flight plans via the same-origin proxy; the browser's Basic auth is forwarded to the provider.
+async function fpLoad(){
+  var url=fpUrl();
+  if(!url){ return; }
+  if(!navigator.onLine){ fpSetStatus('Offline — showing saved routes.',true); return; }
+  var user=localStorage.getItem(LS_FP_USER)||'', pass=localStorage.getItem(LS_FP_PASS)||'';
+  var headers={};
+  if(user||pass){ try{ headers['Authorization']='Basic '+btoa(user+':'+pass); }catch(_){} }
+  fpSetStatus('Loading flight plans…');
+  try{
+    var ctrl=new AbortController(), tid=setTimeout(function(){ctrl.abort();},20000);
+    var r=await fetch(url,{cache:'no-cache',headers:headers,signal:ctrl.signal});
+    clearTimeout(tid);
+    if(!r.ok){ fpSetStatus('HTTP '+r.status+' — '+(HTTP_STATUS_TEXT[r.status]||'request failed'),true); return; }
+    var xml=await r.text();
+    var plans=fpParse(xml);
+    if(!plans.length){ fpSetStatus('No flight plans found in the response.',true); return; }
+    fpPlans=plans;
+    // Save to browser storage like the roster cache, so routes persist across reloads / offline.
+    try{ localStorage.setItem(LS_FP_CACHE,xml); localStorage.setItem(LS_FP_CACHE_TIME,String(Date.now())); }catch(_){}
+    fpSetStatus(plans.length+' flight plans loaded · '+fmtAge(0));
+    if(allEvents.length) render();
+  }catch(err){
+    fpSetStatus('Fetch failed — network error or the proxy is unavailable.',true);
+  }
+}
+// Re-check flight plans in the background when the user returns to the page
+// (tab focus, PWA/mobile resume, back-forward cache, or regained connectivity).
+// Throttled so quick tab switches don't refetch needlessly.
+function fpMaybeRefresh(){
+  if(!fpUrl() || !navigator.onLine) return;
+  var t=Number(localStorage.getItem(LS_FP_CACHE_TIME)||0);
+  if(Date.now()-t < 90000) return; // fetched < 90s ago
+  fpLoad();
+}
+
 /* ── BOOT ────────────────────────────────────────────────────── */
+fpLoadCache();
+fpAutoPreset();
 updateTzBar();
 updateTzMonthLabel();
 updateActiveBadge();
 load();
+fpLoad();
+
+// Loaded/refreshed → handled above. Displayed (returning to the page) → refresh here.
+document.addEventListener('visibilitychange', function(){ if(document.visibilityState==='visible') fpMaybeRefresh(); });
+window.addEventListener('pageshow', function(e){ if(e.persisted) fpMaybeRefresh(); }); // bfcache back/forward
+window.addEventListener('focus', fpMaybeRefresh);
+window.addEventListener('online', fpMaybeRefresh);
 
 // Disclaimer — show once (deferred: element is parsed after this script block)
 window.addEventListener('load', function() {
@@ -2572,6 +2944,11 @@ function dismissDisclaimer() {
     const p = document.getElementById('archivePanel'), b = document.getElementById('archiveBtn');
     p?.classList.add('open'); b?.classList.add('active');
     updateArchiveStats();
+  }
+  if (localStorage.getItem(LS_PANEL_FP) === '1') {
+    const p = document.getElementById('fpPanel'), b = document.getElementById('fpBtn');
+    p?.classList.add('open'); b?.classList.add('active');
+    fpFillInputs();
   }
 })();
 </script>

@@ -9,5 +9,9 @@ fi
 
 source .env
 
-sed "s|__PEXELS_API_KEY__|${PEXELS_API_KEY}|g" roster.html > index.html
+sed \
+  -e "s|__PEXELS_API_KEY__|${PEXELS_API_KEY:-}|g" \
+  -e "s|__JEPPESEN_USER__|${JEPPESEN_USER:-}|g" \
+  -e "s|__JEPPESEN_PASS__|${JEPPESEN_PASS:-}|g" \
+  roster.html > index.html
 echo "Built index.html"
