@@ -1,0 +1,9 @@
+# Project Memory
+
+- **Commit style**: Never append "Co-Authored-By: Claude …" to git commit messages. See memory: `feedback_no_claude_coauthor.md`.
+- **Z-Push / Zimbra server**: Config decisions, known issues, upgrade procedure, useful commands — [`project_zpush_zimbra_server.md`](project_zpush_zimbra_server.md)
+- **Deploy / serving**: Served by Apache from `/home/looping/looping.org/roster/` (DocumentRoot `/home/looping/looping.org` → `https://looping.org/roster/`). `build.sh` injects `.env` secrets into `roster.html` → `index.html` (the served file). `index.html`, `.env`, `roster.built.html` are gitignored — secrets never in tracked source.
+- **Flight plan retrieval (now server-side)**: the Apache reverse proxy was **removed**. A Python job `/home/looping/cari7/cari.py` fetches the Jeppesen FliteBrief feed hourly (creds in `.env`), merges/accumulates plans, and writes `data/flightplans.json`; the frontend just reads that JSON (`FP_DATA_URL`). No provider creds in the browser. Cron: `/etc/cron.d/cari` (as `www-data`).
+- **Cosmic-radiation dose (CARI-7)**: same `cari.py` runs the FAA CARI-7 Linux binary in `/home/looping/cari7/engine/` (ICRP-103 effective dose, tally 2) and adds `usv` per plan; the app shows a per-flight badge + month/year totals. `solar` subcommand refreshes `MV-DATES` monthly to finalize doses.
+- **Stopover tips**: crew-shared notes stored via Apache **WebDAV** at `/roster/tips/tips_<company>.json` (GET/PUT only, no server script; `DavLockDB` + `<Location /roster/tips>` in `00b-looping.org-ssl`). Keyed by airline (shared pool). Give-to-get + admin rules are UI-only. Daily backup: `/etc/cron.d/roster-tips`. NB: HTTP/2 weak-ETags make `If-Match` unreliable → saves use re-GET-then-PUT.
+- **Persistent archive**: events accumulate per-source in localStorage (`schedule_events_archive_*`) so the portal's rolling ICS window never loses past months; seeded from snapshot history.

@@ -4,6 +4,21 @@ All notable changes to Roster are recorded here.
 
 ## [Unreleased]
 
+## 2026-07-09
+
+### Added
+- **Cosmic-radiation dose (CARI-7)** — each flight now shows its galactic-cosmic-radiation **ICRP-103 effective dose** (µSv, the EASA/Euratom aircrew quantity), with **per-month and per-year totals** in the stats bar. Doses are computed **server-side** by a Python job (`/home/looping/cari7/cari.py`) that runs the FAA CARI-7 program over the flight plans (step-climb profile from the route's cruise levels, same method as the legacy `cari.inc.php`) and publishes a small JSON the app reads. A later monthly pass refreshes the finalized solar data (`MV-DATES`) and upgrades provisional doses to final.
+- **Stopover tips** — crew-shared, categorized notes per stopover (Activities, Food & Drink, Getting Around, Money & Shopping, Hotel & Rest, Safety & Health, Other) on each hotel-rest card. Each tip has a **category, title and description**; URLs are auto-linked. Foldable per stopover (collapsed by default). A **give-to-get** gate: you only see others' tips once you've posted at least one; admins moderate any tip and authors edit/delete their own via an inline edit form. Stored server-side via **Apache WebDAV** (no server script), one shared pool per airline, with a daily backup.
+- **Foldable flight-plan route** — the route line (label, enroute time, alternates) is shown collapsed; tap to expand the full token list.
+
+### Changed
+- **Flight-plan retrieval moved fully server-side.** A Python job fetches the provider feed hourly (accumulating/merging so a plan that briefly drops out of the volatile feed is never lost) and writes a static JSON the browser reads. The in-browser fetch, the settings panel, and all provider credentials were **removed from the frontend** — nothing sensitive ships to the browser.
+- Timezone bar: when scrolled, the shrunk month/year fades in at the left and the timezone buttons **right-justify** (and tighten on mobile) so the year never overlays them, even with 5+ zones.
+- Auto-scroll to today's duty now fires only on load / month change, not on background refreshes.
+
+### Removed
+- The same-origin Apache reverse proxy to the flight-plan provider (retrieval is now server-side).
+
 ## 2026-07-03
 
 ### Added

@@ -1,3 +1,5 @@
 .env
 index.html
 roster.built.html
+data/
+tips/

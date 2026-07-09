@@ -14,7 +14,9 @@ Roster parses your crew ICS feed and presents your schedule with richer context 
 - **Calendar view** — traditional monthly grid with event indicators and modal preview
 - **Changes tracking** — snapshot history that highlights roster updates since your last check
 - **Persistent history** — every event ever seen is kept in the browser, so past months are never lost when the portal's rolling feed drops them
-- **Flight plan routes** — optionally fetches planned flight-plan routes from an external provider and shows the colour-coded route (SID, STAR, airways, waypoints, speed/level) with alternates above the crew list on matching flights
+- **Flight plan routes** — planned flight-plan routes (retrieved server-side) shown colour-coded (SID, STAR, airways, waypoints, speed/level) with alternates above the crew list on matching flights; foldable, collapsed by default
+- **Cosmic-radiation dose** — per-flight galactic-cosmic-radiation **ICRP-103 effective dose** (the EASA/Euratom aircrew quantity), computed server-side with the FAA **CARI-7** program; shown as a badge on each flight plus **per-month and per-year totals**
+- **Stopover tips** — crew-shared, categorized notes (activities, food, getting around, money…) on each hotel-rest card. Foldable; each tip has a category, title and description with auto-linked URLs. A give-to-get gate means you see others' tips once you've shared at least one; admins moderate
 - **Timezone switching** — display times in UTC or your home base / destination timezone
 - **Crew panel** — expandable list of crew members per flight (Captain, F/O, Flight Attendants, etc.)
 - **LogTen Pro export** — one-click flight log export (includes the planned route when available)
@@ -41,19 +43,37 @@ Secrets never live in tracked source: `roster.html` carries only `__PLACEHOLDER_
 
 All data is stored in browser LocalStorage — nothing is sent to any external server beyond fetching your ICS feed (with a CORS proxy fallback if needed), the optional flight-plan feed, and the optional Pexels photo API.
 
-### Flight plan routes (optional)
+## Optional server-side helpers
 
-Routes come from an external flight-plan provider whose feed is cross-origin, so it's reached through a **same-origin reverse proxy** to avoid CORS. The app calls a same-origin path (e.g. `/roster/api/fp/…?filter=<FILTER>`), and the web server forwards that to the provider's endpoint. The browser sends the provider login as HTTP Basic auth, which the proxy passes straight through — invalid/missing credentials are rejected upstream, and **no credentials are stored on the server**.
+The core app runs in the browser. Three optional features are prepared by small server-side
+helpers (outside this repo) so that no provider credentials ever reach the browser:
 
-Example Apache (`mod_proxy` + `mod_headers`) config, added to the vhost that serves the app:
+### Flight plan routes + cosmic-radiation dose
+
+A stdlib-only Python job (`cari.py`) fetches the flight-plan provider feed **hourly** using
+credentials in `.env`, accumulates the plans (so an entry that briefly drops out of the provider's
+rolling window is never lost), runs the FAA **CARI-7** program to compute each flight's ICRP-103
+effective dose, and writes a static `data/flightplans.json` the app reads. A monthly pass refreshes
+the finalized solar-modulation data and upgrades provisional doses to final. The browser only reads
+the JSON — the in-browser fetch and the old same-origin reverse proxy were removed.
+
+### Stopover tips
+
+Tips are stored as JSON under `/<app>/tips/` served by **Apache WebDAV** (`mod_dav`) — the browser
+`GET`/`PUT`s the file directly, no server script. The location allows only `GET`/`PUT` (no
+`DELETE`/`PROPFIND`) and isn't listed; a daily cron backs the files up. One shared pool per airline
+(keyed by company). All access rules (the give-to-get view gate, admin moderation) are enforced in
+the app UI.
 
 ```apache
-SSLProxyEngine on
-ProxyPass        /roster/api/fp/ https://<provider-host>/<provider-path>/ nocanon
-ProxyPassReverse /roster/api/fp/ https://<provider-host>/<provider-path>/
+DavLockDB /var/lib/apache2/dav/lockdb
+<Location /roster/tips>
+    Dav On
+    Options -Indexes
+    <Limit GET HEAD OPTIONS PUT>   Require all granted </Limit>
+    <LimitExcept GET HEAD OPTIONS PUT> Require all denied </LimitExcept>
+</Location>
 ```
-
-Set the **Filter** (your airline's flight-number prefix, e.g. `XXX%`) and login in the app's **Flight Plan Routes** settings panel; it auto-presets when a matching roster is detected. Fetched plans are cached in the browser and re-checked in the background whenever the page is loaded, refreshed, or re-displayed.
 
 ## Tech stack
 

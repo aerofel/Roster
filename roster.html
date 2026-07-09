@@ -180,6 +180,13 @@
     .card-photo-bg.loaded{opacity:.4}
     :root[data-theme="light"] .card-photo-bg.loaded{opacity:.28}
     .card > *:not(.card-photo-bg){position:relative;z-index:1}
+    /* When a stopover's tips are expanded, confine the photo to a top banner (fading
+       out) so the tips read on a clean surface instead of over the full-card image. */
+    .card.hot.tips-open .card-photo-bg{
+      bottom:auto;height:150px;
+      -webkit-mask-image:linear-gradient(to bottom,#000 55%,transparent);
+              mask-image:linear-gradient(to bottom,#000 55%,transparent);
+    }
 
     /* FLT header */
     .chdr{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px}
@@ -253,14 +260,64 @@
 
     /* Flight-plan route (Jeppesen) */
     .fp-route{margin-top:14px;padding:14px 16px;background:var(--surf1);border:1px solid var(--bdr);border-radius:12px}
-    .fp-route-hd{display:flex;align-items:center;justify-content:space-between;gap:8px 14px;flex-wrap:wrap;margin-bottom:12px}
+    .fp-route-hd{display:flex;align-items:center;justify-content:space-between;gap:8px 14px;flex-wrap:wrap}
+    .fp-route-toggle{cursor:pointer;user-select:none}
+    .fp-route-toggle:hover{opacity:.85}
+    .fp-route-ttl .crew-arrow{color:var(--txt-dim)}
     .fp-route-ttl{display:flex;align-items:center;gap:8px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--txt-dim)}
     .fp-route-ttl svg{color:var(--blue);flex-shrink:0}
     .fp-enr{color:var(--txt-md);font-weight:700;letter-spacing:.3px;text-transform:none;font-size:11px}
     .fp-altn{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
     .fp-altn-lbl{font-size:9px;font-weight:800;letter-spacing:1px;color:var(--txt-dim)}
     .fp-altn-chip{font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px;background:var(--gold-dim);color:var(--gold);border:1px solid rgba(242,185,44,.28);font-variant-numeric:tabular-nums;cursor:default}
-    .fp-tokens{display:flex;flex-wrap:wrap;align-items:center;gap:6px 7px;line-height:1.7}
+    .fp-tokens{display:none;flex-wrap:wrap;align-items:center;gap:6px 7px;line-height:1.7}
+    .fp-tokens.open{display:flex;margin-top:12px}
+    /* ── Stopover tips ── */
+    .tips-wrap{margin-top:14px}
+    .tips-toggle{display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none;font-size:13px;font-weight:700;color:var(--gold);padding-top:12px;border-top:1px solid var(--bdr)}
+    .tips-toggle:hover{opacity:.85}
+    .tips-toggle .crew-arrow{color:var(--gold)}
+    .tips-count{margin-left:auto;font-size:11px;font-weight:700;color:var(--gold);background:var(--gold-dim);border:1px solid rgba(242,185,44,.22);padding:2px 9px;border-radius:20px;white-space:nowrap}
+    .tips-block{display:none;margin-top:14px}
+    .tips-block.open{display:block}
+    .tip-cat-group{margin-bottom:16px}
+    .tip-cat-group:last-child{margin-bottom:0}
+    .tip-cat{display:inline-flex;align-items:center;gap:6px;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.6px;padding:4px 11px;border-radius:20px;margin-bottom:10px}
+    .tip-item{background:var(--surf1);border:1px solid var(--bdr);border-radius:12px;padding:12px 14px;margin-bottom:8px}
+    .tip-item:last-child{margin-bottom:0}
+    .tip-title{font-size:14.5px;font-weight:800;color:var(--txt);line-height:1.35;margin-bottom:5px;letter-spacing:.1px}
+    .tip-text{font-size:13px;color:var(--txt-md);line-height:1.55;white-space:pre-wrap;word-break:break-word}
+    .tip-link{color:var(--blue);text-decoration:underline;text-underline-offset:2px;word-break:break-all}
+    .tip-link:hover{opacity:.85}
+    .tip-meta{display:flex;align-items:center;gap:8px 10px;margin-top:10px;flex-wrap:wrap}
+    .tip-author{font-size:11px;font-weight:800;letter-spacing:.5px;color:var(--blue);background:var(--blue-dim);border:1px solid rgba(47,164,231,.22);padding:2px 8px;border-radius:6px;cursor:help;font-variant-numeric:tabular-nums}
+    .tip-when{font-size:11px;color:var(--txt-dim)}
+    .tip-actions{margin-left:auto;display:flex;gap:10px}
+    .tip-act{background:none;border:none;color:var(--txt-dim);font:inherit;font-size:11px;font-weight:600;cursor:pointer;padding:0}
+    .tip-act:hover{color:var(--txt-md)}
+    .tip-del:hover{color:#f87171}
+    .tip-locked,.tip-empty,.tip-form-note{font-size:12.5px;color:var(--txt-md);background:var(--surf1);border:1px dashed var(--bdr-hi);border-radius:12px;padding:14px 16px;line-height:1.55}
+    .tip-locked{border-color:rgba(242,185,44,.32);background:var(--gold-dim)}
+    .tip-locked-ttl{font-size:13px;font-weight:800;color:var(--gold);margin-bottom:6px}
+    .tip-form{margin-top:14px;padding-top:14px;border-top:1px solid var(--bdr)}
+    .tip-form-row{display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap}
+    .tip-select{background:var(--surf1);color:var(--txt);border:1px solid var(--bdr-hi);border-radius:8px;padding:7px 10px;font:inherit;font-size:12.5px}
+    .tip-as{font-size:11px;color:var(--txt-dim)}
+    .tip-title-input{width:100%;background:var(--surf1);color:var(--txt);border:1px solid var(--bdr-hi);border-radius:10px;padding:9px 12px;font:inherit;font-size:13.5px;font-weight:700;margin-bottom:8px}
+    .tip-title-input:focus{outline:none;border-color:var(--gold)}
+    .tip-input{width:100%;background:var(--surf1);color:var(--txt);border:1px solid var(--bdr-hi);border-radius:10px;padding:10px 12px;font:inherit;font-size:13px;resize:vertical;line-height:1.5}
+    .tip-input:focus{outline:none;border-color:var(--gold)}
+    .tip-form-actions{display:flex;justify-content:flex-end;margin-top:8px}
+    .tip-save-btn{background:var(--gold-dim);color:var(--gold);border:1px solid rgba(242,185,44,.28);border-radius:8px;padding:8px 16px;font:inherit;font-size:12.5px;font-weight:700;cursor:pointer}
+    .tip-save-btn:hover{background:var(--gold-glow)}
+    .tip-save-btn:disabled{opacity:.5;cursor:default}
+    /* Inline edit form (replaces a tip in place) */
+    .tip-edit{background:var(--surf2);border:1px solid rgba(242,185,44,.4);border-radius:12px;padding:14px}
+    .tip-edit-hd{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.6px;color:var(--gold);margin-bottom:10px}
+    .tip-edit .tip-select{width:100%;margin-bottom:8px}
+    .tip-edit-actions{display:flex;gap:10px;justify-content:flex-end;align-items:center;margin-top:10px}
+    .tip-cancel-btn{background:none;border:1px solid var(--bdr-hi);color:var(--txt-md);border-radius:8px;padding:8px 16px;font:inherit;font-size:12.5px;font-weight:600;cursor:pointer}
+    .tip-cancel-btn:hover{color:var(--txt);border-color:var(--txt-dim)}
     .fp-tk{font-size:12.5px;font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:.2px;white-space:nowrap}
     .fp-grp{display:inline-flex;align-items:baseline;white-space:nowrap}
     .fp-wpt{color:var(--txt)}
@@ -580,18 +637,39 @@
       .cchip.off{background:var(--green)}
       .cmore{display:none}
       .cdn{width:22px;height:22px;font-size:11px}
+      /* Stopover tips — mobile */
+      .tips-toggle{font-size:12.5px}
+      .tip-item{padding:11px 13px}
+      .tip-text{font-size:13px}
+      .tip-cat{font-size:9.5px;padding:4px 9px}
+      .tip-form-row{gap:8px}
+      .tip-select{flex:1 1 140px;min-width:0}
+      .tip-select,.tip-input,.tip-title-input{font-size:16px}   /* 16px prevents iOS zoom-on-focus */
+      .tip-title{font-size:14px}
+      .tip-edit-actions .tip-save-btn,.tip-edit-actions .tip-cancel-btn{flex:1;width:auto}
+      .card.hot.tips-open .card-photo-bg{height:120px}
+      .tip-save-btn{width:100%}
+      .tip-actions{margin-left:auto}
+      .tz-month-label{font-size:13px;left:12px;max-width:92px}
+      .tz-bar.tz-compact .tz-seg{max-width:calc(100% - 100px)}
+      .tz-bar.tz-compact .tz-seg-btn{padding:4px 9px;letter-spacing:.3px}   /* fit more zones per row */
     }
 
     /* ─── TIMEZONE BAR ─── */
     .tz-bar{display:flex;justify-content:center;align-items:center;padding:8px 16px;background:var(--bg);border-bottom:1px solid var(--bdr);position:sticky;top:0;z-index:100;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
-    .tz-seg{display:inline-flex;flex-wrap:wrap;justify-content:center;max-width:100%;border:1px solid var(--bdr);border-radius:8px;overflow:hidden}
+    .tz-seg{display:inline-flex;flex-wrap:wrap;justify-content:center;max-width:100%;border:1px solid var(--bdr);border-radius:8px;overflow:hidden;transition:max-width .28s ease}
     .tz-seg-btn{padding:4px 13px;border:none;border-right:1px solid var(--bdr);background:transparent;color:var(--txt-md);font-size:11px;font-weight:700;cursor:pointer;letter-spacing:.5px;transition:background .15s,color .15s}
     .tz-seg-btn:last-child{border-right:none}
     .tz-seg-btn:hover{background:var(--bg3);color:var(--txt)}
     .tz-seg-btn.on{background:var(--blue);color:#fff}
+    /* When scrolled, the shrunk month/year fades in at the left; push the timezone
+       buttons to the right and cap their width so they never sit under the label. */
+    .tz-bar.tz-compact{justify-content:flex-end}
+    .tz-bar.tz-compact .tz-seg{max-width:calc(100% - 132px)}
     .tz-month-label{
       font-size:15px;font-weight:800;letter-spacing:-.4px;white-space:nowrap;
-      pointer-events:none;opacity:0;position:absolute;left:16px;top:9px;
+      pointer-events:none;opacity:0;position:absolute;left:16px;top:0;bottom:0;
+      display:flex;align-items:center;max-width:122px;overflow:hidden;text-overflow:ellipsis;
     }
     .tz-month-label .tz-m-yr{color:var(--blue)}
     /* ─── SOURCE MANAGEMENT ─── */
@@ -728,15 +806,6 @@
     </span>
     <span class="btn-lbl">History</span>
   </button>
-  <button class="refresh-btn" id="fpBtn" onclick="toggleFP()" title="Flight plan routes (Jeppesen)">
-    <span class="ri">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="6" cy="6" r="2.2"/><circle cx="18" cy="18" r="2.2"/>
-        <path d="M8 6h6a3 3 0 0 1 0 6H10a3 3 0 0 0 0 6h6"/>
-      </svg>
-    </span>
-    <span class="btn-lbl">Routes</span>
-  </button>
   <button class="refresh-btn" id="refreshBtn" onclick="load()">
     <span class="ri" id="refreshIcon">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
@@ -790,32 +859,6 @@
   </div>
   <div class="imp-note" style="margin-top:10px">
     Saved in this browser only — never sent anywhere else.
-  </div>
-</div>
-
-<div id="fpPanel" class="imp-panel">
-  <div class="imp-ttl"><span style="color:var(--teal)">✦</span> Flight Plan Routes</div>
-  <div class="fp-field">
-    <label for="fpFilter">Filter</label>
-    <input type="text" id="fpFilter" class="url-input" autocomplete="off" placeholder="ACI%">
-  </div>
-  <div class="fp-field">
-    <label for="fpUser">Username</label>
-    <input type="text" id="fpUser" class="url-input" autocomplete="off" placeholder="username">
-  </div>
-  <div class="fp-field">
-    <label for="fpPass">Password</label>
-    <input type="password" id="fpPass" class="url-input" autocomplete="new-password" placeholder="password">
-  </div>
-  <div style="display:flex;gap:8px;align-items:center;margin-top:4px">
-    <button class="url-save" onclick="saveFP()" type="button">Save &amp; fetch</button>
-    <span class="url-saved" id="fpSaved">Saved ✓</span>
-  </div>
-  <div class="fp-status" id="fpStatus"></div>
-  <div class="imp-note">
-    Routes load in the background when online and appear above the crew list on matching flights
-    (flight number + origin + departure date must all match), and are saved in this browser for offline use.<br>
-    Credentials are stored in this browser only and forwarded to the flight-plan provider on each request.
   </div>
 </div>
 
@@ -896,25 +939,36 @@ const LS_PANEL_URL      = 'schedule_panel_url';
 const LS_PANEL_IMPORT   = 'schedule_panel_import';
 const LS_PANEL_ARCHIVE  = 'schedule_panel_archive';
 const LS_DISCLAIMER     = 'schedule_disclaimer_agreed';
+// ─── STOPOVER TIPS (crew-shared, stored via Apache WebDAV — no server script) ───
+const LS_TIP_MYCODE = 'schedule_tip_mycode';   // manual override of inferred crew code
+const LS_TIP_CACHE  = 'schedule_tip_cache';    // last-good tips JSON per source (offline view)
+const TIP_BASE   = 'tips/';                     // /roster/tips/tips_<sourceKey>.json (WebDAV)
+const TIP_ADMINS = ['LEG'];                     // may edit/delete any tip and bypass the view gate
+const TIP_MAXLEN = 600;
+const TIP_TITLELEN = 80;
+const TIP_CATS = [
+  { slug:'activities', label:'Activities',      icon:'🎒', color:'blue'    },
+  { slug:'food',       label:'Food & Drink',    icon:'🍜', color:'gold'    },
+  { slug:'transport',  label:'Getting Around',  icon:'🚕', color:'green'   },
+  { slug:'money',      label:'Money & Shopping',icon:'💳', color:'orange'  },
+  { slug:'hotel',      label:'Hotel & Rest',    icon:'🏨', color:'lav'     },
+  { slug:'safety',     label:'Safety & Health', icon:'🩺', color:'orange'  },
+  { slug:'other',      label:'Other',           icon:'📌', color:'neutral' },
+];
+const TIP_CAT = TIP_CATS.reduce(function(m,c){ m[c.slug]=c; return m; }, {});
+const TIP_COLORS = { blue:['--blue','--blue-dim'], gold:['--gold','--gold-dim'],
+  green:['--green','--green-dim'], orange:['--orange','--orange-dim'], lav:['--lavender','--lav-dim'] };
 const HOME_TZ           = 11; // Pacific/Noumea UTC+11 (used for date-only ICS values)
 const MAX_SNAPSHOTS   = 30;
 const PROXY           = 'https://corsproxy.io/?';
 
-// ─── FLIGHT PLANS (Jeppesen FliteBrief) ──────────────────────────────────────
-const LS_FP_FILTER     = 'schedule_fp_filter';
-const LS_FP_USER       = 'schedule_fp_user';
-const LS_FP_PASS       = 'schedule_fp_pass';
+// ─── FLIGHT PLANS + COSMIC-RADIATION DOSE ────────────────────────────────────
+// Flight plans AND their CARI-7 doses are produced entirely server-side (cari.py
+// backend, hourly) and served as this static JSON. Retrieval and the provider
+// credentials live only on the server — the browser just reads/caches the result.
+const FP_DATA_URL      = 'data/flightplans.json';
 const LS_FP_CACHE      = 'schedule_fp_cache';
 const LS_FP_CACHE_TIME = 'schedule_fp_cache_time';
-const LS_PANEL_FP      = 'schedule_panel_fp';
-// Same-origin Apache proxy → Jeppesen FliteBrief (see README). The Filter (e.g. ACI%) is
-// appended to this base. Credentials are injected from .env at build time — never in tracked source.
-const FP_PROXY_BASE = '/roster/api/jeppesen/flightPlanQuery?filter=';
-const FP_PRESET_AIRCALIN = {
-  filter: 'ACI%',
-  user: '__JEPPESEN_USER__',
-  pass: '__JEPPESEN_PASS__'
-};
 // ICAO → IATA for the Aircalin network (departures, arrivals, alternates)
 const ICAO_IATA = {
   NWWW:'NOU', WSSS:'SIN', VTBS:'BKK', LFPG:'CDG', YSSY:'SYD', YMML:'MEL',
@@ -951,6 +1005,7 @@ function setActiveSource(code) {
   localStorage.setItem(LS_ICS_ACTIVE, code);
   renderSourcesList();
   updateActiveBadge();
+  tipStore={}; tipEtag=null; tipsLoadCache(); tipsLoad();  // tips are per-source
   load();
 }
 function codeFromUrl(url) {
@@ -1374,6 +1429,14 @@ let displayTzLbl = localStorage.getItem(LS_DISPLAY_TZ_LBL) || 'NOU';
 let _hasNewChanges = false;
 let editingCode = null;
 const openCrew = new Set();
+// Stopover tips state
+let tipStore = {};        // { CITY: { tips:[{id,cat,text,by,byName,ts,edited}] } }
+let tipEtag  = null;      // ETag of last GET (optimistic concurrency)
+let myCode   = null;      // inferred/overridden crew code of the roster owner
+let myName   = '';        // full name for myCode
+const tipOpen = new Set();// stopover cards whose tips section is expanded (by cid)
+let tipEditingId = null;   // id of the tip currently being edited inline
+let wantScroll = true;     // scroll to today's duty on load/nav, but NOT on background refreshes
 
 /* ── SNAPSHOT STORAGE ────────────────────────────────────────── */
 function getSnapshots() {
@@ -1729,6 +1792,7 @@ function monthEvs() {
 function render() {
   updateTzBar();
   updateTzMonthLabel();
+  computeMyCode();          // refresh roster-owner identity for stopover-tips gating
   const evs = monthEvs();
   const name = new Date(curYear,curMonth,1).toLocaleDateString('en-US',{month:'long'});
 
@@ -1753,6 +1817,15 @@ function render() {
   const th=Math.floor(tft/3600000),   tm=Math.floor((tft%3600000)/60000);
   const nh=Math.floor(night/3600000), nm=Math.floor((night%3600000)/60000);
 
+  // Cosmic-radiation dose (ICRP-103 effective dose, CARI-7): month total + running year total.
+  let monthUsv=0; for(const e of evs){ if(e.type==='FLT'){ const d=cariFor(e); if(d) monthUsv+=d; } }
+  let yearUsv=0;
+  for(const e of allEvents){
+    if(e.type!=='FLT'||!e.dtstart) continue;
+    const s=new Date(e.dtstart.getTime()+displayTz*3600000);
+    if(s.getUTCFullYear()===curYear){ const d=cariFor(e); if(d) yearUsv+=d; }
+  }
+
   document.getElementById('app').innerHTML = `
     <div class="month-row">
       <div class="month-ttl">${name} <span class="month-yr">${curYear}</span></div>
@@ -1766,6 +1839,8 @@ function render() {
       <div class="sbox"><div class="sval">${th}h${String(tm).padStart(2,'0')}</div><div class="slbl">Block Time</div></div>
       ${showNightHours()?`<div class="sbox"><div class="sval" style="color:var(--lavender)">${nh}h${String(nm).padStart(2,'0')}</div><div class="slbl">Night Block</div></div>`:''}
       <div class="sbox"><div class="sval">${dutyDays.size}</div><div class="slbl">Duty Days</div></div>
+      ${monthUsv>0?`<div class="sbox" title="Cosmic radiation this month (ICRP-103 effective dose, CARI-7)"><div class="sval" style="color:var(--gold)">${fmtUsv(monthUsv)}</div><div class="slbl">Cosmic · mo</div></div>`:''}
+      ${yearUsv>0?`<div class="sbox" title="Cosmic radiation ${curYear} to date (ICRP-103 effective dose, CARI-7)"><div class="sval" style="color:var(--gold)">${fmtUsv(yearUsv)}</div><div class="slbl">Cosmic · ${curYear}</div></div>`:''}
     </div>
     <div class="toolbar">
       <div class="vtoggle">
@@ -1782,7 +1857,8 @@ function render() {
   if (view === 'list') {
     const today = new Date();
     const isCurrentMonth = curMonth === today.getMonth() && curYear === today.getFullYear();
-    if (isCurrentMonth) {
+    if (isCurrentMonth && wantScroll) {
+      wantScroll = false;                 // consume: only auto-scroll on load / month change
       requestAnimationFrame(() => {
         const el = document.getElementById('upcoming');
         if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -1932,6 +2008,7 @@ function cardFLT(e){
       ${e.peq?`<div class="mi"><svg ${SI}><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> <strong>${esc(e.peq)}</strong> <span>crew on board</span></div>`:''}
       ${e.posCode?`<div class="mi"><svg ${SI}><path d="M17.8 19.2L16 11l3.5-3.5C21 6 21 4 19.5 2.5S18 2 16.5 3.5L13 7 4.8 5.2C4.3 5.1 3.8 5.4 3.5 5.9L3 6.4c-.4.6-.3 1.3.2 1.7l4.8 3.1L6 14l-2 1v2l3.5-1 1 3.5H11l1-2 3.1 4.8c.4.5 1.1.6 1.7.2l.5-.5c.5-.3.8-.8.5-1.3z"/></svg> <span>${esc(fmtReg(e.posCode))}</span></div>`:''}
       ${e.tft?`<div class="mi"><svg ${SI}><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> <span>TFT</span> <strong>${esc(e.tft)}</strong></div>`:''}
+      ${(()=>{const d=cariFor(e);return d==null?'':`<div class="mi" style="color:var(--gold)" title="ICRP-103 effective dose (CARI-7)"><svg ${SI}><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="22"/><line x1="2" y1="12" x2="5" y2="12"/><line x1="19" y1="12" x2="22" y2="12"/></svg> <strong>${fmtDose(d)}</strong> <span>cosmic</span></div>`;})()}
       ${(()=>{if(!showNightHours())return '';const n=nightMs(e);if(!n)return '';const h=Math.floor(n/3600000),m=Math.floor((n%3600000)/60000);return `<div class="mi" style="color:var(--lavender)"><svg ${SI}><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg> <strong>${h}h${String(m).padStart(2,'0')}</strong> <span>night block</span></div>`;})()}
       <button class="${ltBtnClass}" onclick="importSingle('${id}')">
         <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
@@ -2059,7 +2136,8 @@ function cardHOT(e){
   const past=flightStatus(e)==='completed';
   const ds=fmtTzD(e.dtstart), de=fmtTzD(e.dtend);
   const dateRange=ds===de?'('+ds+')':'('+ds+' → '+de+')';
-  return `<div class="card hot"${past?' style="opacity:.55"':''}>
+  const tipsOpen = city && tipOpen.has(city+'_'+(e.dtstart?e.dtstart.getTime():'0'));
+  return `<div class="card hot${tipsOpen?' tips-open':''}"${past?' style="opacity:.55"':''}>
     <div class="card-photo-bg" data-dest="${esc(city)}"></div>
     <div class="duty-body">
       <div class="duty-info">
@@ -2072,6 +2150,22 @@ function cardHOT(e){
       </div>
       ${dur?`<div class="duty-dur dur-gold">${dur}</div>`:''}
     </div>
+    ${city?tipsSectionHTML(e,city):''}
+  </div>`;
+}
+// Foldable stopover-tips section for a HOT card (collapsed by default). `cid` is
+// unique per card (city + departure time) so repeated cities don't collide.
+function tipsSectionHTML(e,city){
+  const cid = city + '_' + (e && e.dtstart ? e.dtstart.getTime() : '0');
+  const n=tipCount(city), open=tipOpen.has(cid);
+  const badge = n ? (n+' '+(n>1?'tips':'tip')) : 'add one';
+  return `<div class="tips-wrap">
+    <div class="tips-toggle" onclick="tipToggle('${cid}')">
+      <span class="crew-arrow" id="tiparr_${cid}"${open?' style="transform:rotate(90deg)"':''}>▶</span>
+      💡 <span>Stopover tips</span>
+      <span class="tips-count">${badge}</span>
+    </div>
+    <div class="tips-block${open?' open':''}" id="tipblk_${cid}">${tipsBlockHTML(city,cid)}</div>
   </div>`;
 }
 
@@ -2246,6 +2340,9 @@ function buildEntity(e) {
     flight_from: e.from || '',
     flight_to: e.to || '',
     flight_route: route,
+    // Cosmic-radiation ICRP-103 effective dose (µSv, CARI-7). LogTen ignores unknown keys;
+    // adjust to your LogTen custom-field name if you map it to a specific column.
+    flight_dose: plan && typeof plan.usv==='number' ? String(plan.usv) : '',
     flight_scheduledDepartureTime: isActual ? '' : fmtLT(depDt),
     flight_scheduledArrivalTime:   isActual ? '' : fmtLT(arrDt),
     flight_actualDepartureTime:    isActual ? fmtLT(depDt) : '',
@@ -2532,7 +2629,7 @@ async function load(){
 }
 
 /* ── NAV + HELPERS ───────────────────────────────────────────── */
-function shift(d){curMonth+=d;if(curMonth<0){curMonth=11;curYear--;}if(curMonth>11){curMonth=0;curYear++;}render();}
+function shift(d){curMonth+=d;if(curMonth<0){curMonth=11;curYear--;}if(curMonth>11){curMonth=0;curYear++;}wantScroll=true;render();}
 function setView(v){
   view=v;
   localStorage.setItem(LS_VIEW, v);
@@ -2703,6 +2800,15 @@ function fpParse(xml){
   return out;
 }
 
+// Backend JSON: { plans:[{flightId,dep,arr,std,route,alts,enroute,model,reg,usv,source,...}], ... }
+function fpParseData(text){
+  try{ var d=JSON.parse(text); return Array.isArray(d.plans)?d.plans:[]; }catch(_){ return []; }
+}
+// ICRP-103 effective dose (µSv, CARI-7) for a flight event, via its matched flight plan.
+function cariFor(e){ var p=fpFindPlan(e); return (p&&typeof p.usv==='number')?p.usv:null; }
+function fmtDose(v){ return (v>=100?Math.round(v):v.toFixed(1))+' µSv'; }        // per-flight
+function fmtUsv(v){ return v>=1000?(v/1000).toFixed(2)+' mSv':Math.round(v)+' µSv'; } // totals
+
 // Match a roster FLT event to a flight plan: flight number + origin + departure date.
 function fpFindPlan(e){
   if(!fpPlans.length || !e || e.type!=='FLT') return null;
@@ -2781,100 +2887,300 @@ function fpRouteHTML(e){
   }).join('')+'</div>'):'';
   var enr=fpFmtEnroute(p.enroute);
   var enrHTML=enr?'<span class="fp-enr">⏱ '+enr+'</span>':'';
+  var fid='fp'+Math.random().toString(36).slice(2);
+  // Summary line (arrow + label + enroute time + alternates) is always shown; the route
+  // tokens are collapsed by default and expand on click.
   return '<div class="fp-route">'
-    +'<div class="fp-route-hd">'
-      +'<div class="fp-route-ttl"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="2.2"/><circle cx="18" cy="18" r="2.2"/><path d="M8 6h6a3 3 0 0 1 0 6H10a3 3 0 0 0 0 6h6"/></svg> Flight plan route '+enrHTML+'</div>'
+    +'<div class="fp-route-hd fp-route-toggle" onclick="fpToggle(\''+fid+'\')">'
+      +'<div class="fp-route-ttl"><span class="crew-arrow" id="fparr_'+fid+'">▶</span> <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="2.2"/><circle cx="18" cy="18" r="2.2"/><path d="M8 6h6a3 3 0 0 1 0 6H10a3 3 0 0 0 0 6h6"/></svg> Flight plan route '+enrHTML+'</div>'
       +altHTML
     +'</div>'
-    +'<div class="fp-tokens">'+fpRouteTokensHTML(p.route)+'</div>'
+    +'<div class="fp-tokens" id="fptok_'+fid+'">'+fpRouteTokensHTML(p.route)+'</div>'
   +'</div>';
 }
+// Expand/collapse a flight-plan route's token list.
+function fpToggle(id){
+  var t=document.getElementById('fptok_'+id), a=document.getElementById('fparr_'+id);
+  if(!t) return;
+  var open=t.classList.toggle('open');
+  if(a) a.style.transform=open?'rotate(90deg)':'';
+}
 
-function fpSetStatus(msg,isErr){
-  var el=document.getElementById('fpStatus');
-  if(!el) return;
-  el.textContent=msg||'';
-  el.classList.toggle('err',!!isErr);
+/* ── STOPOVER TIPS ─────────────────────────────────────────────
+   Crew-shared, categorized notes per stopover. Stored as one JSON per roster
+   source via Apache WebDAV (GET/PUT, no server script). All rules are UI-only:
+   admins (TIP_ADMINS) moderate; you must post ≥1 tip to read others' tips. */
+// Tips are shared by ALL crew of the same airline, so key the file by COMPANY only
+// (not the per-user roster trigram) — otherwise every crew member reads/writes their
+// own file and nothing is shared, and the same user differs across devices.
+function tipsUrl(){
+  var src=getActiveSource();
+  var company=companyFromUrl(src?src.url:'') || 'shared';
+  return TIP_BASE + 'tips_' + company + '.json';
 }
-function fpIsAircalin(){ return (activeUrl()||'').toLowerCase().indexOf('aircalin')>=0; }
-// Drop values left as unsubstituted build placeholders (e.g. when roster.html is opened unbuilt).
-function fpVal(v){ return (v && v.indexOf('__')!==0) ? v : ''; }
-// Auto-fill the Aircalin endpoint + login when the active roster is Aircalin and nothing is set yet.
-// Effective request URL = proxy base + the saved Filter (e.g. ACI%). Empty when no filter set.
-function fpUrl(){
-  var f=(localStorage.getItem(LS_FP_FILTER)||'').trim();
-  return f ? FP_PROXY_BASE+f : '';
+function tipCacheKey(){ var src=getActiveSource(); return LS_TIP_CACHE + '_' + (companyFromUrl(src?src.url:'')||'shared'); }
+
+// Infer the roster owner's crew code from the crew lists: the person appearing on
+// the most flights is the owner (they're on every duty). Resolve their name too.
+// A manual override (LS_TIP_MYCODE) wins. NB: we intentionally do NOT use the
+// summary posCode slot — in some rosters that field holds the aircraft registration.
+function computeMyCode(){
+  var ov=(localStorage.getItem(LS_TIP_MYCODE)||'').trim().toUpperCase();
+  var freq={}, nameOf={};
+  for(var i=0;i<allEvents.length;i++){
+    var cr=allEvents[i].crew||[];
+    for(var r=0;r<cr.length;r++){
+      var ms=cr[r].members||[];
+      for(var m=0;m<ms.length;m++){
+        var c=(ms[m].code||'').trim().toUpperCase(); if(!c) continue;
+        freq[c]=(freq[c]||0)+1;
+        if(ms[m].name && !nameOf[c]) nameOf[c]=ms[m].name;
+      }
+    }
+  }
+  if(ov){ myCode=ov; }
+  else {
+    var best=null,bestN=0;
+    for(var c in freq){ if(freq[c]>bestN){ bestN=freq[c]; best=c; } }
+    myCode=best;
+  }
+  myName = (myCode && nameOf[myCode]) ? nameOf[myCode] : '';
 }
-function fpAutoPreset(){
-  if(localStorage.getItem(LS_FP_FILTER)) return;
-  if(!fpIsAircalin()) return;
-  localStorage.setItem(LS_FP_FILTER, FP_PRESET_AIRCALIN.filter);
-  localStorage.setItem(LS_FP_USER,fpVal(FP_PRESET_AIRCALIN.user));
-  localStorage.setItem(LS_FP_PASS,fpVal(FP_PRESET_AIRCALIN.pass));
+function tipIsAdmin(){ return !!myCode && TIP_ADMINS.indexOf(myCode)>=0; }
+function tipHasContributed(){
+  if(!myCode) return false;
+  for(var city in tipStore){
+    var ts=(tipStore[city]&&tipStore[city].tips)||[];
+    for(var i=0;i<ts.length;i++) if((ts[i].by||'').toUpperCase()===myCode) return true;
+  }
+  return false;
 }
-function fpFillInputs(){
-  var fl=document.getElementById('fpFilter'); if(fl)fl.value=localStorage.getItem(LS_FP_FILTER)||'';
-  var us=document.getElementById('fpUser');  if(us)us.value=localStorage.getItem(LS_FP_USER)||'';
-  var pw=document.getElementById('fpPass');  if(pw)pw.value=localStorage.getItem(LS_FP_PASS)||'';
-  var t=Number(localStorage.getItem(LS_FP_CACHE_TIME)||0);
-  if(fpPlans.length) fpSetStatus(fpPlans.length+' flight plans cached'+(t?' · updated '+fmtAge(Date.now()-t):''));
-  else fpSetStatus(localStorage.getItem(LS_FP_FILTER)?'No flight plans loaded yet.':'Not configured.');
+function tipCount(city){ var s=tipStore[city]; return s&&s.tips?s.tips.length:0; }
+
+function tipsLoadCache(){
+  try{ var c=localStorage.getItem(tipCacheKey()); tipStore=c?(JSON.parse(c)||{}):{}; }
+  catch(_){ tipStore={}; }
 }
-function toggleFP(){
-  var panel=document.getElementById('fpPanel'), btn=document.getElementById('fpBtn');
-  var open=panel.classList.toggle('open');
-  if(btn) btn.classList.toggle('active',open);
-  localStorage.setItem(LS_PANEL_FP, open?'1':'0');
-  if(open) fpFillInputs();
+// Background load of the shared tips file (silent; falls back to cache offline / on error).
+async function tipsLoad(){
+  if(!navigator.onLine){ tipsLoadCache(); return; }
+  try{
+    var r=await fetch(tipsUrl(),{cache:'no-cache'});
+    if(r.status===404){ tipStore={}; tipEtag=null; if(allEvents.length) render(); return; }
+    if(!r.ok){ tipsLoadCache(); return; }
+    tipEtag=r.headers.get('ETag');
+    var txt=await r.text();
+    tipStore = txt.trim()? JSON.parse(txt) : {};
+    try{ localStorage.setItem(tipCacheKey(), txt); }catch(_){}
+    if(allEvents.length) render();
+  }catch(_){ tipsLoadCache(); }
 }
-function saveFP(){
-  var filter=(document.getElementById('fpFilter')||{}).value||'';
-  var user=(document.getElementById('fpUser')||{}).value||'';
-  var pass=(document.getElementById('fpPass')||{}).value||'';
-  filter=filter.trim(); user=user.trim();
-  if(filter) localStorage.setItem(LS_FP_FILTER,filter); else localStorage.removeItem(LS_FP_FILTER);
-  localStorage.setItem(LS_FP_USER,user);
-  localStorage.setItem(LS_FP_PASS,pass);
-  var s=document.getElementById('fpSaved');
-  if(s){ s.classList.add('show'); clearTimeout(saveFP._t); saveFP._t=setTimeout(function(){s.classList.remove('show');},1500); }
-  fpLoad();
+// Persist a mutation. Merge into the freshest server copy right before writing to
+// minimise lost updates (HTTP/2 makes ETag If-Match concurrency unreliable, so this
+// narrow GET→PUT window is the guard; the daily backup covers rare races). Returns bool.
+async function tipsSave(mutate){
+  var store;
+  try{
+    var g=await fetch(tipsUrl(),{cache:'no-cache'});
+    if(g.ok){ var t=await g.text(); store=t.trim()?JSON.parse(t):{}; }
+    else if(g.status===404){ store={}; }
+    else { store=JSON.parse(JSON.stringify(tipStore||{})); }   // server hiccup → local copy
+  }catch(_){ store=JSON.parse(JSON.stringify(tipStore||{})); }
+  try{ mutate(store); }catch(_){ return false; }
+  var body=JSON.stringify(store);
+  try{
+    var p=await fetch(tipsUrl(),{method:'PUT',headers:{'Content-Type':'application/json'},body:body});
+    if(!p.ok) return false;
+    tipStore=store; tipEtag=p.headers.get('ETag')||null;
+    try{ localStorage.setItem(tipCacheKey(), body); }catch(_){}
+    return true;
+  }catch(_){ return false; }
 }
-// Prime plan list from cache so saved routes show on first paint (and offline).
+
+// `cid` is a per-card id (city + departure time) so the same city appearing on
+// several stopover cards (e.g. BKK outbound + inbound) doesn't collide; the tips
+// DATA stays keyed by `city`.
+function tipToggle(cid){
+  var b=document.getElementById('tipblk_'+cid), a=document.getElementById('tiparr_'+cid);
+  var open; if(tipOpen.has(cid)){ tipOpen.delete(cid); open=false; } else { tipOpen.add(cid); open=true; }
+  if(b){
+    b.classList.toggle('open', open);
+    var card=b.closest('.card');           // confine the photo to a banner while expanded
+    if(card) card.classList.toggle('tips-open', open);
+  }
+  if(a) a.style.transform=open?'rotate(90deg)':'';
+  // If tips never finished loading (e.g. a flaky mobile connection at start-up),
+  // fetch them now that the user is asking to see them.
+  if(open && navigator.onLine && !Object.keys(tipStore).length) tipsLoad();
+}
+// Reload the shared tips when returning to the app (mirrors fpMaybeRefresh); skip while
+// the user is typing in a tip form so a background refresh can't wipe their input.
+function tipMaybeRefresh(){
+  if(!navigator.onLine) return;
+  var ae=document.activeElement;
+  if(ae&&(ae.classList.contains('tip-input')||ae.classList.contains('tip-title-input')||ae.classList.contains('tip-select'))) return;
+  if(Date.now()-(tipMaybeRefresh._t||0) < 60000) return;
+  tipMaybeRefresh._t=Date.now();
+  tipsLoad();
+}
+
+// Escape HTML, then turn URLs (http/https or bare www.) into new-tab links.
+function tipLinkify(text){
+  var e=esc(text);
+  return e.replace(/(https?:\/\/[^\s<]+|www\.[^\s<]+)/g, function(m){
+    var tail=''; var mm=m.match(/[)\].,;:!?]+$/);   // don't swallow trailing punctuation
+    if(mm){ tail=mm[0]; m=m.slice(0,-tail.length); }
+    var href=/^https?:\/\//i.test(m)?m:'https://'+m;
+    return '<a href="'+href+'" target="_blank" rel="noopener noreferrer nofollow" class="tip-link">'+m+'</a>'+tail;
+  });
+}
+function tipCatChip(c){
+  var col=TIP_COLORS[c.color];
+  var style = col ? 'color:var('+col[0]+');background:var('+col[1]+')'
+                  : 'color:var(--txt-md);background:var(--surf2)';
+  return '<div class="tip-cat" style="'+style+'">'+c.icon+' '+esc(c.label)+'</div>';
+}
+function tipEditFormHTML(city,t,cid){
+  var opts=TIP_CATS.map(function(c){ return '<option value="'+c.slug+'"'+(c.slug===t.cat?' selected':'')+'>'+c.icon+' '+esc(c.label)+'</option>'; }).join('');
+  return '<div class="tip-edit">'
+    +'<div class="tip-edit-hd">✎ Edit tip</div>'
+    +'<select class="tip-select" id="tipecat_'+t.id+'">'+opts+'</select>'
+    +'<input type="text" class="tip-title-input" id="tipetitle_'+t.id+'" maxlength="'+TIP_TITLELEN+'" value="'+esc(t.title||'')+'" placeholder="Title — e.g. Best rooftop bar">'
+    +'<textarea class="tip-input" id="tipetxt_'+t.id+'" maxlength="'+TIP_MAXLEN+'" rows="3" placeholder="Details">'+esc(t.text||'')+'</textarea>'
+    +'<div class="tip-edit-actions">'
+      +'<button class="tip-cancel-btn" onclick="tipCancelEdit(\''+cid+'\')">Cancel</button>'
+      +'<button class="tip-save-btn" onclick="tipSaveEdit(\''+esc(city)+'\',\''+t.id+'\',\''+cid+'\')">Save changes</button>'
+    +'</div>'
+  +'</div>';
+}
+function tipItemHTML(city,t,cid){
+  if(t.id===tipEditingId) return tipEditFormHTML(city,t,cid);
+  var canEdit = ((t.by||'').toUpperCase()===myCode) || tipIsAdmin();
+  var when = t.ts ? fmtAge(Date.now()-t.ts*1000) : '';
+  if(t.edited) when += ' · edited';
+  var actions = canEdit
+    ? '<span class="tip-actions"><button class="tip-act" onclick="tipEdit(\''+esc(city)+'\',\''+t.id+'\',\''+cid+'\')">Edit</button>'
+      +'<button class="tip-act tip-del" onclick="tipDelete(\''+esc(city)+'\',\''+t.id+'\',\''+cid+'\')">Delete</button></span>'
+    : '';
+  return '<div class="tip-item">'
+    +(t.title?'<div class="tip-title">'+esc(t.title)+'</div>':'')
+    +(t.text?'<div class="tip-text">'+tipLinkify(t.text)+'</div>':'')
+    +'<div class="tip-meta">'
+      +'<span class="tip-author" title="'+esc(t.byName||t.by||'')+'">'+esc(t.by||'??')+'</span>'
+      +'<span class="tip-when">'+esc(when)+'</span>'+actions
+    +'</div>'
+  +'</div>';
+}
+function tipFormHTML(city,cid){
+  if(!myCode) return '<div class="tip-form-note">Your crew code wasn\'t detected from the roster, so you can\'t post yet.</div>';
+  var opts=TIP_CATS.map(function(c){ return '<option value="'+c.slug+'">'+c.icon+' '+esc(c.label)+'</option>'; }).join('');
+  return '<div class="tip-form">'
+    +'<div class="tip-form-row">'
+      +'<select class="tip-select" id="tipcat_'+cid+'">'+opts+'</select>'
+      +'<span class="tip-as">posting as <strong>'+esc(myCode)+'</strong></span>'
+    +'</div>'
+    +'<input type="text" class="tip-title-input" id="tiptitle_'+cid+'" maxlength="'+TIP_TITLELEN+'" placeholder="Title — e.g. Best rooftop bar">'
+    +'<textarea class="tip-input" id="tiptxt_'+cid+'" maxlength="'+TIP_MAXLEN+'" rows="3" placeholder="Details about '+esc(city)+'…"></textarea>'
+    +'<div class="tip-form-actions"><button class="tip-save-btn" id="tipbtn_'+cid+'" onclick="tipAdd(\''+esc(city)+'\',\''+cid+'\')">Add tip</button></div>'
+  +'</div>';
+}
+function tipsBlockHTML(city,cid){
+  var out='';
+  if(!tipIsAdmin() && !tipHasContributed()){
+    out = '<div class="tip-locked"><div class="tip-locked-ttl">🔒 Tips are shared crew-to-crew</div>'
+        + 'To read what others posted about <strong>'+esc(city)+'</strong>, add at least one tip of your own first — info only flows to those who share. Post one below to unlock every stopover.</div>';
+  } else {
+    var s=tipStore[city], tips=(s&&s.tips)?s.tips.slice():[];
+    if(!tips.length){
+      out = '<div class="tip-empty">No tips yet for <strong>'+esc(city)+'</strong>. Be the first to add one.</div>';
+    } else {
+      var byCat={};
+      tips.forEach(function(t){ (byCat[t.cat]=byCat[t.cat]||[]).push(t); });
+      out = TIP_CATS.filter(function(c){ return byCat[c.slug]; }).map(function(c){
+        var items=byCat[c.slug].sort(function(a,b){ return (b.ts||0)-(a.ts||0); });
+        return '<div class="tip-cat-group">'+tipCatChip(c)+items.map(function(t){ return tipItemHTML(city,t,cid); }).join('')+'</div>';
+      }).join('');
+    }
+  }
+  return out + tipFormHTML(city,cid);
+}
+
+async function tipAdd(city,cid){
+  var sel=document.getElementById('tipcat_'+cid), ttl=document.getElementById('tiptitle_'+cid),
+      txt=document.getElementById('tiptxt_'+cid), btn=document.getElementById('tipbtn_'+cid);
+  if(!sel||!txt) return;
+  var title=(ttl&&ttl.value||'').trim(); if(title.length>TIP_TITLELEN) title=title.slice(0,TIP_TITLELEN);
+  var text=(txt.value||'').trim();
+  if(!title && !text){ (ttl||txt).focus(); return; }   // need at least a title or details
+  if(text.length>TIP_MAXLEN) text=text.slice(0,TIP_MAXLEN);
+  var tip={ id:'t_'+Math.random().toString(36).slice(2), cat:(sel.value||'other'),
+    title:title, text:text, by:myCode, byName:myName, ts:Math.floor(Date.now()/1000), edited:0 };
+  if(btn){ btn.disabled=true; btn.textContent='Saving…'; }
+  var ok=await tipsSave(function(store){
+    if(!store[city]) store[city]={tips:[]};
+    if(!store[city].tips) store[city].tips=[];
+    store[city].tips.push(tip);
+  });
+  if(!ok){ if(btn){ btn.disabled=false; btn.textContent='Add tip'; } alert('Could not save the tip — check your connection and try again.'); return; }
+  tipOpen.add(cid);   // keep this card's section open across the re-render
+  render();
+}
+async function tipDelete(city,id,cid){
+  if(!confirm('Delete this tip?')) return;
+  var ok=await tipsSave(function(store){
+    var s=store[city]; if(!s||!s.tips) return;
+    s.tips=s.tips.filter(function(t){ return t.id!==id; });
+  });
+  if(!ok){ alert('Could not delete — try again.'); return; }
+  if(cid) tipOpen.add(cid); render();
+}
+function tipEdit(city,id,cid){        // open the inline editor for this tip
+  tipEditingId=id; if(cid) tipOpen.add(cid); render();
+}
+function tipCancelEdit(cid){ tipEditingId=null; if(cid) tipOpen.add(cid); render(); }
+async function tipSaveEdit(city,id,cid){
+  var sel=document.getElementById('tipecat_'+id), ttl=document.getElementById('tipetitle_'+id), txt=document.getElementById('tipetxt_'+id);
+  if(!txt) return;
+  var title=(ttl&&ttl.value||'').trim().slice(0,TIP_TITLELEN);
+  var text=(txt.value||'').trim().slice(0,TIP_MAXLEN);
+  if(!title && !text){ (ttl||txt).focus(); return; }
+  var cat=(sel&&sel.value)||'other';
+  var ok=await tipsSave(function(store){
+    var ss=store[city]; if(!ss||!ss.tips) return;
+    var tt=ss.tips.filter(function(x){ return x.id===id; })[0];
+    if(tt){ tt.cat=cat; tt.title=title; tt.text=text; tt.edited=Math.floor(Date.now()/1000); }
+  });
+  if(!ok){ alert('Could not save the edit — try again.'); return; }
+  tipEditingId=null; if(cid) tipOpen.add(cid); render();
+}
+
+// Prime plan list from cache so routes + doses show on first paint (and offline).
 function fpLoadCache(){
   var c=localStorage.getItem(LS_FP_CACHE);
-  if(c){ try{ fpPlans=fpParse(c); }catch(_){} }
+  if(c){ try{ fpPlans=fpParseData(c); }catch(_){} }
 }
-// Fetch flight plans via the same-origin proxy; the browser's Basic auth is forwarded to the provider.
+// Background load of flight plans + doses from the server-produced JSON (built by the
+// Python backend). Silent: routes are optional, so failures just keep the cached view.
 async function fpLoad(){
-  var url=fpUrl();
-  if(!url){ return; }
-  if(!navigator.onLine){ fpSetStatus('Offline — showing saved routes.',true); return; }
-  var user=localStorage.getItem(LS_FP_USER)||'', pass=localStorage.getItem(LS_FP_PASS)||'';
-  var headers={};
-  if(user||pass){ try{ headers['Authorization']='Basic '+btoa(user+':'+pass); }catch(_){} }
-  fpSetStatus('Loading flight plans…');
+  if(!navigator.onLine) return;
   try{
     var ctrl=new AbortController(), tid=setTimeout(function(){ctrl.abort();},20000);
-    var r=await fetch(url,{cache:'no-cache',headers:headers,signal:ctrl.signal});
+    var r=await fetch(FP_DATA_URL,{cache:'no-cache',signal:ctrl.signal});
     clearTimeout(tid);
-    if(!r.ok){ fpSetStatus('HTTP '+r.status+' — '+(HTTP_STATUS_TEXT[r.status]||'request failed'),true); return; }
-    var xml=await r.text();
-    var plans=fpParse(xml);
-    if(!plans.length){ fpSetStatus('No flight plans found in the response.',true); return; }
+    if(!r.ok) return;
+    var txt=await r.text();
+    var plans=fpParseData(txt);
+    if(!plans.length) return;
     fpPlans=plans;
-    // Save to browser storage like the roster cache, so routes persist across reloads / offline.
-    try{ localStorage.setItem(LS_FP_CACHE,xml); localStorage.setItem(LS_FP_CACHE_TIME,String(Date.now())); }catch(_){}
-    fpSetStatus(plans.length+' flight plans loaded · '+fmtAge(0));
+    // Persist across reloads / offline, like the roster cache.
+    try{ localStorage.setItem(LS_FP_CACHE,txt); localStorage.setItem(LS_FP_CACHE_TIME,String(Date.now())); }catch(_){}
     if(allEvents.length) render();
-  }catch(err){
-    fpSetStatus('Fetch failed — network error or the proxy is unavailable.',true);
-  }
+  }catch(err){ /* keep showing cached routes */ }
 }
-// Re-check flight plans in the background when the user returns to the page
-// (tab focus, PWA/mobile resume, back-forward cache, or regained connectivity).
-// Throttled so quick tab switches don't refetch needlessly.
+// Re-check in the background when the user returns to the page (tab focus, resume,
+// bfcache, regained connectivity). Throttled so quick tab switches don't refetch.
 function fpMaybeRefresh(){
-  if(!fpUrl() || !navigator.onLine) return;
+  if(!navigator.onLine) return;
   var t=Number(localStorage.getItem(LS_FP_CACHE_TIME)||0);
   if(Date.now()-t < 90000) return; // fetched < 90s ago
   fpLoad();
@@ -2882,18 +3188,19 @@ function fpMaybeRefresh(){
 
 /* ── BOOT ────────────────────────────────────────────────────── */
 fpLoadCache();
-fpAutoPreset();
+tipsLoadCache();
 updateTzBar();
 updateTzMonthLabel();
 updateActiveBadge();
 load();
 fpLoad();
+tipsLoad();
 
 // Loaded/refreshed → handled above. Displayed (returning to the page) → refresh here.
-document.addEventListener('visibilitychange', function(){ if(document.visibilityState==='visible') fpMaybeRefresh(); });
-window.addEventListener('pageshow', function(e){ if(e.persisted) fpMaybeRefresh(); }); // bfcache back/forward
-window.addEventListener('focus', fpMaybeRefresh);
-window.addEventListener('online', fpMaybeRefresh);
+document.addEventListener('visibilitychange', function(){ if(document.visibilityState==='visible'){ fpMaybeRefresh(); tipMaybeRefresh(); } });
+window.addEventListener('pageshow', function(e){ if(e.persisted){ fpMaybeRefresh(); tipMaybeRefresh(); } }); // bfcache back/forward
+window.addEventListener('focus', function(){ fpMaybeRefresh(); tipMaybeRefresh(); });
+window.addEventListener('online', function(){ fpMaybeRefresh(); tipMaybeRefresh(); });
 
 // Disclaimer — show once (deferred: element is parsed after this script block)
 window.addEventListener('load', function() {
@@ -2925,6 +3232,9 @@ function dismissDisclaimer() {
       var progress = Math.min(1, Math.max(0, (tzH - rect.bottom) / (rect.height || 40)));
       label.style.opacity   = progress;
       label.style.transform = 'translateY(' + ((1 - progress) * 6) + 'px)';
+      // Once the label starts showing, right-justify the timezone buttons so the
+      // year no longer sits over them (matters with 5+ buttons).
+      tzBar.classList.toggle('tz-compact', progress > 0.05);
     });
   }
   window.addEventListener('scroll', onScroll, {passive: true});
@@ -2944,11 +3254,6 @@ function dismissDisclaimer() {
     const p = document.getElementById('archivePanel'), b = document.getElementById('archiveBtn');
     p?.classList.add('open'); b?.classList.add('active');
     updateArchiveStats();
-  }
-  if (localStorage.getItem(LS_PANEL_FP) === '1') {
-    const p = document.getElementById('fpPanel'), b = document.getElementById('fpBtn');
-    p?.classList.add('open'); b?.classList.add('active');
-    fpFillInputs();
   }
 })();
 </script>
