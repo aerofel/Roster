@@ -4,7 +4,16 @@ All notable changes to Roster are recorded here.
 
 ## [Unreleased]
 
-## 2026-07-09
+## 2026-07-18
+
+### Added
+- **Simulator / training session cards** — ground-training events (`SIMU`, `ENTM3`, `OPSM3`, …) are now recognized and labelled ("Simulator Session"), and show the **participating crew** (trainees & instructor) in the same expandable crew panel as flights. The portal lists sim crews as `*** ELV ***` / `*** INS ***` sections without the `Crew:` header used on flights — the parser now detects those sections directly. New role labels: ELV → Trainee, INS → Instructor, INS-C, EXM.
+- **Dedicated MEP (positioning) card for every leg** — all positioning legs now use the orange MEP card: 💺 deadhead-seat icon, "MEP · Positioning" heading, a "Positioning flight (mise en place)" note, a dashed route line, and the full times grid. Previously only MEP legs carrying a flight number (e.g. `MEP - SB410 - NOU/AKL - FONEA`) got that card; legs like `MEP - AKL/NAN` fell through to the generic purple card — which made a two-leg positioning day (16/08) look like the same MEP displayed twice in two different styles.
+- **Nothing is ever dropped** — any description line the parser doesn't recognize is collected and displayed in a dim "extra info" block on the card (all card types), so new/unknown portal data is always visible to the crew member.
+
+### Changed
+- **REST events display like Hotel Rest** — same gold card with destination photo, duration and stopover tips, labelled "Rest" (e.g. the 24 h `REST - NAN` between the positioning and the sim block).
+- Calendar-view chips follow the same rules: REST is gold like hotel rest, and all MEP legs are orange and labelled with their route when they have no flight number.
 
 ### Added
 - **Cosmic-radiation dose (CARI-7)** — each flight now shows its galactic-cosmic-radiation **ICRP-103 effective dose** (µSv, the EASA/Euratom aircrew quantity), with **per-month and per-year totals** in the stats bar. Doses are computed **server-side** by a Python job (`/home/looping/cari7/cari.py`) that runs the FAA CARI-7 program over the flight plans (step-climb profile from the route's cruise levels, same method as the legacy `cari.inc.php`) and publishes a small JSON the app reads. A later monthly pass refreshes the finalized solar data (`MV-DATES`) and upgrades provisional doses to final.

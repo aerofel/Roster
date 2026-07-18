@@ -212,6 +212,11 @@
     .rmid{flex:1;display:flex;align-items:center;gap:5px}
     .rln{flex:1;height:1px;background:linear-gradient(to right,transparent,var(--bdr-hi),transparent)}
     .rplane{color:var(--blue);font-size:17px}
+    /* MEP (positioning): dashed route line to distinguish from operating sectors */
+    .card.mep .rln{height:0;background:none;border-top:2px dashed var(--orange);opacity:.35}
+    .mep-note{font-size:11.5px;color:var(--orange);opacity:.8;margin:-8px 0 14px;text-align:center;font-style:italic}
+    /* Unrecognized description lines — always displayed, never dropped */
+    .extra-info{margin-top:10px;padding-top:10px;border-top:1px dashed var(--bdr);font-size:12px;line-height:1.6;color:var(--txt-md);word-break:break-word}
 
     /* Time grid */
     .tgrid{
@@ -1147,7 +1152,8 @@ const ROLES = {
   'CPT':'Captain','CPT-AEL':'Captain (AEL)','F/O':'First Officer',
   'SFP':'Senior Purser','F/P':'Flight Purser','HST':'Cabin Crew',
   'RFT':'Relief Crew','EXM-T':'Examiner (T)','FCC':'Check Crew',
-  'OBS':'Observer'
+  'OBS':'Observer',
+  'ELV':'Trainee','INS':'Instructor','INS-C':'Instructor (C)','EXM':'Examiner'
 };
 
 /* ── PEXELS BACKGROUND PHOTOS ───────────────────────────────── */
@@ -1370,11 +1376,12 @@ function parseSummary(s) {
 
 /* ── DESCRIPTION PARSING ─────────────────────────────────────── */
 function parseDesc(raw) {
-  if (!raw||!raw.trim()) return { times:{}, tft:'', peq:'', crew:[] };
+  if (!raw||!raw.trim()) return { times:{}, tft:'', peq:'', crew:[], extra:[] };
   const lines = raw.split('\n');
   const times = {};
   let tft='', peq='';
   const crew = [];
+  const extra = [];   // any line the parser doesn't recognize — displayed, never dropped
   let inCrew=false, crewRole='';
   const seenRoles = new Set();
   let stopCrew = false;
@@ -1382,6 +1389,8 @@ function parseDesc(raw) {
   for (const ln of lines) {
     if (stopCrew) break;
     const ci = ln.indexOf(':');
+    // Sim/training events list crew directly as "*** ROLE ***" with no "Crew:" header
+    if (!inCrew && ln.trim().startsWith('***')) inCrew = true;
 
     if (!inCrew && ci > 0) {
       const k = ln.slice(0,ci).replace(/\t/g,'').trim().toLowerCase();
@@ -1392,6 +1401,7 @@ function parseDesc(raw) {
       } else if (k==='tft')  { tft = v; }
         else if (k==='peq')  { peq = v; }
         else if (k==='crew') { inCrew = true; }
+        else { extra.push(ln.replace(/\t+/g,' ').trim()); }
     } else if (inCrew) {
       const trimmed = ln.trim();
       if (!trimmed) continue;
@@ -1406,11 +1416,15 @@ function parseDesc(raw) {
         if (cols.length >= 2) {
           const last = crew[crew.length-1];
           last.members.push({ code:cols[0], name:cols[1], note:cols[2]||'' });
+        } else {
+          extra.push(trimmed);
         }
       }
+    } else if (ln.trim()) {
+      extra.push(ln.replace(/\t+/g,' ').trim());
     }
   }
-  return { times, tft, peq, crew };
+  return { times, tft, peq, crew, extra };
 }
 
 /* ── ENRICH ──────────────────────────────────────────────────── */
@@ -1916,10 +1930,17 @@ function renderList(evs) {
 
 function cardHTML(e){
   if(e.type==='FLT') return cardFLT(e);
-  if(e.type==='HOT') return cardHOT(e);
+  if(e.type==='HOT'||e.type==='REST') return cardHOT(e);
   if(e.type==='OFF') return cardOFF(e);
-  if(e.flight && e.from) return cardMEP(e);
+  if(e.from && e.to) return cardMEP(e);
   return cardUnknown(e);
+}
+
+/* Leftover description lines the parser didn't recognize — always shown so
+   no information from the portal is ever silently dropped. */
+function extraInfoHTML(e){
+  if(!e.extra||!e.extra.length) return '';
+  return `<div class="extra-info">${e.extra.map(l=>`<div>${esc(l)}</div>`).join('')}</div>`;
 }
 
 /* FLT card */
@@ -2016,6 +2037,7 @@ function cardFLT(e){
       </button>
     </div>
     ${fpRouteHTML(e)}
+    ${extraInfoHTML(e)}
     ${e.crew&&e.crew.length?`
     <button class="crew-toggle" onclick="toggleCrew('${id}')">
       <span class="crew-arrow" id="arr_${id}">▶</span> ${crewSummary}
@@ -2069,10 +2091,12 @@ function cardMEP(e){
       '</div>';
   }).join(''):'';
   const aircraft=e.aircraft||'';
+  const isMep=e.type==='MEP';
   return `<div class="card mep"${past?' style="opacity:.55"':''}>
     <div class="chdr">
       <div style="display:flex;align-items:center;gap:8px">
-        <span style="font-size:10px;font-weight:800;letter-spacing:.8px;color:var(--orange);text-transform:uppercase">${esc(e.type)}</span>
+        <span style="font-size:15px" title="Positioning — travelling as passenger">&#128186;</span>
+        <span style="font-size:10px;font-weight:800;letter-spacing:.8px;color:var(--orange);text-transform:uppercase">${esc(e.type)}${isMep?' · Positioning':''}</span>
         <span class="fnum" style="color:var(--txt-md);font-size:15px">${esc(e.flight||'')}</span>
       </div>
       <div class="pills">
@@ -2085,13 +2109,15 @@ function cardMEP(e){
         <div class="iata">${esc(from)}</div>
         <div class="iata-name">${esc(AIRPORTS[from]||'')}</div>
       </div>
-      <div class="rmid"><div class="rln"></div><span class="rplane" style="color:var(--orange)">&#9992;</span><div class="rln"></div></div>
+      <div class="rmid"><div class="rln"></div><span class="rplane" style="color:var(--orange)">&#128186;</span><div class="rln"></div></div>
       <div class="airport" style="text-align:right">
         <div class="iata">${esc(to)}</div>
         <div class="iata-name" style="text-align:right">${esc(AIRPORTS[to]||'')}</div>
       </div>
     </div>
+    ${isMep?`<div class="mep-note">Positioning flight (mise en place) — not an operating sector</div>`:''}
     ${hasTimes?`<div class="tgrid">${tgrid}</div>`:''}
+    ${extraInfoHTML(e)}
   </div>`;
 }
 
@@ -2129,19 +2155,20 @@ function toggleCrew(id){
   if(arr) arr.style.transform=open?'rotate(90deg)':'';
 }
 
-/* HOT card */
+/* HOT / REST card (hotel layover & mandated rest share the same display) */
 function cardHOT(e){
   const city=e.city||'';
   const dur=fmtDur(e.dtend-e.dtstart);
   const past=flightStatus(e)==='completed';
   const ds=fmtTzD(e.dtstart), de=fmtTzD(e.dtend);
   const dateRange=ds===de?'('+ds+')':'('+ds+' → '+de+')';
+  const label=e.type==='REST'?'Rest':'Hotel Rest';
   const tipsOpen = city && tipOpen.has(city+'_'+(e.dtstart?e.dtstart.getTime():'0'));
   return `<div class="card hot${tipsOpen?' tips-open':''}"${past?' style="opacity:.55"':''}>
     <div class="card-photo-bg" data-dest="${esc(city)}"></div>
     <div class="duty-body">
       <div class="duty-info">
-        <div style="font-size:11px;color:var(--gold);font-weight:700;text-transform:uppercase;letter-spacing:.6px;margin-bottom:5px">Hotel Rest</div>
+        <div style="font-size:11px;color:var(--gold);font-weight:700;text-transform:uppercase;letter-spacing:.6px;margin-bottom:5px">${label}</div>
         <div class="duty-ttl">🏨 ${esc(city)} <span style="font-size:13px;color:var(--txt-md)">${esc(AIRPORTS[city]?'— '+AIRPORTS[city]:'')}</span></div>
         <div class="duty-sub">
           ${tzHHMM(e.dtstart)} → ${tzHHMM(e.dtend)}
@@ -2150,6 +2177,7 @@ function cardHOT(e){
       </div>
       ${dur?`<div class="duty-dur dur-gold">${dur}</div>`:''}
     </div>
+    ${extraInfoHTML(e)}
     ${city?tipsSectionHTML(e,city):''}
   </div>`;
 }
@@ -2189,8 +2217,20 @@ function cardOFF(e){
   </div>`;
 }
 
-/* Unknown/other event */
+/* Ground duty / training / unknown event.
+   Known simulator & training codes get an explicit label; everything else
+   keeps its raw code visible. Crew (if present in the description) is shown
+   exactly like on a flight card. */
+function dutyMeta(type){
+  const t=(type||'').toUpperCase();
+  if(/^(SIMU|SIM$|ENTM|OPSM|LOFT|OPC|LPC|UPRT|ATQP)/.test(t)) return {icon:'🕹️', label:'Simulator Session'};
+  if(/^(CBT|GRND|SGS|CRM|SECU|MED|FORM|COURS)/.test(t))        return {icon:'📚', label:'Ground Training'};
+  if(/^(JD|RES|STBY|SBY)/.test(t))                             return {icon:'📞', label:'Standby / Duty'};
+  return {icon:'📍', label:''};
+}
 function cardUnknown(e){
+  const id='c'+Math.random().toString(36).slice(2);
+  eventById[id]=e;
   const city=e.city||'';
   const dur=fmtDur(e.dtend-e.dtstart);
   const past=flightStatus(e)==='completed';
@@ -2204,15 +2244,24 @@ function cardUnknown(e){
     :tzHHMM(e.dtstart)+' → '+tzHHMM(e.dtend);
   const ds=e.dtstart?fmtTzD(e.dtstart):'', de=e.dtend?fmtTzD(new Date(e.dtend.getTime()-1)):'';
   const dateRange=ds&&de&&ds!==de?'('+ds+' → '+de+')':ds?'('+ds+')':'';
+  const meta=dutyMeta(e.type);
+  const crewSummary=buildCrewSummary(e.crew);
+  const crewBlock=buildCrewBlock(e.crew,id);
   return `<div class="card unk"${past?' style="opacity:.55"':''}>
     <div class="duty-body">
       <div class="duty-info">
-        <div style="font-size:11px;color:var(--lavender);font-weight:700;text-transform:uppercase;letter-spacing:.6px;margin-bottom:5px">${esc(e.type)}</div>
-        ${city?`<div class="duty-ttl">📍 ${esc(city)}${AIRPORTS[city]?' <span style="font-size:13px;color:var(--txt-md)">— '+esc(AIRPORTS[city])+'</span>':''}</div>`:''}
+        <div style="font-size:11px;color:var(--lavender);font-weight:700;text-transform:uppercase;letter-spacing:.6px;margin-bottom:5px">${esc(e.type)}${meta.label?' · '+meta.label:''}</div>
+        ${city?`<div class="duty-ttl">${meta.icon} ${esc(city)}${AIRPORTS[city]?' <span style="font-size:13px;color:var(--txt-md)">— '+esc(AIRPORTS[city])+'</span>':''}</div>`:''}
         <div class="duty-sub">${timeStr}${dateRange?' <span style="color:var(--txt-dim)">'+esc(dateRange)+'</span>':''}</div>
       </div>
       ${dur?`<div class="duty-dur dur-lav">${dur}</div>`:''}
     </div>
+    ${extraInfoHTML(e)}
+    ${e.crew&&e.crew.length?`
+    <button class="crew-toggle" onclick="toggleCrew('${id}')">
+      <span class="crew-arrow" id="arr_${id}">▶</span> ${crewSummary}
+    </button>
+    <div class="crew-block" id="cb_${id}">${crewBlock}</div>`:''}
   </div>`;
 }
 
@@ -2249,13 +2298,13 @@ function renderCal(evs){
       <div class="cdn">${d}</div>
       ${dayEvs.slice(0,3).map(e=>{
         const label=e.type==='FLT'?e.flight
-          :e.type==='HOT'?'HOT '+(e.city||'')
+          :(e.type==='HOT'||e.type==='REST')?e.type+' '+(e.city||'')
           :e.type==='OFF'?'OFF '+(e.city||'')
-          :(e.flight&&e.from)?e.type+' '+e.flight
+          :(e.from&&e.to)?e.type+' '+(e.flight||e.from+'/'+e.to)
           :e.city?e.type+' '+e.city
           :e.type;
-        const cls=e.type==='FLT'?'flt':e.type==='HOT'?'hot':e.type==='OFF'?'off'
-          :(e.flight&&e.from)?'mep':'unk';
+        const cls=e.type==='FLT'?'flt':(e.type==='HOT'||e.type==='REST')?'hot':e.type==='OFF'?'off'
+          :(e.from&&e.to)?'mep':'unk';
         const idx=allEvents.indexOf(e);
         return `<div class="cchip ${cls}" onclick="showCalEvent(${idx})">${esc(label)}</div>`;
       }).join('')}
