@@ -14,7 +14,7 @@ Roster parses your crew ICS feed and presents your schedule with richer context 
 - **Simulator & ground training** — sessions such as `SIMU`/`ENTM3`/`OPSM3` are labelled and show the participating trainees and instructors in the same expandable crew panel as flights
 - **No information dropped** — description lines the parser doesn't recognize are still displayed on the card in an "extra info" block, so nothing from the portal is ever hidden
 - **List view** — month-by-month chronological event cards
-- **Calendar view** — traditional monthly grid with event indicators and modal preview
+- **Calendar view** — traditional monthly grid with event indicators and modal preview; multi-day events (days off, layovers, rest) appear on every day they cover
 - **Changes tracking** — snapshot history that highlights roster updates since your last check
 - **Persistent history** — every event ever seen is kept in the browser, so past months are never lost when the portal's rolling feed drops them
 - **Flight plan routes** — planned flight-plan routes (retrieved server-side) shown colour-coded (SID, STAR, airways, waypoints, speed/level) with alternates above the crew list on matching flights; foldable, collapsed by default

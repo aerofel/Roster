@@ -12,6 +12,7 @@ All notable changes to Roster are recorded here.
 - **Nothing is ever dropped** — any description line the parser doesn't recognize is collected and displayed in a dim "extra info" block on the card (all card types), so new/unknown portal data is always visible to the crew member.
 
 ### Changed
+- **Calendar view: multi-day events fill every day they cover** — a 5-day `OFF` block, a 4-day hotel layover, or a flight crossing local midnight now shows a chip on each covered day (DTEND exclusive), not just its start day. The day map is built from all known events, so an event starting late in the previous month still fills the first days of the displayed month.
 - **REST events display like Hotel Rest** — same gold card with destination photo, duration and stopover tips, labelled "Rest" (e.g. the 24 h `REST - NAN` between the positioning and the sim block).
 - Calendar-view chips follow the same rules: REST is gold like hotel rest, and all MEP legs are orange and labelled with their route when they have no flight number.
 

@@ -2269,11 +2269,23 @@ function renderCal(evs){
   const last =new Date(curYear,curMonth+1,0);
   const today=new Date();
 
-  // Build map keyed by displayTz date, matching how monthEvs() and the list view key events
+  // Build map keyed by displayTz date, matching how monthEvs() and the list view key events.
+  // Events appear on EVERY day they cover (DTEND exclusive), not just their start day,
+  // so multi-day OFF/HOT/REST blocks fill the calendar. Built from allEvents (not just
+  // this month's) so an event starting late in the previous month still fills this
+  // month's first days.
   const lk=d=>new Date(d.getTime()+displayTz*3600000).toISOString().slice(0,10);
   const map={};
-  for(const e of evs){
+  for(const e of allEvents){
+    if(!e.dtstart) continue;
     (map[lk(e.dtstart)]=map[lk(e.dtstart)]||[]).push(e);
+    if(e.dtend&&e.dtend>e.dtstart){
+      const endK=lk(new Date(e.dtend.getTime()-1));
+      let d=new Date(e.dtstart.getTime()+86400000);
+      for(let n=0;n<62&&lk(d)<=endK;n++,d=new Date(d.getTime()+86400000)){
+        (map[lk(d)]=map[lk(d)]||[]).push(e);
+      }
+    }
   }
 
   let html=`<div class="cal"><div class="cal-head">
