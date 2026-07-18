@@ -212,9 +212,6 @@
     .rmid{flex:1;display:flex;align-items:center;gap:5px}
     .rln{flex:1;height:1px;background:linear-gradient(to right,transparent,var(--bdr-hi),transparent)}
     .rplane{color:var(--blue);font-size:17px}
-    /* MEP (positioning): dashed route line to distinguish from operating sectors */
-    .card.mep .rln{height:0;background:none;border-top:2px dashed var(--orange);opacity:.35}
-    .mep-note{font-size:11.5px;color:var(--orange);opacity:.8;margin:-8px 0 14px;text-align:center;font-style:italic}
     /* Unrecognized description lines — always displayed, never dropped */
     .extra-info{margin-top:10px;padding-top:10px;border-top:1px dashed var(--bdr);font-size:12px;line-height:1.6;color:var(--txt-md);word-break:break-word}
 
@@ -2047,6 +2044,8 @@ function cardFLT(e){
 }
 
 /* MEP / positioning card */
+// Monochrome seat icon (lucide-style, currentColor) — the MEP counterpart of the ✈ glyph
+const seatSVG=px=>`<svg width="${px}" height="${px}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 9V6a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v3"/><path d="M3 16a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-5a2 2 0 0 0-4 0v2H7v-2a2 2 0 0 0-4 0Z"/><path d="M5 18v2"/><path d="M19 18v2"/></svg>`;
 function cardMEP(e){
   const depDt=buildDt(e.dtstart,e.times?.departure?.utc);
   const arrDt=buildDt(depDt||e.dtstart,e.times?.arrival?.utc);
@@ -2095,7 +2094,7 @@ function cardMEP(e){
   return `<div class="card mep"${past?' style="opacity:.55"':''}>
     <div class="chdr">
       <div style="display:flex;align-items:center;gap:8px">
-        <span style="font-size:15px" title="Positioning — travelling as passenger">&#128186;</span>
+        <span style="color:var(--orange);display:flex" title="Positioning — travelling as passenger">${seatSVG(15)}</span>
         <span style="font-size:10px;font-weight:800;letter-spacing:.8px;color:var(--orange);text-transform:uppercase">${esc(e.type)}${isMep?' · Positioning':''}</span>
         <span class="fnum" style="color:var(--txt-md);font-size:15px">${esc(e.flight||'')}</span>
       </div>
@@ -2109,13 +2108,12 @@ function cardMEP(e){
         <div class="iata">${esc(from)}</div>
         <div class="iata-name">${esc(AIRPORTS[from]||'')}</div>
       </div>
-      <div class="rmid"><div class="rln"></div><span class="rplane" style="color:var(--orange)">&#128186;</span><div class="rln"></div></div>
+      <div class="rmid"><div class="rln"></div><span class="rplane" style="color:var(--orange);display:flex;align-items:center">${seatSVG(17)}</span><div class="rln"></div></div>
       <div class="airport" style="text-align:right">
         <div class="iata">${esc(to)}</div>
         <div class="iata-name" style="text-align:right">${esc(AIRPORTS[to]||'')}</div>
       </div>
     </div>
-    ${isMep?`<div class="mep-note">Positioning flight (mise en place) — not an operating sector</div>`:''}
     ${hasTimes?`<div class="tgrid">${tgrid}</div>`:''}
     ${extraInfoHTML(e)}
   </div>`;

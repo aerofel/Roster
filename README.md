@@ -10,7 +10,7 @@ Roster parses your crew ICS feed and presents your schedule with richer context 
 
 - **Flight events** — departure/arrival times, crew assignments, aircraft type, total flight time
 - **Hotel rest & rest periods, days off** — colour-coded cards; rest periods (`REST`) display like hotel rest, with destination photo, duration and stopover tips
-- **Positioning (MEP)** — a dedicated deadhead card (💺 icon, dashed route line, "mise en place" note) for every positioning leg, with or without a flight number, including the full check-in/departure/arrival times grid
+- **Positioning (MEP)** — a dedicated deadhead card for every positioning leg, with or without a flight number: the same route display as flights but with a seat icon in place of the plane, plus the full check-in/departure/arrival times grid
 - **Simulator & ground training** — sessions such as `SIMU`/`ENTM3`/`OPSM3` are labelled and show the participating trainees and instructors in the same expandable crew panel as flights
 - **No information dropped** — description lines the parser doesn't recognize are still displayed on the card in an "extra info" block, so nothing from the portal is ever hidden
 - **List view** — month-by-month chronological event cards
