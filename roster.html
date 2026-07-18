@@ -1828,6 +1828,18 @@ function render() {
   const th=Math.floor(tft/3600000),   tm=Math.floor((tft%3600000)/60000);
   const nh=Math.floor(night/3600000), nm=Math.floor((night%3600000)/60000);
 
+  // OFF days: display-tz days covered by OFF events (DTEND exclusive), clamped to the
+  // shown month. Uses allEvents so a block starting late last month still counts here.
+  const offDays=new Set();
+  for(const e of allEvents){
+    if(e.type!=='OFF'||!e.dtstart) continue;
+    const end=e.dtend&&e.dtend>e.dtstart?new Date(e.dtend.getTime()-1):e.dtstart;
+    for(let d=new Date(e.dtstart.getTime()),n=0;n<62&&d<=end;n++,d=new Date(d.getTime()+86400000)){
+      const s=new Date(d.getTime()+displayTz*3600000);
+      if(s.getUTCMonth()===curMonth&&s.getUTCFullYear()===curYear) offDays.add(s.toISOString().slice(0,10));
+    }
+  }
+
   // Cosmic-radiation dose (ICRP-103 effective dose, CARI-7): month total + running year total.
   let monthUsv=0; for(const e of evs){ if(e.type==='FLT'){ const d=cariFor(e); if(d) monthUsv+=d; } }
   let yearUsv=0;
@@ -1850,6 +1862,7 @@ function render() {
       <div class="sbox"><div class="sval">${th}h${String(tm).padStart(2,'0')}</div><div class="slbl">Block Time</div></div>
       ${showNightHours()?`<div class="sbox"><div class="sval" style="color:var(--lavender)">${nh}h${String(nm).padStart(2,'0')}</div><div class="slbl">Night Block</div></div>`:''}
       <div class="sbox"><div class="sval">${dutyDays.size}</div><div class="slbl">Duty Days</div></div>
+      <div class="sbox"><div class="sval" style="color:var(--green)">${offDays.size}</div><div class="slbl">Off Days</div></div>
       ${monthUsv>0?`<div class="sbox" title="Cosmic radiation this month (ICRP-103 effective dose, CARI-7)"><div class="sval" style="color:var(--gold)">${fmtUsv(monthUsv)}</div><div class="slbl">Cosmic · mo</div></div>`:''}
       ${yearUsv>0?`<div class="sbox" title="Cosmic radiation ${curYear} to date (ICRP-103 effective dose, CARI-7)"><div class="sval" style="color:var(--gold)">${fmtUsv(yearUsv)}</div><div class="slbl">Cosmic · ${curYear}</div></div>`:''}
     </div>

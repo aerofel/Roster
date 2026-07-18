@@ -11,6 +11,9 @@ All notable changes to Roster are recorded here.
 - **Dedicated MEP (positioning) card for every leg** — all positioning legs now use the orange MEP card: monochrome seat icon (matching the flight cards' plane glyph) in the header and in the middle of the standard gradient route line, "MEP · Positioning" heading, and the full times grid. Previously only MEP legs carrying a flight number (e.g. `MEP - SB410 - NOU/AKL - FONEA`) got that card; legs like `MEP - AKL/NAN` fell through to the generic purple card — which made a two-leg positioning day (16/08) look like the same MEP displayed twice in two different styles.
 - **Nothing is ever dropped** — any description line the parser doesn't recognize is collected and displayed in a dim "extra info" block on the card (all card types), so new/unknown portal data is always visible to the crew member.
 
+### Added (later same day)
+- **Off Days stat** — the top stats bar now shows the month's total days off (green), counting every display-timezone day covered by `OFF` events (multi-day blocks included, clamped to the shown month).
+
 ### Changed
 - **Calendar view: multi-day events fill every day they cover** — a 5-day `OFF` block, a 4-day hotel layover, or a flight crossing local midnight now shows a chip on each covered day (DTEND exclusive), not just its start day. The day map is built from all known events, so an event starting late in the previous month still fills the first days of the displayed month.
 - **REST events display like Hotel Rest** — same gold card with destination photo, duration and stopover tips, labelled "Rest" (e.g. the 24 h `REST - NAN` between the positioning and the sim block).
