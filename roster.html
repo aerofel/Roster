@@ -874,6 +874,7 @@
     <div class="lb-seg" title="Logbook app — remembered on this device">
       <button class="lb-btn" id="lbBtnLogten"   onclick="setLogbookApp('logten')">LogTen Pro</button>
       <button class="lb-btn" id="lbBtnPilotlog" onclick="setLogbookApp('pilotlog')">PilotLog</button>
+      <button class="lb-btn" id="lbBtnRb"       onclick="setLogbookApp('rblogbook')">RB Logbook</button>
     </div>
   </div>
   <div class="imp-row">
@@ -2565,23 +2566,80 @@ function buildPlogRow(e) {
   };
 }
 
-function downloadPilotlog(events) {
-  const rows = events.map(buildPlogRow);
+function downloadCSV(headers, rows, filename) {
   const cell = v => { v = String(v ?? ''); return /[",\n]/.test(v) ? '"'+v.replace(/"/g,'""')+'"' : v; };
-  const csv  = [PLOG_HEADERS.join(',')]
-    .concat(rows.map(r => PLOG_HEADERS.map(h => cell(r[h])).join(',')))
+  const csv  = [headers.join(',')]
+    .concat(rows.map(r => headers.map(h => cell(r[h])).join(',')))
     .join('\r\n') + '\r\n';
-  const d0 = rows[0]?.PILOTLOG_DATE || '', d1 = rows[rows.length-1]?.PILOTLOG_DATE || '';
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv;charset=utf-8'}));
-  a.download = 'pilotlog_' + (d0 === d1 ? d0 : d0+'_'+d1) + '.csv';
+  a.download = filename;
   document.body.appendChild(a);
   a.click();
   setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(a.href); }, 1500);
 }
 
+/* ── RB LOGBOOK (CAE / RosterBuster) ─────────────────────────── */
+// Like PilotLog, no data-carrying URL scheme (rblogbook:// exists but only for
+// navigation deep links). Import = CSV/XLS via More › Import & Export › Import
+// Logbooks. Column names from CAE's official template rb_logbook_flights-1.9;
+// times must be UTC, durations hh:mm (not decimal).
+const RB_HEADERS = [
+  'Date','Flight #','Departure','Arrival','Aircraft ID','Type',
+  'Sched Out','Sched In','Out','In','Total Block','PIC','SIC','Night',
+  'Crew PIC','Crew SIC','Crew Relief1','Crew Relief2','Notes1','Notes2'
+];
+
+function buildRbRow(e) {
+  const depDt = buildDt(e.dtstart, e.times?.departure?.utc);
+  const arrDt = buildDt(depDt || e.dtstart, e.times?.arrival?.utc);
+  const st       = flightStatus(e);
+  const isActual = st === 'completed' || st === 'active';
+  const hm = dt => dt ? dt.toISOString().slice(11,16) : '';
+
+  const plan = fpFindPlan(e);
+  const reg  = e.posCode || plan?.reg || '';
+  const tft  = e.tft || (depDt && arrDt && arrDt > depDt ? fmtHM(arrDt-depDt) : '');
+  const isFO  = e.role === 'F/O';
+  const isCPT = e.role && /CPT|CMD/i.test(e.role);
+
+  const pic  = e.crew?.find(g => g.role?.startsWith('CPT'))?.members?.[0];
+  const sic  = e.crew?.find(g => g.role === 'F/O')?.members?.[0];
+  const acm  = e.crew?.find(g => g.role === 'SFP')?.members?.[0];
+  const acm2 = e.crew?.find(g => g.role === 'F/P')?.members?.[0];
+  const night = nightMs(e);
+
+  return {
+    'Date':        e.dtstart.toISOString().slice(0,10),
+    'Flight #':    e.flight || '',
+    'Departure':   IATA_ICAO[e.from] || e.from || '',
+    'Arrival':     IATA_ICAO[e.to]   || e.to   || '',
+    'Aircraft ID': fmtReg(reg) || '',
+    'Type':        plan?.model || fpModelForReg(reg),
+    'Sched Out':   isActual ? '' : hm(depDt),
+    'Sched In':    isActual ? '' : hm(arrDt),
+    'Out':         isActual ? hm(depDt) : '',
+    'In':          isActual ? hm(arrDt) : '',
+    'Total Block': tft,
+    'PIC':         isCPT ? tft : '',
+    'SIC':         isFO  ? tft : '',
+    'Night':       night > 0 ? fmtHM(night) : '',
+    'Crew PIC':    fmtName(pic?.name),
+    'Crew SIC':    fmtName(sic?.name),
+    'Crew Relief1': fmtName(acm?.name),
+    'Crew Relief2': fmtName(acm2?.name),
+    'Notes1': plan && plan.route ? 'Route: '+plan.route : '',
+    'Notes2': plan && typeof plan.usv === 'number' ? 'Cosmic '+plan.usv+' uSv (CARI-7)' : ''
+  };
+}
+
 /* ── LOGBOOK-APP SELECTION + DISPATCH ────────────────────────── */
-function logbookApp(){ return localStorage.getItem(LS_LOGBOOK) === 'pilotlog' ? 'pilotlog' : 'logten'; }
+const LOGBOOK_LABELS = { logten:'LogTen Pro', pilotlog:'PilotLog', rblogbook:'RB Logbook' };
+
+function logbookApp(){
+  const v = localStorage.getItem(LS_LOGBOOK);
+  return LOGBOOK_LABELS[v] ? v : 'logten';
+}
 
 function setLogbookApp(app){
   localStorage.setItem(LS_LOGBOOK, app);
@@ -2589,30 +2647,41 @@ function setLogbookApp(app){
 }
 
 function updateLogbookUI(){
-  const lt  = logbookApp() === 'logten';
-  const lbl = lt ? 'LogTen Pro' : 'PilotLog';
-  document.getElementById('lbBtnLogten')  ?.classList.toggle('on',  lt);
-  document.getElementById('lbBtnPilotlog')?.classList.toggle('on', !lt);
+  const app = logbookApp(), lbl = LOGBOOK_LABELS[app];
+  document.getElementById('lbBtnLogten')  ?.classList.toggle('on', app === 'logten');
+  document.getElementById('lbBtnPilotlog')?.classList.toggle('on', app === 'pilotlog');
+  document.getElementById('lbBtnRb')      ?.classList.toggle('on', app === 'rblogbook');
   const set = (id,txt) => { const el = document.getElementById(id); if (el) el.textContent = txt; };
   set('ltTriggerLbl', lbl);
   set('impTitle', 'Import to ' + lbl);
-  set('impGoLbl', lt ? 'Open in LogTen Pro' : 'Download CSV');
+  set('impGoLbl', app === 'logten' ? 'Open in LogTen Pro' : 'Download CSV');
   document.getElementById('ltTrigger')?.setAttribute('title', 'Import to ' + lbl);
   const note = document.getElementById('impNote');
-  if (note) note.innerHTML = lt
-    ? `Opens LogTen Pro on this device and imports the selected flights.<br>
-       Times are UTC (Zulu) · PIC/SIC assigned from your role on each flight.`
-    : `Downloads a CSV in CrewLounge PILOTLOG's native import format.<br>
+  if (note) note.innerHTML =
+    app === 'logten' ?
+      `Opens LogTen Pro on this device and imports the selected flights.<br>
+       Times are UTC (Zulu) · PIC/SIC assigned from your role on each flight.` :
+    app === 'pilotlog' ?
+      `Downloads a CSV in CrewLounge PILOTLOG's native import format.<br>
        Open the file and share it to the PILOTLOG app, or upload it under
        My CrewLounge › PILOTLOG › Import records (crewlounge.center).<br>
+       Times are UTC (Zulu) · PIC/SIC times assigned from your role on each flight.` :
+      `Downloads a CSV in RB Logbook's own template format (rb_logbook_flights).<br>
+       In RB Logbook: More › Import &amp; Export › Import Logbooks, pick the file,
+       check the preview, then Import.<br>
        Times are UTC (Zulu) · PIC/SIC times assigned from your role on each flight.`;
 }
 
 // Single dispatch point for every import button (bulk, month, per-flight card).
 function exportFlights(events){
   if (!events.length) return;
-  if (logbookApp() === 'pilotlog') downloadPilotlog(events);
-  else openLogten(events.map(buildEntity));
+  const app = logbookApp();
+  if (app === 'logten') { openLogten(events.map(buildEntity)); return; }
+  const d0 = events[0].dtstart.toISOString().slice(0,10);
+  const d1 = events[events.length-1].dtstart.toISOString().slice(0,10);
+  const range = d0 === d1 ? d0 : d0 + '_' + d1;
+  if (app === 'pilotlog') downloadCSV(PLOG_HEADERS, events.map(buildPlogRow), 'pilotlog_'  + range + '.csv');
+  else                    downloadCSV(RB_HEADERS,   events.map(buildRbRow),   'rblogbook_' + range + '.csv');
 }
 
 function toggleUrl() {
