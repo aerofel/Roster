@@ -15,3 +15,8 @@ sed \
   -e "s|__JEPPESEN_PASS__|${JEPPESEN_PASS:-}|g" \
   roster.html > index.html
 echo "Built index.html"
+
+# Service worker: stamp the build hash so every deploy installs a fresh worker/cache.
+BUILD=$(md5sum index.html | cut -c1-12)
+sed -e "s|__BUILD__|${BUILD}|g" sw.template.js > sw.js
+echo "Built sw.js (build ${BUILD})"

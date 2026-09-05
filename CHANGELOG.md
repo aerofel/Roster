@@ -6,6 +6,13 @@ All notable changes to Roster are recorded here.
 
 ## 2026-09-05
 
+### Fixed
+- **iOS home-screen shortcut kept showing the old build.** The page was served with no `Cache-Control`, so Safari applied heuristic freshness (based on a months-old `Last-Modified`) and kept an old copy of the single-file app for weeks — offline viewing "worked" only by this accident. Apache now sends `Cache-Control: no-cache, must-revalidate` for `/roster/`, `index.html` and `sw.js` (ETag revalidation → cheap 304 when unchanged).
+
+### Added
+- **Service worker (`sw.js`, generated from `sw.template.js` by `build.sh`)** — real offline support for inflight use, without ever serving a stale build when online: the page and `data/flightplans.json` are **network-first** (4 s timeout, then the cached copy); Google Fonts and destination photos are cache-first; the roster ICS, CORS proxy, Pexels API and tips JSON are not intercepted (the app keeps its own localStorage caches; tips are PUT). `build.sh` stamps the build hash into the worker so each deploy installs a fresh worker and drops old caches. Registered with `updateViaCache:'none'` so Safari re-checks the worker on every open.
+- Home-screen / tab icons (`icon.svg`, `apple-touch-icon.png`, `icon-512.png`) matching the new brand mark.
+
 ### Changed
 - **New "Flight Deck" theme — complete visual redesign, no information removed.** Manrope for UI text and JetBrains Mono for every time, IATA code, flight number and figure (tabular numerals line up in columns). Glass-like layered cards on a deep navy ground with a soft aurora gradient; light theme is a proper white/paper variant (photos get a whitewash so text stays readable). Compact spacing throughout: the September list is ~30 % shorter on a phone and ~33 % shorter on desktop than before, without dropping a single field.
 - **Timeline layout** — the list is now a vertical timeline: a sticky date node (day number in a circle, weekday) on the left with a hairline rail, the day's blocks on the right. Today's node is highlighted. On phones the node collapses into a compact sticky date row that stays visible under the timezone bar while you scroll that day's duties.

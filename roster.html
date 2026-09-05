@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" id="themeColorMeta" content="#eef1f6">
   <title>Crew Schedule</title>
+  <link rel="icon" type="image/svg+xml" href="icon.svg">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
@@ -3425,6 +3427,16 @@ function dismissDisclaimer() {
     updateArchiveStats();
   }
 })();
+
+/* ── OFFLINE / UPDATE: service worker ────────────────────────
+   sw.js serves this page network-first (fresh build whenever online, cached copy
+   when offline — inflight use). updateViaCache:'none' + the server's no-cache
+   header make Safari re-check the worker on every open. */
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function () {
+    navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).catch(function () {});
+  });
+}
 </script>
 <div class="cal-modal" id="calModal" onclick="if(event.target===this)closeCalModal()">
   <div class="cal-modal-sheet" id="calModalSheet"></div>
