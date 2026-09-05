@@ -24,8 +24,9 @@ Roster parses your crew ICS feed and presents your schedule with richer context 
 - **Timezone switching** — display times in UTC or your home base / destination timezone
 - **Crew panel** — expandable list of crew members per flight (Captain, F/O, Flight Attendants, etc.)
 - **Logbook export (LogTen Pro / CrewLounge PilotLog / RB Logbook)** — pick your logbook app once (remembered per device), then export per flight, per displayed month, or from any date. LogTen Pro opens directly via its `logtenprox://` URL scheme; PilotLog and RB Logbook (neither has a data-carrying URL scheme) get a CSV in their own native import format — share it to the PILOTLOG app / upload at My CrewLounge, or import it in RB Logbook under More › Import & Export. All include the planned route when available
+- **"Flight Deck" theme** — compact timeline layout (sticky date node + hairline rail), glass-like layered cards, Manrope UI text with JetBrains Mono for every time/code/figure. **Two block sizes only**: flights are the large block (route line that fills to the aircraft's live position while airborne, one-row four-cell time strip, meta chips, foldable route + crew); every other duty (MEP, hotel/REST, days off, sim, standby, unknown) is one uniform compact tile
 - **Dark / Light theme** — follows the OS preference on first visit; manual toggle remembered
-- **Mobile-friendly** responsive layout
+- **Responsive** — phone, tablet and desktop layouts; the date row stays sticky on phones, the time strip never wraps
 - **Quick navigation** — "Today" button when viewing another month, ← / → keyboard month switching, auto-refresh of a stale roster when returning to the tab
 
 ## How to use
