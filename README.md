@@ -23,9 +23,10 @@ Roster parses your crew ICS feed and presents your schedule with richer context 
 - **Stopover tips** — crew-shared, categorized notes (activities, food, getting around, money…) on each hotel-rest card. Foldable; each tip has a category, title and description with auto-linked URLs. A give-to-get gate means you see others' tips once you've shared at least one; admins moderate
 - **Timezone switching** — display times in UTC or your home base / destination timezone
 - **Crew panel** — expandable list of crew members per flight (Captain, F/O, Flight Attendants, etc.)
-- **LogTen Pro export** — one-click flight log export (includes the planned route when available)
-- **Dark / Light theme**
+- **Logbook export (LogTen Pro / CrewLounge PilotLog)** — pick your logbook app once (remembered per device), then export per flight, per displayed month, or from any date. LogTen Pro opens directly via its `logtenprox://` URL scheme; PilotLog (which has no URL scheme) gets a CSV in its native Import-Wizard format to share to the PILOTLOG app or upload at My CrewLounge. Both include the planned route when available
+- **Dark / Light theme** — follows the OS preference on first visit; manual toggle remembered
 - **Mobile-friendly** responsive layout
+- **Quick navigation** — "Today" button when viewing another month, ← / → keyboard month switching, auto-refresh of a stale roster when returning to the tab
 
 ## How to use
 

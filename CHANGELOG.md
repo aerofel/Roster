@@ -4,6 +4,31 @@ All notable changes to Roster are recorded here.
 
 ## [Unreleased]
 
+## 2026-09-05
+
+### Added
+- **CrewLounge PilotLog export** — the import panel now has a logbook-app selector (LogTen Pro / PilotLog, remembered per device in `schedule_logbook_app`). With PilotLog selected, every import button produces a CSV in PilotLog's **native Import-Wizard format** (~24 columns incl. the mandatory `PILOTLOG_DATE`, `AF_DEP/AF_ARR` (ICAO), `TIME_TOTAL`, `AC_MODEL`, `AC_REG`) — share the downloaded file to the PILOTLOG app or upload it at My CrewLounge › Import. PilotLog exposes **no URL scheme** (unlike LogTen), so a file hand-off is the minimum-step path that exists; rows also carry scheduled vs actual UTC times, PIC/SIC times from your role, night time, crew (PILOT1–4), planned route, and the CARI-7 cosmic dose as a remark. Aircraft model/registration are filled from the matched flight plan (with a reg→model fallback across all known plans).
+- **Monthly import button** — a second button in the import panel imports all flights of the **displayed month** in one tap (label shows month name + flight count, follows month navigation), complementing the existing from-date import. Works for both logbook apps.
+
+### Changed
+- Import plumbing unified: bulk, monthly and per-flight-card buttons all route through one `exportFlights()` dispatcher that opens LogTen Pro (`logtenprox://`) or downloads a PilotLog CSV according to the saved selection; the top-bar trigger and panel labels follow the selected app.
+
+## 2026-07-25
+
+### Added
+- **"Today" button** in the month navigation — appears whenever you're viewing another month; one tap returns to the current month and scrolls to the next upcoming duty.
+- **Keyboard month navigation** — ← / → arrow keys switch months on desktop (ignored while typing in a form or when the calendar modal is open).
+- **Today highlight in list view** — the current day's date label is shown in blue with a "· Today" suffix, so it's easy to spot your place in the month.
+- **Stale-roster auto-refresh** — returning to a tab whose roster cache is older than 1 hour now silently re-fetches the ICS (throttled to one attempt per 5 minutes), instead of showing outdated duties until a manual Refresh.
+- **OS theme preference** — first visit now follows the system light/dark preference (`prefers-color-scheme`) instead of always starting light; a manual toggle still wins and is remembered.
+- **`theme-color` meta** synced with the active theme, so mobile browser chrome matches the page background.
+- **Reduced-motion support** — `prefers-reduced-motion` disables the LIVE pulse, card hover lift, photo fade and modal animations.
+- **Accessibility labels** — aria-labels/tooltips on the icon-only month arrows and top-bar buttons (Refresh, LogTen Pro).
+
+### Fixed
+- **Undefined CSS variable `--bg3`** — the timezone-button hover, the source-code chip and the code input referenced a variable that was never defined, so they rendered with no background. Now use the existing `--surf2` token.
+- **Invisible MEP/unknown dots in the mobile calendar** — on small screens calendar chips collapse to dots, but only FLT/HOT/OFF had solid dot colours; positioning (orange) and other duties (lavender) were nearly invisible. All five event types now get solid dots.
+
 ## 2026-07-18
 
 ### Added

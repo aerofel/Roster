@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" id="themeColorMeta" content="#f0f4f9">
   <title>Crew Schedule</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -126,6 +127,7 @@
       transition:all .18s;font-family:inherit;
     }
     .arr:hover{background:var(--surf1);border-color:var(--blue);color:var(--blue)}
+    .arr-today{width:auto;padding:0 14px;font-size:13px;font-weight:600}
 
     /* ─── STATS ──────────────────────────────────────────────── */
     .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px}
@@ -156,6 +158,7 @@
       text-transform:uppercase;letter-spacing:.8px;
       padding:6px 0 10px;margin-top:14px;
     }
+    .day-lbl.today{color:var(--blue)}
     .cards{display:flex;flex-direction:column;gap:12px}
     .card{
       background:var(--surf0);border:1px solid var(--bdr);
@@ -556,6 +559,26 @@
       border:1px solid rgba(47,164,231,.2);
     }
     .lt-btn-actual:hover{background:var(--blue-glow);border-color:var(--blue)}
+    /* Logbook-app selector (LogTen Pro / PilotLog) inside the import panel */
+    .lb-seg{
+      display:inline-flex;margin-left:auto;gap:3px;
+      background:var(--surf0);border:1px solid var(--bdr);
+      border-radius:9px;padding:3px;
+    }
+    .lb-btn{
+      padding:5px 13px;border:none;border-radius:7px;
+      background:transparent;color:var(--txt-md);
+      font-family:inherit;font-size:12px;font-weight:600;
+      cursor:pointer;transition:all .15s;
+    }
+    .lb-btn:hover{color:var(--txt)}
+    .lb-btn.on{background:var(--lav-dim);color:var(--lavender)}
+    .imp-btns{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+    .imp-go-month{
+      background:var(--lav-dim);color:var(--lavender);
+      box-shadow:none;border:1px solid rgba(167,139,250,.25);
+    }
+    .imp-go-month:hover{opacity:1;background:rgba(167,139,250,.24);border-color:var(--lavender)}
 
     /* ─── URL INPUT ─────────────────────────────────────────── */
     .url-input{
@@ -637,6 +660,8 @@
       .cchip.flt{background:var(--blue)}
       .cchip.hot{background:var(--gold)}
       .cchip.off{background:var(--green)}
+      .cchip.mep{background:var(--orange)}
+      .cchip.unk{background:var(--lavender)}
       .cmore{display:none}
       .cdn{width:22px;height:22px;font-size:11px}
       /* Stopover tips — mobile */
@@ -657,12 +682,21 @@
       .tz-bar.tz-compact .tz-seg-btn{padding:4px 9px;letter-spacing:.3px}   /* fit more zones per row */
     }
 
+    /* ─── REDUCED MOTION ─── */
+    @media (prefers-reduced-motion: reduce){
+      .card{transition:none}
+      .card:hover{transform:none}
+      .pill.live,.badge-dot{animation:none}
+      .disc-box,.cal-modal-sheet{animation:none}
+      .card-photo-bg{transition:none}
+    }
+
     /* ─── TIMEZONE BAR ─── */
     .tz-bar{display:flex;justify-content:center;align-items:center;padding:8px 16px;background:var(--bg);border-bottom:1px solid var(--bdr);position:sticky;top:0;z-index:100;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
     .tz-seg{display:inline-flex;flex-wrap:wrap;justify-content:center;max-width:100%;border:1px solid var(--bdr);border-radius:8px;overflow:hidden;transition:max-width .28s ease}
     .tz-seg-btn{padding:4px 13px;border:none;border-right:1px solid var(--bdr);background:transparent;color:var(--txt-md);font-size:11px;font-weight:700;cursor:pointer;letter-spacing:.5px;transition:background .15s,color .15s}
     .tz-seg-btn:last-child{border-right:none}
-    .tz-seg-btn:hover{background:var(--bg3);color:var(--txt)}
+    .tz-seg-btn:hover{background:var(--surf2);color:var(--txt)}
     .tz-seg-btn.on{background:var(--blue);color:#fff}
     /* When scrolled, the shrunk month/year fades in at the left; push the timezone
        buttons to the right and cap their width so they never sit under the label. */
@@ -678,7 +712,7 @@
     .src-badge{font-size:10px;font-weight:700;letter-spacing:.5px;background:var(--blue);color:#fff;padding:1px 6px;border-radius:4px;margin-left:5px;vertical-align:middle}
     .src-item{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--bdr)}
     .src-item:last-child{border-bottom:none}
-    .src-code{font-weight:700;font-size:11px;letter-spacing:.5px;background:var(--bg3);padding:2px 6px;border-radius:4px;flex-shrink:0;min-width:32px;text-align:center}
+    .src-code{font-weight:700;font-size:11px;letter-spacing:.5px;background:var(--surf2);padding:2px 6px;border-radius:4px;flex-shrink:0;min-width:32px;text-align:center}
     .src-item.active .src-code{background:var(--blue);color:#fff}
     .src-url{flex:1;color:var(--txt-md);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px}
     .src-active-lbl{font-size:10px;color:var(--green);font-weight:700;flex-shrink:0}
@@ -687,7 +721,7 @@
     .src-del-btn:hover{color:#e55}
     .src-edit-btn{font-size:13px;padding:0 4px;border:none;background:transparent;color:var(--txt-dim);cursor:pointer;flex-shrink:0;line-height:1}
     .src-edit-btn:hover{color:var(--blue)}
-    .src-code-input{width:54px;padding:7px 8px;border-radius:8px;border:1px solid var(--bdr);background:var(--bg3);color:var(--txt);font-size:13px;font-family:inherit;text-transform:uppercase;letter-spacing:1px;flex-shrink:0;text-align:center}
+    .src-code-input{width:54px;padding:7px 8px;border-radius:8px;border:1px solid var(--bdr);background:var(--surf2);color:var(--txt);font-size:13px;font-family:inherit;text-transform:uppercase;letter-spacing:1px;flex-shrink:0;text-align:center}
 
     /* ─── HISTORY / DIFF / EXPORT ────────────────────────────── */
     .diff-block{margin-bottom:24px}
@@ -794,9 +828,9 @@
     </span>
     <span class="btn-lbl">Source</span>
   </button>
-  <button class="lt-trigger" id="ltTrigger" onclick="toggleImport()">
+  <button class="lt-trigger" id="ltTrigger" onclick="toggleImport()" title="Import to logbook">
     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-    <span class="btn-lbl">LogTen Pro</span>
+    <span class="btn-lbl" id="ltTriggerLbl">LogTen Pro</span>
   </button>
   <button class="refresh-btn" id="archiveBtn" onclick="toggleArchive()" title="History &amp; Export">
     <span class="ri">
@@ -808,7 +842,7 @@
     </span>
     <span class="btn-lbl">History</span>
   </button>
-  <button class="refresh-btn" id="refreshBtn" onclick="load()">
+  <button class="refresh-btn" id="refreshBtn" onclick="load()" title="Refresh schedule">
     <span class="ri" id="refreshIcon">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
         <polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.5"/>
@@ -836,17 +870,28 @@
 </div>
 
 <div id="importPanel" class="imp-panel">
-  <div class="imp-ttl"><span>✦</span> Import to LogTen Pro</div>
+  <div class="imp-ttl"><span>✦</span> <span id="impTitle">Import to LogTen Pro</span>
+    <div class="lb-seg" title="Logbook app — remembered on this device">
+      <button class="lb-btn" id="lbBtnLogten"   onclick="setLogbookApp('logten')">LogTen Pro</button>
+      <button class="lb-btn" id="lbBtnPilotlog" onclick="setLogbookApp('pilotlog')">PilotLog</button>
+    </div>
+  </div>
   <div class="imp-row">
     <span class="imp-lbl">Import flights from</span>
     <input type="date" class="imp-date" id="impFromDate" oninput="updateImportCount()">
     <span class="imp-count" id="impCount">—</span>
   </div>
-  <button class="imp-go" id="impGoBtn" onclick="doImport()" disabled>
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-    Open in LogTen Pro
-  </button>
-  <div class="imp-note">
+  <div class="imp-btns">
+    <button class="imp-go" id="impGoBtn" onclick="doImport()" disabled>
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      <span id="impGoLbl">Open in LogTen Pro</span>
+    </button>
+    <button class="imp-go imp-go-month" id="impMonthBtn" onclick="doImportMonth()" disabled title="Import all flights of the displayed month">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      <span id="impMonthLbl">This month</span>
+    </button>
+  </div>
+  <div class="imp-note" id="impNote">
     Opens LogTen Pro on this device and imports the selected flights.<br>
     Times are UTC (Zulu) · PIC/SIC assigned from your role on each flight.
   </div>
@@ -908,6 +953,8 @@
 const LS_THEME = 'schedule_theme';
 function applyTheme(t) {
   document.documentElement.setAttribute('data-theme', t);
+  var meta = document.getElementById('themeColorMeta');
+  if (meta) meta.setAttribute('content', t === 'light' ? '#f0f4f9' : '#060d1a');
   var icon = document.getElementById('themeIcon');
   if (!icon) return;
   if (t === 'light') {
@@ -923,7 +970,8 @@ function toggleTheme() {
   applyTheme(next);
 }
 (function() {
-  var saved = localStorage.getItem(LS_THEME) || 'light';
+  var saved = localStorage.getItem(LS_THEME);
+  if (!saved) saved = (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
   applyTheme(saved);
 })();
 
@@ -941,6 +989,7 @@ const LS_PANEL_URL      = 'schedule_panel_url';
 const LS_PANEL_IMPORT   = 'schedule_panel_import';
 const LS_PANEL_ARCHIVE  = 'schedule_panel_archive';
 const LS_DISCLAIMER     = 'schedule_disclaimer_agreed';
+const LS_LOGBOOK        = 'schedule_logbook_app';   // 'logten' | 'pilotlog'
 // ─── STOPOVER TIPS (crew-shared, stored via Apache WebDAV — no server script) ───
 const LS_TIP_MYCODE = 'schedule_tip_mycode';   // manual override of inferred crew code
 const LS_TIP_CACHE  = 'schedule_tip_cache';    // last-good tips JSON per source (offline view)
@@ -1853,8 +1902,9 @@ function render() {
     <div class="month-row">
       <div class="month-ttl">${name} <span class="month-yr">${curYear}</span></div>
       <div class="arrows">
-        <button class="arr" onclick="shift(-1)">&#8592;</button>
-        <button class="arr" onclick="shift(1)">&#8594;</button>
+        <button class="arr" onclick="shift(-1)" aria-label="Previous month" title="Previous month (←)">&#8592;</button>
+        ${(curMonth!==new Date().getMonth()||curYear!==new Date().getFullYear())?'<button class="arr arr-today" onclick="goToday()" title="Back to the current month">Today</button>':''}
+        <button class="arr" onclick="shift(1)" aria-label="Next month" title="Next month (→)">&#8594;</button>
       </div>
     </div>
     <div class="stats">
@@ -1877,6 +1927,9 @@ function render() {
   `;
 
   loadCardPhotos();
+
+  // Keep the import panel's month button/count in step with the displayed month
+  if (document.getElementById('importPanel')?.classList.contains('open')) updateImportCount();
 
   if (view === 'list') {
     const today = new Date();
@@ -1928,11 +1981,13 @@ function renderList(evs) {
     }
   }
 
+  const todayKey = new Date(Date.now()+displayTz*3600000).toISOString().slice(0,10);
   let html='<div class="cards">';
   for(const[k,dayEvs] of Object.entries(groups)){
     const anchor = k === upcomingKey ? ' id="upcoming"' : '';
     const hd = new Date(k+'T00:00:00Z');
-    html+=`<div class="day-lbl"${anchor}>${hd.toLocaleDateString('en-US',{weekday:'long',day:'numeric',month:'long',timeZone:'UTC'})}</div>`;
+    const isToday = k === todayKey;
+    html+=`<div class="day-lbl${isToday?' today':''}"${anchor}>${hd.toLocaleDateString('en-US',{weekday:'long',day:'numeric',month:'long',timeZone:'UTC'})}${isToday?' · Today':''}</div>`;
     for(const e of dayEvs) html+=cardHTML(e);
   }
   return html+'</div>';
@@ -2440,6 +2495,126 @@ function openLogten(entities) {
   window.location.href = 'logtenprox://v2/addEntities/package=' + JSON.stringify(pkg);
 }
 
+/* ── CREWLOUNGE PILOTLOG ─────────────────────────────────────── */
+// PilotLog has no URL scheme; flights go in as a CSV in its native Import-Wizard
+// format (support.crewlounge.aero art. 24000034487). Mandatory columns:
+// PILOTLOG_DATE, AF_DEP, AF_ARR, TIME_TOTAL, AC_MODEL, AC_REG.
+const PLOG_HEADERS = [
+  'PILOTLOG_DATE','FLIGHTNUMBER','AF_DEP','AF_ARR',
+  'TIME_DEPSCH','TIME_ARRSCH','TIME_DEP','TIME_ARR',
+  'TIME_TOTAL','TIME_PIC','TIME_SIC','TIME_NIGHT',
+  'AC_MODEL','AC_REG',
+  'PILOT1_ID','PILOT1_NAME','PILOT2_ID','PILOT2_NAME',
+  'PILOT3_ID','PILOT3_NAME','PILOT4_ID','PILOT4_NAME',
+  'ROUTE','REMARKS'
+];
+
+function fmtHM(ms){ // ms → "H:MM"
+  return Math.floor(ms/3600000)+':'+String(Math.floor((ms%3600000)/60000)).padStart(2,'0');
+}
+
+// Aircraft model for a registration, recovered from any flight plan sharing that reg
+// (direct plan match can fail for old flights once plans age out).
+function fpModelForReg(reg){
+  if(!reg||!fpPlans.length) return '';
+  const n=String(reg).replace(/-/g,'').toUpperCase();
+  const p=fpPlans.find(p=>p.reg&&String(p.reg).replace(/-/g,'').toUpperCase()===n&&p.model);
+  return p?p.model:'';
+}
+
+function buildPlogRow(e) {
+  const depDt = buildDt(e.dtstart, e.times?.departure?.utc);
+  const arrDt = buildDt(depDt || e.dtstart, e.times?.arrival?.utc);
+  const st       = flightStatus(e);
+  const isActual = st === 'completed' || st === 'active';
+  const hm = dt => dt ? dt.toISOString().slice(11,16) : '';
+
+  const plan = fpFindPlan(e);
+  const reg  = e.posCode || plan?.reg || '';
+  const tft  = e.tft || (depDt && arrDt && arrDt > depDt ? fmtHM(arrDt-depDt) : '');
+  const isFO  = e.role === 'F/O';
+  const isCPT = e.role && /CPT|CMD/i.test(e.role);
+
+  const pic  = e.crew?.find(g => g.role?.startsWith('CPT'))?.members?.[0];
+  const sic  = e.crew?.find(g => g.role === 'F/O')?.members?.[0];
+  const acm  = e.crew?.find(g => g.role === 'SFP')?.members?.[0];
+  const acm2 = e.crew?.find(g => g.role === 'F/P')?.members?.[0];
+  const night = nightMs(e);
+
+  return {
+    PILOTLOG_DATE: e.dtstart.toISOString().slice(0,10),
+    FLIGHTNUMBER:  e.flight || '',
+    AF_DEP: IATA_ICAO[e.from] || e.from || '',
+    AF_ARR: IATA_ICAO[e.to]   || e.to   || '',
+    TIME_DEPSCH: isActual ? '' : hm(depDt),
+    TIME_ARRSCH: isActual ? '' : hm(arrDt),
+    TIME_DEP:    isActual ? hm(depDt) : '',
+    TIME_ARR:    isActual ? hm(arrDt) : '',
+    TIME_TOTAL: tft,
+    TIME_PIC:   isCPT ? tft : '',
+    TIME_SIC:   isFO  ? tft : '',
+    TIME_NIGHT: night > 0 ? fmtHM(night) : '',
+    AC_MODEL: plan?.model || fpModelForReg(reg),
+    AC_REG:   fmtReg(reg) || '',
+    PILOT1_ID: pic?.code  || '', PILOT1_NAME: fmtName(pic?.name),
+    PILOT2_ID: sic?.code  || '', PILOT2_NAME: fmtName(sic?.name),
+    PILOT3_ID: acm?.code  || '', PILOT3_NAME: fmtName(acm?.name),
+    PILOT4_ID: acm2?.code || '', PILOT4_NAME: fmtName(acm2?.name),
+    ROUTE: plan && plan.route ? plan.route : '',
+    REMARKS: plan && typeof plan.usv === 'number' ? 'Cosmic '+plan.usv+' uSv (CARI-7)' : ''
+  };
+}
+
+function downloadPilotlog(events) {
+  const rows = events.map(buildPlogRow);
+  const cell = v => { v = String(v ?? ''); return /[",\n]/.test(v) ? '"'+v.replace(/"/g,'""')+'"' : v; };
+  const csv  = [PLOG_HEADERS.join(',')]
+    .concat(rows.map(r => PLOG_HEADERS.map(h => cell(r[h])).join(',')))
+    .join('\r\n') + '\r\n';
+  const d0 = rows[0]?.PILOTLOG_DATE || '', d1 = rows[rows.length-1]?.PILOTLOG_DATE || '';
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv;charset=utf-8'}));
+  a.download = 'pilotlog_' + (d0 === d1 ? d0 : d0+'_'+d1) + '.csv';
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(a.href); }, 1500);
+}
+
+/* ── LOGBOOK-APP SELECTION + DISPATCH ────────────────────────── */
+function logbookApp(){ return localStorage.getItem(LS_LOGBOOK) === 'pilotlog' ? 'pilotlog' : 'logten'; }
+
+function setLogbookApp(app){
+  localStorage.setItem(LS_LOGBOOK, app);
+  updateLogbookUI();
+}
+
+function updateLogbookUI(){
+  const lt  = logbookApp() === 'logten';
+  const lbl = lt ? 'LogTen Pro' : 'PilotLog';
+  document.getElementById('lbBtnLogten')  ?.classList.toggle('on',  lt);
+  document.getElementById('lbBtnPilotlog')?.classList.toggle('on', !lt);
+  const set = (id,txt) => { const el = document.getElementById(id); if (el) el.textContent = txt; };
+  set('ltTriggerLbl', lbl);
+  set('impTitle', 'Import to ' + lbl);
+  set('impGoLbl', lt ? 'Open in LogTen Pro' : 'Download CSV');
+  document.getElementById('ltTrigger')?.setAttribute('title', 'Import to ' + lbl);
+  const note = document.getElementById('impNote');
+  if (note) note.innerHTML = lt
+    ? `Opens LogTen Pro on this device and imports the selected flights.<br>
+       Times are UTC (Zulu) · PIC/SIC assigned from your role on each flight.`
+    : `Downloads a CSV in CrewLounge PILOTLOG's native import format.<br>
+       Open the file and share it to the PILOTLOG app, or upload it under
+       My CrewLounge › PILOTLOG › Import records (crewlounge.center).<br>
+       Times are UTC (Zulu) · PIC/SIC times assigned from your role on each flight.`;
+}
+
+// Single dispatch point for every import button (bulk, month, per-flight card).
+function exportFlights(events){
+  if (!events.length) return;
+  if (logbookApp() === 'pilotlog') downloadPilotlog(events);
+  else openLogten(events.map(buildEntity));
+}
+
 function toggleUrl() {
   const panel = document.getElementById('urlPanel');
   const btn   = document.getElementById('urlBtn');
@@ -2501,6 +2676,16 @@ function updateImportCount() {
     ? `<strong>${count}</strong> flight${count!==1?'s':''} selected`
     : '<span style="color:var(--txt-dim)">No flights in range</span>';
   if (goBtn) goBtn.disabled = count === 0;
+
+  // Month-import button mirrors the displayed month
+  const mBtn = document.getElementById('impMonthBtn');
+  const mLbl = document.getElementById('impMonthLbl');
+  if (mBtn) {
+    const mCount = monthEvs().filter(e => e.type === 'FLT').length;
+    const mName  = new Date(curYear, curMonth, 1).toLocaleDateString('en-US', {month:'long'});
+    if (mLbl) mLbl.textContent = `${mName} (${mCount})`;
+    mBtn.disabled = mCount === 0;
+  }
 }
 
 function doImport() {
@@ -2511,12 +2696,16 @@ function doImport() {
     .filter(e => e.type==='FLT' && e.dtstart && e.dtstart.toISOString().slice(0,10) >= from)
     .sort((a,b) => a.dtstart-b.dtstart);
   if (!flts.length) return;
-  openLogten(flts.map(buildEntity));
+  exportFlights(flts);
+}
+
+function doImportMonth() {
+  exportFlights(monthEvs().filter(e => e.type === 'FLT'));
 }
 
 function importSingle(id) {
   const e = eventById[id];
-  if (e) openLogten([buildEntity(e)]);
+  if (e) exportFlights([e]);
 }
 
 /* ── LOAD DATA ───────────────────────────────────────────────── */
@@ -2702,6 +2891,7 @@ async function load(){
 
 /* ── NAV + HELPERS ───────────────────────────────────────────── */
 function shift(d){curMonth+=d;if(curMonth<0){curMonth=11;curYear--;}if(curMonth>11){curMonth=0;curYear++;}wantScroll=true;render();}
+function goToday(){const n=new Date();curMonth=n.getMonth();curYear=n.getFullYear();wantScroll=true;render();}
 function setView(v){
   view=v;
   localStorage.setItem(LS_VIEW, v);
@@ -2844,6 +3034,16 @@ function closeCalModal() {
   document.body.style.overflow = '';
 }
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeCalModal(); });
+// ← / → navigate months (ignored while typing or when the calendar modal is open)
+document.addEventListener('keydown', e => {
+  if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+  if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
+  const t = e.target;
+  if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable)) return;
+  const modal = document.getElementById('calModal');
+  if (modal && modal.classList.contains('open')) return;
+  shift(e.key === 'ArrowLeft' ? -1 : 1);
+});
 
 /* ── FLIGHT PLANS (Jeppesen FliteBrief) ──────────────────────────── */
 // Digits-only flight number, so roster IATA "SB600" matches Jeppesen ICAO "ACI600".
@@ -3258,6 +3458,19 @@ function fpMaybeRefresh(){
   fpLoad();
 }
 
+// Refresh the roster itself when returning to a long-open tab with stale data
+// (> 1 h old). Throttled, and skipped while the user is typing in any form.
+function rosterMaybeRefresh(){
+  if(!navigator.onLine) return;
+  var ae=document.activeElement;
+  if(ae&&(ae.tagName==='INPUT'||ae.tagName==='TEXTAREA'||ae.tagName==='SELECT')) return;
+  var t=Number(localStorage.getItem(cacheTimeKey())||0);
+  if(Date.now()-t < 3600000) return;
+  if(Date.now()-(rosterMaybeRefresh._t||0) < 300000) return; // failed fetches: retry at most every 5 min
+  rosterMaybeRefresh._t=Date.now();
+  load();
+}
+
 /* ── BOOT ────────────────────────────────────────────────────── */
 fpLoadCache();
 tipsLoadCache();
@@ -3269,10 +3482,10 @@ fpLoad();
 tipsLoad();
 
 // Loaded/refreshed → handled above. Displayed (returning to the page) → refresh here.
-document.addEventListener('visibilitychange', function(){ if(document.visibilityState==='visible'){ fpMaybeRefresh(); tipMaybeRefresh(); } });
-window.addEventListener('pageshow', function(e){ if(e.persisted){ fpMaybeRefresh(); tipMaybeRefresh(); } }); // bfcache back/forward
-window.addEventListener('focus', function(){ fpMaybeRefresh(); tipMaybeRefresh(); });
-window.addEventListener('online', function(){ fpMaybeRefresh(); tipMaybeRefresh(); });
+document.addEventListener('visibilitychange', function(){ if(document.visibilityState==='visible'){ fpMaybeRefresh(); tipMaybeRefresh(); rosterMaybeRefresh(); } });
+window.addEventListener('pageshow', function(e){ if(e.persisted){ fpMaybeRefresh(); tipMaybeRefresh(); rosterMaybeRefresh(); } }); // bfcache back/forward
+window.addEventListener('focus', function(){ fpMaybeRefresh(); tipMaybeRefresh(); rosterMaybeRefresh(); });
+window.addEventListener('online', function(){ fpMaybeRefresh(); tipMaybeRefresh(); rosterMaybeRefresh(); });
 
 // Disclaimer — show once (deferred: element is parsed after this script block)
 window.addEventListener('load', function() {
@@ -3322,6 +3535,7 @@ function dismissDisclaimer() {
     const p = document.getElementById('importPanel'), b = document.getElementById('ltTrigger');
     p?.classList.add('open'); b?.classList.add('active');
   }
+  updateLogbookUI();
   if (localStorage.getItem(LS_PANEL_ARCHIVE) === '1') {
     const p = document.getElementById('archivePanel'), b = document.getElementById('archiveBtn');
     p?.classList.add('open'); b?.classList.add('active');
