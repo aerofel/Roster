@@ -1414,6 +1414,60 @@ function mergeIntoArchive(fresh){
   return merged;
 }
 
+/* ── SCHEDULED-TIME MEMORY ───────────────────────────────────────
+   Alexis serves ONE set of leg times: the schedule until the flight is
+   flown, then it overwrites Departure/Arrival with the actual block times
+   (Checkin is never updated). So we remember the times of every FLT leg
+   as long as its departure is still in the future; once the feed flips to
+   actuals the schedule survives here and both go to the logbook export.
+   Keyed by leg (type|flight|from|to|checkin date), not evKey, so an
+   aircraft swap in the summary doesn't lose the record. */
+const LS_SCHED = 'schedule_sched_times';
+function schedStoreKey(){ return LS_SCHED + '_' + activeSourceKey(); }
+let _schedCache = null, _schedCacheKey = '';
+function getSchedStore(){
+  const k = schedStoreKey();
+  if (_schedCache && _schedCacheKey === k) return _schedCache;
+  try { _schedCache = JSON.parse(localStorage.getItem(k) || '{}'); } catch(_) { _schedCache = {}; }
+  _schedCacheKey = k;
+  return _schedCache;
+}
+function legId(e, dtstart){
+  return [e.type, e.flight||'', e.from||'', e.to||'', dtstart ? dtstart.toISOString().slice(0,10) : ''].join('|');
+}
+// Record pre-departure times of raw ICS events as they looked at `asOf`.
+function captureSchedTimes(rawEvents, asOf){
+  const store = getSchedStore(); let changed = false;
+  for (const r of rawEvents || []) {
+    const sm = parseSummary(r.SUMMARY || '');
+    if (sm.type !== 'FLT') continue;
+    const d = parseDesc(r.DESCRIPTION || '');
+    const dtstart = parseDate(r.DTSTART);
+    if (!dtstart) continue;
+    const dep = buildDt(dtstart, d.times.departure?.utc);
+    const arr = buildDt(dep || dtstart, d.times.arrival?.utc);
+    if (!dep || !arr || dep <= asOf) continue;   // already departed → may be actuals
+    const id = legId(sm, dtstart), prev = store[id], seen = asOf.getTime();
+    if (prev && prev.seen > seen) continue;      // keep the most recent pre-departure view
+    if (prev && prev.dep === dep.toISOString() && prev.arr === arr.toISOString()) { prev.seen = seen; continue; }
+    store[id] = { dep: dep.toISOString(), arr: arr.toISOString(), seen };
+    changed = true;
+  }
+  if (changed) {
+    try { localStorage.setItem(schedStoreKey(), JSON.stringify(store)); }
+    catch(e) { console.warn('[Schedule] scheduled-time store not saved:', e && e.name); }
+  }
+}
+// One-off per source: recover schedules of already-flown legs from saved snapshots.
+function seedSchedFromSnapshots(){
+  const flag = schedStoreKey() + '_seeded';
+  if (localStorage.getItem(flag)) return;
+  for (const snap of getSnapshots()) {
+    try { captureSchedTimes(parseICS(snap.raw), new Date(snap.ts)); } catch(_) {}
+  }
+  try { localStorage.setItem(flag, '1'); } catch(_) {}
+}
+
 /* ── DIFF ────────────────────────────────────────────────────── */
 function descFingerprint(raw) {
   // Extract only times + TFT from DESCRIPTION for change detection.
@@ -1934,9 +1988,9 @@ function cardFLT(e){
   }
   const planeLeft=status==='active'?Math.min(92,Math.max(8,prog)):50;
 
-  const isActualCard = status==='completed' || status==='active';
-  const ltBtnClass   = isActualCard ? 'lt-btn lt-btn-actual' : 'lt-btn';
-  const ltBtnLabel   = isActualCard ? 'Block times' : 'Scheduled';
+  const ltState      = legTimes4Export(e).state;
+  const ltBtnClass   = ltState==='actual' ? 'lt-btn lt-btn-actual' : 'lt-btn';
+  const ltBtnLabel   = ltState==='actual' ? 'Block times' : ltState==='pending' ? 'Actuals pending' : 'Scheduled';
   const dose=cariFor(e);
   const nightHTML=(()=>{if(!showNightHours())return '';const n=nightMs(e);if(!n)return '';const h=Math.floor(n/3600000),m=Math.floor((n%3600000)/60000);return `<div class="mi lav" title="Night block">${ICON.moon} <strong>${h}h${String(m).padStart(2,'0')}</strong> night</div>`;})();
 
@@ -2244,15 +2298,66 @@ function fmtLT(dt) { // "yyyy-MM-dd HH:mm" UTC
   return dt ? dt.toISOString().slice(0, 16).replace('T', ' ') : '';
 }
 
-function buildEntity(e) {
-  const depTime = e.times?.departure?.utc;
-  const arrTime = e.times?.arrival?.utc;
-  const depDt   = buildDt(e.dtstart, depTime);
-  // For arrival, base off depDt (or dtstart if dep unavailable)
-  const arrDt   = buildDt(depDt || e.dtstart, arrTime);
+// A flown leg whose feed times still equal the schedule is assumed "pending"
+// (Alexis hasn't published actuals yet) for this long after arrival; past it,
+// identical times mean the flight really ran to the minute.
+const ACTUALS_PENDING_MS = 72*3600000;
+const isRound5 = dt => dt && dt.getUTCMinutes() % 5 === 0;
 
+// Check-in → STD offset per departure station, learned from not-yet-flown legs
+// (Alexis never updates Checkin, so checkin + offset recovers a flown leg's STD).
+function briefOffsetFor(from){
+  const now = new Date(), byStn = {}, all = {};
+  for (const x of allEvents) {
+    if (x.type !== 'FLT' || !x.dtstart) continue;
+    const dep = buildDt(x.dtstart, x.times?.departure?.utc);
+    if (!dep || dep <= now) continue;
+    const off = dep - x.dtstart;
+    if (off <= 0 || off > 4*3600000) continue;
+    (byStn[x.from] = byStn[x.from] || {})[off] = (byStn[x.from][off] || 0) + 1;
+    all[off] = (all[off] || 0) + 1;
+  }
+  const mode = m => { let b = null, n = 0; for (const k in m) if (m[k] > n) { n = m[k]; b = +k; } return b; };
+  return mode(byStn[from] || {}) ?? mode(all);
+}
+
+// Scheduled vs actual times of a FLT leg.
+//   state 'scheduled' – not flown yet: feed times are the schedule
+//   state 'actual'    – flown and Alexis has published block times
+//   state 'pending'   – flown, but the feed still shows the schedule
+// sched* come from the remembered pre-departure feed, else (STD only) the
+// matching flight plan, else check-in + learned briefing offset.
+function legTimes4Export(e){
+  const now    = new Date();
+  const curDep = buildDt(e.dtstart, e.times?.departure?.utc);
+  const curArr = buildDt(curDep || e.dtstart, e.times?.arrival?.utc);
+  const flown  = curArr ? curArr < now : !!(e.dtend && e.dtend < now);
+  if (!flown) return { state:'scheduled', schedDep:curDep, schedArr:curArr, actDep:null, actArr:null, blockMs:0 };
+
+  const rec = e.dtstart ? getSchedStore()[legId(e, e.dtstart)] : null;
+  let schedDep = rec ? new Date(rec.dep) : null;
+  let schedArr = rec ? new Date(rec.arr) : null;
+  if (!schedDep) {
+    const plan = fpFindPlan(e), pd = plan && plan.std ? new Date(plan.std) : null;
+    if (pd && !isNaN(pd) && curDep && Math.abs(pd - curDep) < 12*3600000) schedDep = pd;
+    else if (e.times?.checkin?.utc && e.dtstart) {
+      const off = briefOffsetFor(e.from);
+      if (off) schedDep = new Date(e.dtstart.getTime() + off);
+    }
+  }
+  const unchanged = rec
+    ? (+schedDep === +curDep && +schedArr === +curArr)
+    : (schedDep && +schedDep === +curDep && isRound5(curArr));
+  if (unchanged && curArr && now - curArr < ACTUALS_PENDING_MS)
+    return { state:'pending', schedDep, schedArr, actDep:null, actArr:null, blockMs:0 };
+  const blockMs = curDep && curArr && curArr > curDep ? curArr - curDep : 0;
+  return { state:'actual', schedDep, schedArr, actDep:curDep, actArr:curArr, blockMs };
+}
+
+function buildEntity(e) {
   const flightDate = e.dtstart.toISOString().slice(0, 10);
-  const tft = e.tft || '';
+  const lt    = legTimes4Export(e);
+  const block = lt.blockMs ? fmtHM(lt.blockMs) : '';
 
   // Extract cockpit crew from parsed crew list
   const cptGrp = e.crew?.find(g => g.role?.startsWith('CPT'));
@@ -2268,31 +2373,31 @@ function buildEntity(e) {
   // Role from summary e.g. "(F/O)" → sic capacity; captain → pic capacity
   const isFO  = e.role === 'F/O';
   const isCPT = e.role && /CPT|CMD/i.test(e.role);
-  const st    = flightStatus(e);
-  const isActual = st === 'completed' || st === 'active';
 
   // Attach the planned route (ICAO) when a matching flight plan is available.
   const plan  = fpFindPlan(e);
   const route = plan && plan.route ? plan.route : '';
+  // Registration: roster summary slot (e.g. "FONET") first, else the matched plan.
+  const reg   = e.posCode || plan?.reg || '';
 
   return {
     entity_name: "Flight",
     flight_key: `${e.flight}-${flightDate}-${e.from}`,
     flight_flightDate: flightDate,
     flight_flightNumber: e.flight || '',
-    flight_TotalTime: tft,
+    flight_TotalTime: block,
     flight_from: e.from || '',
     flight_to: e.to || '',
     flight_route: route,
     // Cosmic-radiation ICRP-103 effective dose (µSv, CARI-7). LogTen ignores unknown keys;
     // adjust to your LogTen custom-field name if you map it to a specific column.
     flight_dose: plan && typeof plan.usv==='number' ? String(plan.usv) : '',
-    flight_scheduledDepartureTime: isActual ? '' : fmtLT(depDt),
-    flight_scheduledArrivalTime:   isActual ? '' : fmtLT(arrDt),
-    flight_actualDepartureTime:    isActual ? fmtLT(depDt) : '',
-    flight_actualArrivalTime:      isActual ? fmtLT(arrDt) : '',
-    flight_selectedAircraftID:   '',
-    flight_selectedAircraftType: '',
+    flight_scheduledDepartureTime: fmtLT(lt.schedDep),
+    flight_scheduledArrivalTime:   fmtLT(lt.schedArr),
+    flight_actualDepartureTime:    fmtLT(lt.actDep),
+    flight_actualArrivalTime:      fmtLT(lt.actArr),
+    flight_selectedAircraftID:   fmtReg(reg) || '',
+    flight_selectedAircraftType: plan?.model || fpModelForReg(reg),
     flight_selectedCrewPIC:   fmtName(pic?.name),
     flight_selectedCrewPICID: pic?.code || '',
     flight_selectedCrewSIC:   fmtName(sic?.name),
@@ -2302,8 +2407,8 @@ function buildEntity(e) {
     flight_selectedCrewCustom3:   fmtName(acm2?.name),
     flight_selectedCrewCustom3ID: acm2?.code || '',
     flight_pilotFlyingCapacity: false,
-    flight_picCapacity: isCPT ? tft : '',
-    flight_sicCapacity: isFO  ? tft : ''
+    flight_picCapacity: isCPT ? block : '',
+    flight_sicCapacity: isFO  ? block : ''
   };
 }
 
@@ -2340,15 +2445,12 @@ function fpModelForReg(reg){
 }
 
 function buildPlogRow(e) {
-  const depDt = buildDt(e.dtstart, e.times?.departure?.utc);
-  const arrDt = buildDt(depDt || e.dtstart, e.times?.arrival?.utc);
-  const st       = flightStatus(e);
-  const isActual = st === 'completed' || st === 'active';
-  const hm = dt => dt ? dt.toISOString().slice(11,16) : '';
+  const lt    = legTimes4Export(e);
+  const hm    = dt => dt ? dt.toISOString().slice(11,16) : '';
+  const block = lt.blockMs ? fmtHM(lt.blockMs) : '';
 
   const plan = fpFindPlan(e);
   const reg  = e.posCode || plan?.reg || '';
-  const tft  = e.tft || (depDt && arrDt && arrDt > depDt ? fmtHM(arrDt-depDt) : '');
   const isFO  = e.role === 'F/O';
   const isCPT = e.role && /CPT|CMD/i.test(e.role);
 
@@ -2356,20 +2458,20 @@ function buildPlogRow(e) {
   const sic  = e.crew?.find(g => g.role === 'F/O')?.members?.[0];
   const acm  = e.crew?.find(g => g.role === 'SFP')?.members?.[0];
   const acm2 = e.crew?.find(g => g.role === 'F/P')?.members?.[0];
-  const night = nightMs(e);
+  const night = lt.state === 'actual' ? nightMs(e) : 0;
 
   return {
     PILOTLOG_DATE: e.dtstart.toISOString().slice(0,10),
     FLIGHTNUMBER:  e.flight || '',
     AF_DEP: IATA_ICAO[e.from] || e.from || '',
     AF_ARR: IATA_ICAO[e.to]   || e.to   || '',
-    TIME_DEPSCH: isActual ? '' : hm(depDt),
-    TIME_ARRSCH: isActual ? '' : hm(arrDt),
-    TIME_DEP:    isActual ? hm(depDt) : '',
-    TIME_ARR:    isActual ? hm(arrDt) : '',
-    TIME_TOTAL: tft,
-    TIME_PIC:   isCPT ? tft : '',
-    TIME_SIC:   isFO  ? tft : '',
+    TIME_DEPSCH: hm(lt.schedDep),
+    TIME_ARRSCH: hm(lt.schedArr),
+    TIME_DEP:    hm(lt.actDep),
+    TIME_ARR:    hm(lt.actArr),
+    TIME_TOTAL: block,
+    TIME_PIC:   isCPT ? block : '',
+    TIME_SIC:   isFO  ? block : '',
     TIME_NIGHT: night > 0 ? fmtHM(night) : '',
     AC_MODEL: plan?.model || fpModelForReg(reg),
     AC_REG:   fmtReg(reg) || '',
@@ -2407,15 +2509,12 @@ const RB_HEADERS = [
 ];
 
 function buildRbRow(e) {
-  const depDt = buildDt(e.dtstart, e.times?.departure?.utc);
-  const arrDt = buildDt(depDt || e.dtstart, e.times?.arrival?.utc);
-  const st       = flightStatus(e);
-  const isActual = st === 'completed' || st === 'active';
-  const hm = dt => dt ? dt.toISOString().slice(11,16) : '';
+  const lt    = legTimes4Export(e);
+  const hm    = dt => dt ? dt.toISOString().slice(11,16) : '';
+  const block = lt.blockMs ? fmtHM(lt.blockMs) : '';
 
   const plan = fpFindPlan(e);
   const reg  = e.posCode || plan?.reg || '';
-  const tft  = e.tft || (depDt && arrDt && arrDt > depDt ? fmtHM(arrDt-depDt) : '');
   const isFO  = e.role === 'F/O';
   const isCPT = e.role && /CPT|CMD/i.test(e.role);
 
@@ -2423,7 +2522,7 @@ function buildRbRow(e) {
   const sic  = e.crew?.find(g => g.role === 'F/O')?.members?.[0];
   const acm  = e.crew?.find(g => g.role === 'SFP')?.members?.[0];
   const acm2 = e.crew?.find(g => g.role === 'F/P')?.members?.[0];
-  const night = nightMs(e);
+  const night = lt.state === 'actual' ? nightMs(e) : 0;
 
   return {
     'Date':        e.dtstart.toISOString().slice(0,10),
@@ -2432,13 +2531,13 @@ function buildRbRow(e) {
     'Arrival':     IATA_ICAO[e.to]   || e.to   || '',
     'Aircraft ID': fmtReg(reg) || '',
     'Type':        plan?.model || fpModelForReg(reg),
-    'Sched Out':   isActual ? '' : hm(depDt),
-    'Sched In':    isActual ? '' : hm(arrDt),
-    'Out':         isActual ? hm(depDt) : '',
-    'In':          isActual ? hm(arrDt) : '',
-    'Total Block': tft,
-    'PIC':         isCPT ? tft : '',
-    'SIC':         isFO  ? tft : '',
+    'Sched Out':   hm(lt.schedDep),
+    'Sched In':    hm(lt.schedArr),
+    'Out':         hm(lt.actDep),
+    'In':          hm(lt.actArr),
+    'Total Block': block,
+    'PIC':         isCPT ? block : '',
+    'SIC':         isFO  ? block : '',
     'Night':       night > 0 ? fmtHM(night) : '',
     'Crew PIC':    fmtName(pic?.name),
     'Crew SIC':    fmtName(sic?.name),
@@ -2476,7 +2575,7 @@ function updateLogbookUI(){
   if (note) note.innerHTML =
     app === 'logten' ?
       `Opens LogTen Pro on this device and imports the selected flights.<br>
-       Times are UTC (Zulu) · PIC/SIC assigned from your role on each flight.` :
+       Times are UTC (Zulu) · scheduled + actual block times · PIC/SIC assigned from your role on each flight.` :
     app === 'pilotlog' ?
       `Downloads a CSV in CrewLounge PILOTLOG's native import format.<br>
        Open the file and share it to the PILOTLOG app, or upload it under
@@ -2491,6 +2590,10 @@ function updateLogbookUI(){
 // Single dispatch point for every import button (bulk, month, per-flight card).
 function exportFlights(events){
   if (!events.length) return;
+  const pending = events.filter(e => legTimes4Export(e).state === 'pending').length;
+  if (pending && !confirm(pending + (pending > 1 ? ' flights have' : ' flight has') +
+      ' landed but the crew portal still shows only scheduled times (actual block times not published yet).\n\n' +
+      'They will be exported with scheduled times only and no flight time — re-export later to add the actuals.\n\nContinue?')) return;
   const app = logbookApp();
   if (app === 'logten') { openLogten(events.map(buildEntity)); return; }
   const d0 = events[0].dtstart.toISOString().slice(0,10);
@@ -2744,7 +2847,10 @@ async function load(){
   }
 
   // Merge the fresh window into the persistent archive so past months are never lost.
-  allEvents=mergeIntoArchive(parseICS(text)).map(enrich);
+  const freshRaw=parseICS(text);
+  seedSchedFromSnapshots();
+  captureSchedTimes(freshRaw, new Date());
+  allEvents=mergeIntoArchive(freshRaw).map(enrich);
   console.log('%c[Schedule] events: '+allEvents.length+' (archived) | range: '+(allEvents.length?allEvents[0].dtstart?.toISOString().slice(0,10)+' → '+allEvents[allEvents.length-1].dtstart?.toISOString().slice(0,10):'—'), 'color:#2fa4e7');
   updateImportCount();
 

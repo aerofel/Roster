@@ -4,6 +4,15 @@ All notable changes to Roster are recorded here.
 
 ## [Unreleased]
 
+## 2026-09-28
+
+### Fixed
+- **Aircraft registration missing in LogTen Pro exports.** `buildEntity()` hardcoded `flight_selectedAircraftID`/`flight_selectedAircraftType` to empty strings although the reg is in the ICS summary (`FLT - SB501 - CDG/BKK - FONET (RFT)`). It now sends the formatted reg (`F-ONET`, from the roster, else the matched flight plan) and the aircraft model, like the PilotLog/RB exports already did.
+- **Logged flight time was ~1:30 too long.** All three exports used the Alexis `TFT` line as total/PIC/SIC time, but TFT runs from **check-in** to arrival (block + the 1:30 briefing + any delay). TFT is no longer exported; flight time is now the actual block time (in − out).
+
+### Added
+- **Scheduled + actual times in every logbook export.** Alexis publishes a single set of leg times: the schedule until the flight is flown, then it silently overwrites Departure/Arrival with the actual block times (Checkin is never updated). The app now remembers each flight's pre-departure times (per device, per roster source; back-filled once from saved snapshots) so exports carry **both** scheduled out/in and actual out/in. Each flight is classified as *scheduled* (not yet landed → scheduled times only, no flight time), *actual* (landed and the feed differs from the remembered schedule → both sets + block time) or *pending* (landed < 72 h ago but the feed still equals the schedule → Alexis hasn't published actuals; export asks for confirmation and sends scheduled times only — re-export later). Flights flown before this feature get their scheduled departure from the flight plan (or check-in + the station's briefing offset); their scheduled arrival stays blank. Night time is only exported for actual flights. The per-flight export button reads *Scheduled* / *Actuals pending* / *Block times* accordingly.
+
 ## 2026-09-05
 
 ### Fixed
