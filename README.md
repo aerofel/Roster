@@ -21,7 +21,7 @@ Roster parses your crew ICS feed and presents your schedule with richer context 
 - **Flight plan routes** — planned flight-plan routes (retrieved server-side) shown colour-coded (SID, STAR, airways, waypoints, speed/level) with alternates above the crew list on matching flights; foldable, collapsed by default
 - **Cosmic-radiation dose** — per-flight galactic-cosmic-radiation **ICRP-103 effective dose** (the EASA/Euratom aircrew quantity), computed server-side with the FAA **CARI-7** program; shown as a badge on each flight plus **per-month and per-year totals**
 - **Stopover tips** — crew-shared, categorized notes (activities, food, getting around, money…) on each hotel-rest card. Foldable; each tip has a category, title and description with auto-linked URLs. A give-to-get gate means you see others' tips once you've shared at least one; admins moderate
-- **Timezone switching** — display times in UTC or your home base / destination timezone
+- **Timezone switching** — display times in UTC or your home base / destination timezone; every airport uses its real IANA zone, so summer/winter time (DST) is applied for each event's own date
 - **Crew panel** — expandable list of crew members per flight (Captain, F/O, Flight Attendants, etc.)
 - **Logbook export (LogTen Pro / CrewLounge PilotLog / RB Logbook)** — pick your logbook app once (remembered per device), then export per flight, per displayed month, or from any date. LogTen Pro opens directly via its `logtenprox://` URL scheme; PilotLog and RB Logbook (neither has a data-carrying URL scheme) get a CSV in their own native import format — share it to the PILOTLOG app / upload at My CrewLounge, or import it in RB Logbook under More › Import & Export. All include the planned route when available. Every export carries the aircraft registration/type and both **scheduled and actual block times**: the app remembers each flight's schedule before the crew portal overwrites it with actuals, and flight time is the actual block time (out → in), never the portal's TFT (which counts from check-in)
 - **"Flight Deck" theme** — compact timeline layout (sticky date node + hairline rail), glass-like layered cards, Manrope UI text with JetBrains Mono for every time/code/figure. **Two block sizes only**: flights are the large block (route line that fills to the aircraft's live position while airborne, one-row four-cell time strip, meta chips, foldable route + crew); every other duty (MEP, hotel/REST, days off, sim, standby, unknown) is one uniform compact tile
@@ -63,6 +63,13 @@ rolling window is never lost), runs the FAA **CARI-7** program to compute each f
 effective dose, and writes a static `data/flightplans.json` the app reads. A monthly pass refreshes
 the finalized solar-modulation data and upgrades provisional doses to final. The browser only reads
 the JSON — the in-browser fetch and the old same-origin reverse proxy were removed.
+
+### Timezone check
+
+`tools/tzcheck.py` (stdlib only) runs weekly from cron and e-mails `TZCHECK_MAILTO` if the tz
+database or the DST rules of an airport in `AIRPORT_TZ` changed, if the server tzdata is behind
+IANA, or if the crew feed's own local times (`ROSTER_ICS_URLS`) disagree with a zone. When it
+reports a station missing from `AIRPORT_TZ`, add the airport with its IANA zone and rebuild.
 
 ### Stopover tips
 

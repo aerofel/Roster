@@ -1021,11 +1021,13 @@ const AIRPORTS = {
   OSA:'Osaka — Kansai', TYO:'Tokyo', HKG:'Hong Kong',
   BNE:'Brisbane — International', NAN:'Nadi — International'
 };
+// IANA zones (not fixed hours) so DST is applied for each event's own date.
 const AIRPORT_TZ = {
-  NOU:11, SIN:8, BKK:7, CDG:2, SYD:10, MEL:10,
-  AKL:12, PPT:-10, HND:9, NRT:9, OSA:9, TYO:9,
-  HKG:8, LAX:-8, LHR:1, DXB:4,
-  BNE:10, NAN:12
+  NOU:'Pacific/Noumea', SIN:'Asia/Singapore', BKK:'Asia/Bangkok', CDG:'Europe/Paris',
+  SYD:'Australia/Sydney', MEL:'Australia/Melbourne', AKL:'Pacific/Auckland',
+  PPT:'Pacific/Tahiti', HND:'Asia/Tokyo', NRT:'Asia/Tokyo', OSA:'Asia/Tokyo', TYO:'Asia/Tokyo',
+  HKG:'Asia/Hong_Kong', LAX:'America/Los_Angeles', LHR:'Europe/London', DXB:'Asia/Dubai',
+  BNE:'Australia/Brisbane', NAN:'Pacific/Fiji'
 };
 
 const ROLES = {
@@ -1150,41 +1152,71 @@ function fmtLocalD(d) { // Date → "DD/MM" using local timezone
   if (!d) return '';
   return String(d.getDate()).padStart(2,'0') + '/' + String(d.getMonth()+1).padStart(2,'0');
 }
+// UTC offset (ms) of an IANA zone at instant t. Memoized per 15-min bucket: zone
+// transitions fall on whole/half UTC hours, so the offset is constant inside a bucket.
+var _tzFmt = {}, _tzOffMemo = {};
+function zoneOffsetMs(zone, t) {
+  var b = Math.floor(t / 900000), key = zone + '|' + b;
+  var v = _tzOffMemo[key];
+  if (v !== undefined) return v;
+  var f = _tzFmt[zone] || (_tzFmt[zone] = new Intl.DateTimeFormat('en-US', {timeZone:zone, hourCycle:'h23',
+    year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit', second:'2-digit'}));
+  var p = {};
+  f.formatToParts(new Date(b * 900000)).forEach(function(x){ p[x.type] = x.value; });
+  v = Date.UTC(+p.year, +p.month - 1, +p.day, +p.hour % 24, +p.minute, +p.second) - b * 900000;
+  return (_tzOffMemo[key] = v);
+}
+function zoneForLabel(lbl) {
+  if (lbl === 'UTC') return 'UTC';
+  if (lbl === 'NOU') return 'Pacific/Noumea';
+  return AIRPORT_TZ[lbl] || null;
+}
+// Display-TZ offset (ms) at date d; falls back to the stored fixed offset for unknown labels.
+function tzMs(d) {
+  var z = zoneForLabel(displayTzLbl);
+  var t = d instanceof Date ? d.getTime() : (d == null ? Date.now() : d);
+  if (z) { try { return zoneOffsetMs(z, t); } catch (err) {} }
+  return displayTz * 3600000;
+}
+function tzIsUtc() { return displayTzLbl === 'UTC' || (!zoneForLabel(displayTzLbl) && displayTz === 0); }
 function tzHHMM(d) {
   if (!d) return '--:--';
-  return new Date(d.getTime() + displayTz * 3600000).toISOString().slice(11,16);
+  return new Date(d.getTime() + tzMs(d)).toISOString().slice(11,16);
 }
 function fmtTzD(d) { // "DD/MM" in displayTz
   if (!d) return '';
-  var s = new Date(d.getTime() + displayTz * 3600000).toISOString();
+  var s = new Date(d.getTime() + tzMs(d)).toISOString();
   return s.slice(8,10) + '/' + s.slice(5,7);
 }
 function tzLabel() { return displayTzLbl; }
-function setTz(offset, label) {
-  displayTz = offset;
-  displayTzLbl = label || (offset === 0 ? 'UTC' : (offset >= 0 ? '+' : '') + offset);
-  localStorage.setItem(LS_DISPLAY_TZ, offset);
+function setTz(label) {
+  displayTzLbl = label;
+  displayTz = Math.round(tzMs(new Date()) / 60000) / 60; // legacy fixed-offset fallback only
+  localStorage.setItem(LS_DISPLAY_TZ, displayTz);
   localStorage.setItem(LS_DISPLAY_TZ_LBL, displayTzLbl);
   updateTzBar();
   render();
 }
 function tzOptionsForMonth() {
+  // Offsets shown/sorted as of mid-month; event times use each event's own date.
+  var ref = Date.UTC(curYear, curMonth, 15, 12);
+  function offH(z) { try { return zoneOffsetMs(z, ref) / 3600000; } catch (err) { return 0; } }
   var opts = [{label:'UTC', offset:0}];
   var seen = {};
-  seen[0] = true;
+  seen['UTC'] = true;
   // Always include home base NOU
-  if (!seen[HOME_TZ]) { seen[HOME_TZ] = true; opts.push({label:'NOU', offset:HOME_TZ}); }
+  seen['Pacific/Noumea'] = true; opts.push({label:'NOU', offset:offH('Pacific/Noumea')});
   // Add airports from FLT events in the current month
   var evs = allEvents.filter(function(e) {
     if (!e.dtstart) return false;
-    var s = new Date(e.dtstart.getTime() + displayTz * 3600000);
+    var s = new Date(e.dtstart.getTime() + tzMs(e.dtstart));
     return s.getUTCMonth() === curMonth && s.getUTCFullYear() === curYear;
   });
   function addAp(ap) {
     if (!ap || ap === 'NOU') return;
-    var off = AIRPORT_TZ[ap];
-    if (off === undefined || off === null) return;
-    if (!seen[off]) { seen[off] = true; opts.push({label:ap, offset:off}); }
+    var z = AIRPORT_TZ[ap];
+    if (!z) return;
+    if (!seen[z]) { seen[z] = true; opts.push({label:ap, offset:offH(z)}); }
   }
   for (var i = 0; i < evs.length; i++) {
     addAp(evs[i].from);
@@ -1192,7 +1224,10 @@ function tzOptionsForMonth() {
     addAp(evs[i].city);
   }
   // Always ensure current selection is present
-  if (!seen[displayTz]) { seen[displayTz] = true; opts.push({label:displayTzLbl, offset:displayTz}); }
+  if (!opts.some(function(o){ return o.label === displayTzLbl; })) {
+    var cz = zoneForLabel(displayTzLbl);
+    opts.push({label:displayTzLbl, offset:cz ? offH(cz) : displayTz});
+  }
   opts.sort(function(a,b){ return a.offset - b.offset; });
   return opts;
 }
@@ -1203,9 +1238,9 @@ function updateTzBar() {
   var html = '';
   for (var i = 0; i < opts.length; i++) {
     var o = opts[i];
-    var isOn = o.offset === displayTz;
+    var isOn = o.label === displayTzLbl;
     var title = 'UTC' + (o.offset >= 0 ? '+' : '') + o.offset;
-    html += '<button class="tz-seg-btn' + (isOn ? ' on' : '') + '" onclick="setTz(' + o.offset + ',\'' + o.label + '\')" title="' + title + '">' + o.label + '</button>';
+    html += '<button class="tz-seg-btn' + (isOn ? ' on' : '') + '" onclick="setTz(\'' + o.label + '\')" title="' + title + '">' + o.label + '</button>';
   }
   seg.innerHTML = html;
 }
@@ -1318,7 +1353,7 @@ function enrich(raw) {
 
 /* ── STATE ───────────────────────────────────────────────────── */
 let allEvents=[], curMonth=new Date().getMonth(), curYear=new Date().getFullYear(), view=localStorage.getItem(LS_VIEW)||'list';
-let displayTz    = parseInt(localStorage.getItem(LS_DISPLAY_TZ)||'11');
+let displayTz    = parseFloat(localStorage.getItem(LS_DISPLAY_TZ)||'11');
 let displayTzLbl = localStorage.getItem(LS_DISPLAY_TZ_LBL) || 'NOU';
 let _hasNewChanges = false;
 let editingCode = null;
@@ -1730,7 +1765,7 @@ function monthEvs() {
   return allEvents
     .filter(function(e) {
       if (!e.dtstart) return false;
-      var s = new Date(e.dtstart.getTime() + displayTz * 3600000);
+      var s = new Date(e.dtstart.getTime() + tzMs(e.dtstart));
       return s.getUTCMonth() === curMonth && s.getUTCFullYear() === curYear;
     })
     .sort((a,b)=>a.dtstart-b.dtstart);
@@ -1772,7 +1807,7 @@ function render() {
     if(e.type!=='OFF'||!e.dtstart) continue;
     const end=e.dtend&&e.dtend>e.dtstart?new Date(e.dtend.getTime()-1):e.dtstart;
     for(let d=new Date(e.dtstart.getTime()),n=0;n<62&&d<=end;n++,d=new Date(d.getTime()+86400000)){
-      const s=new Date(d.getTime()+displayTz*3600000);
+      const s=new Date(d.getTime()+tzMs(d));
       if(s.getUTCMonth()===curMonth&&s.getUTCFullYear()===curYear) offDays.add(s.toISOString().slice(0,10));
     }
   }
@@ -1782,7 +1817,7 @@ function render() {
   let yearUsv=0;
   for(const e of allEvents){
     if(e.type!=='FLT'||!e.dtstart) continue;
-    const s=new Date(e.dtstart.getTime()+displayTz*3600000);
+    const s=new Date(e.dtstart.getTime()+tzMs(e.dtstart));
     if(s.getUTCFullYear()===curYear){ const d=cariFor(e); if(d) yearUsv+=d; }
   }
 
@@ -1864,7 +1899,7 @@ function renderList(evs) {
   // Group by display-TZ date
   const groups={};
   for(const e of merged){
-    const k=new Date(e.dtstart.getTime()+displayTz*3600000).toISOString().slice(0,10);
+    const k=new Date(e.dtstart.getTime()+tzMs(e.dtstart)).toISOString().slice(0,10);
     (groups[k]=groups[k]||[]).push(e);
   }
 
@@ -1872,12 +1907,12 @@ function renderList(evs) {
   let upcomingKey = null;
   for (const e of merged) {
     if (e.dtend > now) {
-      upcomingKey=new Date(e.dtstart.getTime()+displayTz*3600000).toISOString().slice(0,10);
+      upcomingKey=new Date(e.dtstart.getTime()+tzMs(e.dtstart)).toISOString().slice(0,10);
       break;
     }
   }
 
-  const todayKey = new Date(Date.now()+displayTz*3600000).toISOString().slice(0,10);
+  const todayKey = new Date(Date.now()+tzMs(new Date())).toISOString().slice(0,10);
   let html='<div class="cards">';
   for(const[k,dayEvs] of Object.entries(groups)){
     const anchor = k === upcomingKey ? ' id="upcoming"' : '';
@@ -1954,7 +1989,7 @@ function timeCellHTML(e,k,i,dts){
   const cellDt=dts[k];
   const dayTag=(!na&&cellDt)?'<span class="z-sfx" style="margin-left:3px">['+String(cellDt.getUTCDate()).padStart(2,'0')+']</span>':'';
   if(na) return '<div class="'+cls+'"><div class="tcell-lbl">'+LEG_LBLS[i]+'</div><div class="tcell-utc na">n/a</div></div>';
-  if(displayTz===0){
+  if(tzIsUtc()){
     return '<div class="'+cls+'"><div class="tcell-lbl">'+LEG_LBLS[i]+'</div>'
       +'<div class="tcell-utc">'+esc(t.utc)+'<span class="z-sfx">z</span>'+dayTag+'</div></div>';
   }
@@ -2056,7 +2091,7 @@ function cityTitleHTML(city){
 function spanTimesHTML(a,b){
   if(!a||!b) return '';
   let h=`<span class="t-time">${tzHHMM(a)} → ${tzHHMM(b)}</span>`;
-  if(displayTz!==0) h+=`<span class="t-dim"><span class="mono">${utcHHMM(a)}<span class="z-sfx">z</span> → ${utcHHMM(b)}<span class="z-sfx">z</span></span></span>`;
+  if(!tzIsUtc()) h+=`<span class="t-dim"><span class="mono">${utcHHMM(a)}<span class="z-sfx">z</span> → ${utcHHMM(b)}<span class="z-sfx">z</span></span></span>`;
   return h;
 }
 
@@ -2073,10 +2108,10 @@ function cardMEP(e){
   const t=e.times||{};
   const has=k=>t[k]&&t[k].utc&&t[k].utc.toLowerCase()!=='n/a';
   let sub='';
-  const fmtOne=(d,raw)=>displayTz===0?`${esc(raw)}<span class="z-sfx">z</span>`:(d?tzHHMM(d):esc(raw));
+  const fmtOne=(d,raw)=>tzIsUtc()?`${esc(raw)}<span class="z-sfx">z</span>`:(d?tzHHMM(d):esc(raw));
   if(has('departure')||has('arrival')){
     sub+=`<span class="t-time">${has('departure')?fmtOne(L.depDt,t.departure.utc):'--:--'} → ${has('arrival')?fmtOne(L.arrDt,t.arrival.utc):'--:--'}</span>`;
-    if(displayTz!==0){
+    if(!tzIsUtc()){
       const z=k=>has(k)?`${esc(t[k].utc)}<span class="z-sfx">z</span>${L.dts[k]?' <span class="z-sfx">['+String(L.dts[k].getUTCDate()).padStart(2,'0')+']</span>':''}`:'--:--';
       sub+=`<span class="t-dim"><span class="mono">${z('departure')} → ${z('arrival')}</span></span>`;
     }
@@ -2213,7 +2248,7 @@ function renderCal(evs){
   // so multi-day OFF/HOT/REST blocks fill the calendar. Built from allEvents (not just
   // this month's) so an event starting late in the previous month still fills this
   // month's first days.
-  const lk=d=>new Date(d.getTime()+displayTz*3600000).toISOString().slice(0,10);
+  const lk=d=>new Date(d.getTime()+tzMs(d)).toISOString().slice(0,10);
   const map={};
   for(const e of allEvents){
     if(!e.dtstart) continue;
@@ -2240,7 +2275,7 @@ function renderCal(evs){
   for(let d=1;d<=last.getDate();d++){
     const k=`${curYear}-${String(curMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
     const dayEvs=map[k]||[];
-    const todayTz=new Date(today.getTime()+displayTz*3600000);
+    const todayTz=new Date(today.getTime()+tzMs(today));
     const isToday=todayTz.getUTCFullYear()===curYear&&todayTz.getUTCMonth()===curMonth&&todayTz.getUTCDate()===d;
     const hasEv=dayEvs.length>0;
     html+=`<div class="cday${isToday?' today':''}${hasEv?' has-ev':''}">
@@ -2857,14 +2892,14 @@ async function load(){
   // Default to current month; if no events, go to first event's month
   let hasThis=allEvents.some(function(e){
     if(!e.dtstart) return false;
-    var s=new Date(e.dtstart.getTime()+displayTz*3600000);
+    var s=new Date(e.dtstart.getTime()+tzMs(e.dtstart));
     return s.getUTCMonth()===curMonth&&s.getUTCFullYear()===curYear;
   });
   if(!hasThis&&allEvents.length){
     // Land on the month with events nearest to today (archive may span far into the past).
     const now=Date.now();
     const near=allEvents.filter(e=>e.dtstart).sort((a,b)=>Math.abs(a.dtstart-now)-Math.abs(b.dtstart-now))[0];
-    if(near){var fs=new Date(near.dtstart.getTime()+displayTz*3600000);curMonth=fs.getUTCMonth();curYear=fs.getUTCFullYear();}
+    if(near){var fs=new Date(near.dtstart.getTime()+tzMs(near.dtstart));curMonth=fs.getUTCMonth();curYear=fs.getUTCFullYear();}
   }
   render();
   if(is503){

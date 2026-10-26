@@ -4,6 +4,14 @@ All notable changes to Roster are recorded here.
 
 ## [Unreleased]
 
+## 2026-10-26
+
+### Fixed
+- **Times one hour late after the end of summer time (e.g. SB501 CDG departure 20:30 shown as 21:30).** `AIRPORT_TZ` held one fixed UTC offset per airport (`CDG:2`, `LHR:1`, `LAX:-8`, `SYD:10`, `AKL:12`…), so the CDG/LHR/LAX/SYD/MEL/AKL displays were wrong for half the year. It now maps each airport to its IANA zone (`Europe/Paris`, …) and the offset is computed **for each event's own date** with the device's tz database (`Intl.DateTimeFormat`, memoized per 15 min). This also fixes day grouping, month filters, calendar days and the "today" marker around DST changes. The timezone buttons now select by label (offsets in their tooltip are those of mid-month); an old saved selection (`schedule_display_tz_lbl` = `CDG`, offset 2) is picked up automatically, nothing to reset on the phone.
+
+### Added
+- **`tools/tzcheck.py` — weekly timezone check** (cron `/etc/cron.d/roster-tzcheck`, Mondays 06:05 UTC, as `looping`). Mails `TZCHECK_MAILTO` when: a zone in `AIRPORT_TZ` is unknown; the server tzdata is older than the latest IANA release; a tzdata update changed the offsets/DST dates of one of our airports (18-month transition fingerprint kept in `~/.local/state/roster-tzcheck.json`); the Alexis feed's own `(HH:MM LOC)` times disagree with the zone; or the feed has a station missing from `AIRPORT_TZ`. Feed URLs come from `ROSTER_ICS_URLS` in `.env`. `--dry-run` prints without mailing or saving state.
+
 ## 2026-09-28
 
 ### Fixed
