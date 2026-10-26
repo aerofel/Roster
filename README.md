@@ -28,7 +28,7 @@ Roster parses your crew ICS feed and presents your schedule with richer context 
 - **Dark / Light theme** — follows the OS preference on first visit; manual toggle remembered
 - **Offline / inflight** — a service worker keeps the last build of the page, the flight-plan data, fonts and destination photos; when online the page is always fetched fresh first (new builds appear on the next open, nothing stale), when offline the cached copy is served and the roster comes from the browser's local cache
 - **Responsive** — phone, tablet and desktop layouts; the date row stays sticky on phones, the time strip never wraps
-- **Quick navigation** — "Today" button when viewing another month, ← / → keyboard month switching, auto-refresh of a stale roster when returning to the tab
+- **Quick navigation** — month ‹ Today › buttons also in the sticky bar once the month title has scrolled away (the bar's timezone buttons scroll sideways when they don't fit, and snap back on page scroll), "Today" button when viewing another month, ← / → keyboard month switching, auto-refresh of a stale roster when returning to the tab
 
 ## How to use
 

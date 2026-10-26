@@ -4,6 +4,11 @@ All notable changes to Roster are recorded here.
 
 ## [Unreleased]
 
+## 2026-10-26 (2)
+
+### Changed
+- **Sticky timezone bar after scrolling past the month title** — now one line: `Month Year` + **‹ Today ›** month buttons on the left (Today only when another month is shown), timezone buttons right-justified. When there are too many buttons the line no longer wraps: swipe it sideways to reach the hidden ones; any vertical page scroll (> 8 px) slides it back to the left so the month is visible again. The bar's ‹ › land at the top of the new month (current month in list view: the usual auto-scroll to today's duty). At the top of the page the bar is unchanged (centered buttons, no label).
+
 ## 2026-10-26
 
 ### Fixed
