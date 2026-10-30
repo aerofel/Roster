@@ -304,6 +304,18 @@
       font-size:10.5px;font-weight:800;letter-spacing:.3px;transition:all .15s;
     }
     .lt-btn:hover{background:rgba(177,151,252,.25);border-color:var(--lavender)}
+    /* Takeoff / landing chip (left of the export button) — blue = something you fill in */
+    .tl-chip{margin-left:auto;display:inline-flex;align-items:center;gap:6px;padding:5px 11px;border-radius:999px;cursor:pointer;
+      background:transparent;color:var(--blue);border:1px dashed color-mix(in srgb,var(--blue) 50%,transparent);
+      font:inherit;font-size:10.5px;font-weight:800;letter-spacing:.3px;transition:all .15s;white-space:nowrap}
+    .tl-chip svg{width:13px;height:13px;flex-shrink:0}
+    .tl-chip:hover{background:var(--blue-dim)}
+    .tl-chip.on{border-style:solid;background:var(--blue-dim);border-color:rgba(90,184,255,.3)}
+    .tl-chip .mono{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--txt);letter-spacing:0}
+    .tl-chip .sep{color:var(--txt-dim);font-weight:600}
+    .tl-chip.open{background:var(--blue);border:1px solid var(--blue);color:#04121f;box-shadow:0 4px 16px -6px var(--blue-glow)}
+    .tl-chip.open .mono,.tl-chip.open .sep{color:#04121f}
+    .tl-chip + .lt-btn{margin-left:0}
     .lt-btn-actual{background:var(--blue-dim);color:var(--blue);border-color:rgba(90,184,255,.22)}
     .lt-btn-actual:hover{background:var(--blue-glow);border-color:var(--blue)}
 
@@ -371,23 +383,84 @@
     .day.cur-day .day-num{border-color:var(--lv);color:var(--lv);box-shadow:0 0 0 4px var(--bg),0 0 20px -2px var(--lv-glow)}
     .cday.cur-day{box-shadow:inset 0 0 0 2px var(--lv);background:var(--lv-dim)}
     .cday.cur-day .cdn{color:var(--lv);font-weight:800}
+    /* Bottom dock: one pill per warning (currency + expiries < 30 days), most urgent at the bottom */
+    .warn-dock{position:fixed;left:50%;bottom:max(16px,env(safe-area-inset-bottom));z-index:40;transform:translateX(-50%);
+      display:flex;flex-direction:column-reverse;align-items:center;gap:8px;max-width:calc(100vw - 32px);pointer-events:none}
     .cur-pill{
-      position:fixed;left:50%;bottom:max(16px,env(safe-area-inset-bottom));z-index:40;
-      transform:translate(-50%,calc(100% + 40px));opacity:0;transition:transform .3s ease,opacity .3s ease;
-      display:inline-flex;align-items:center;gap:9px;max-width:calc(100vw - 32px);padding:9px 14px 9px 12px;border-radius:999px;cursor:pointer;
+      display:none;pointer-events:auto;
+      align-items:center;gap:9px;max-width:calc(100vw - 32px);padding:9px 14px 9px 12px;border-radius:999px;cursor:pointer;
       font-family:var(--font);font-size:12px;font-weight:700;color:var(--txt);white-space:nowrap;
       background:var(--glass);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);
       border:1px solid color-mix(in srgb,var(--lv) 55%,transparent);box-shadow:0 10px 30px -10px rgba(0,0,0,.6),0 0 24px -6px var(--lv-glow);
     }
-    .cur-pill.show{transform:translate(-50%,0);opacity:1}
+    .cur-pill.show{display:inline-flex;animation:pill-in .38s cubic-bezier(.2,.9,.3,1.15) both}
+    @keyframes pill-in{from{opacity:0;transform:translateY(18px) scale(.96)}to{opacity:1;transform:none}}
+    .cur-pill .pill-ic{display:inline-flex;flex-shrink:0}
+    .cur-pill .pill-ic svg{width:15px;height:15px;color:var(--lv);filter:drop-shadow(0 0 6px var(--lv-glow))}
+    .cur-pill.more{--lv:var(--txt-md);--lv-glow:transparent;padding:7px 13px;font-size:11.5px;color:var(--txt-md)}
     .cur-pill .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;background:var(--lv);box-shadow:0 0 10px var(--lv)}
     .cur-pill .mono{font-family:var(--mono);color:var(--lv)}
     .cur-pill .dim{color:var(--txt-md);font-weight:600;overflow:hidden;text-overflow:ellipsis}
     .cur-pill svg{width:13px;height:13px;color:var(--txt-md);flex-shrink:0}
 
+    /* ── Expiries (medical, ratings, passports…) ── */
+    .exp-banner .cur-ttl .t-det{font-family:var(--mono);color:var(--lv);letter-spacing:-.3px;margin-left:6px}
+    .exp-banner .cur-sub .exp-edit{background:none;border:none;padding:0;margin-left:8px;font:inherit;font-size:11.5px;font-weight:800;color:var(--lv);cursor:pointer;text-decoration:underline;text-underline-offset:3px;text-decoration-color:color-mix(in srgb,var(--lv) 45%,transparent)}
+    .vbtn .exp-dot{width:6px;height:6px;border-radius:50%;background:var(--lv);box-shadow:0 0 8px var(--lv)}
+    .vbtn.on .exp-dot{box-shadow:none}
+    .exp-hd{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:8px 0 14px}
+    .exp-h{font-size:18px;font-weight:800;letter-spacing:-.3px}
+    .exp-hs{font-size:12px;color:var(--txt-md);margin-top:2px}
+    .exp-add{display:inline-flex;align-items:center;gap:6px;padding:8px 15px 8px 12px;border-radius:999px;border:none;background:var(--txt);color:var(--bg);font:inherit;font-size:12.5px;font-weight:800;cursor:pointer;white-space:nowrap;transition:transform .15s}
+    .exp-add:hover{transform:translateY(-1px)}
+    .exp-add svg{width:14px;height:14px}
+    .exp-list{display:flex;flex-direction:column;gap:10px}
+    .exp-grp{font-size:9.5px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;color:var(--txt-dim);margin:10px 0 -2px 4px}
+    .card.exp-card{--accent:var(--lv);--accent-dim:var(--lv-dim);cursor:pointer}
+    .exp-card .tile-ic{box-shadow:0 0 18px -6px var(--lv-glow)}
+    .exp-card .tile-ttl .t-code{color:var(--txt)}
+    .exp-card .tile-sub .mono{font-family:var(--mono);color:var(--txt);font-weight:600}
+    .exp-card.cur-orange,.exp-card.cur-red{border-color:color-mix(in srgb,var(--lv) 40%,transparent);box-shadow:var(--card-shadow),0 0 26px -12px var(--lv-glow)}
+    .exp-left{display:flex;flex-direction:column;align-items:flex-end;gap:4px}
+    .exp-left .tile-dur{font-variant-numeric:tabular-nums}
+    .exp-left .exp-ed{font-size:10px;font-weight:700;color:var(--txt-dim);display:inline-flex;align-items:center;gap:4px}
+    .exp-left .exp-ed svg{width:11px;height:11px}
+    .card.exp-form{--accent:var(--blue);--accent-dim:var(--blue-dim);padding:16px 16px 14px 18px;margin-bottom:12px;border-color:color-mix(in srgb,var(--blue) 35%,transparent);box-shadow:var(--card-shadow),0 0 30px -14px var(--blue-glow)}
+    .card.exp-form:hover{transform:none}
+    .exp-form-hd{font-size:9.5px;font-weight:800;letter-spacing:1.3px;text-transform:uppercase;color:var(--blue);margin-bottom:10px}
+    .exp-kinds{display:grid;grid-template-columns:repeat(var(--n,4),1fr);gap:6px}
+    .exp-kind{display:flex;flex-direction:column;align-items:center;gap:6px;padding:11px 4px 9px;border-radius:12px;border:1px solid var(--bdr);background:var(--surf0);color:var(--txt-md);font:inherit;font-size:11px;font-weight:700;cursor:pointer;transition:all .15s}
+    .exp-kind svg{width:20px;height:20px}
+    .exp-kind:hover{color:var(--txt);border-color:var(--bdr-hi)}
+    .exp-kind.on{color:var(--blue);background:var(--blue-dim);border-color:color-mix(in srgb,var(--blue) 50%,transparent);box-shadow:0 0 18px -8px var(--blue-glow)}
+    .exp-fields{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+    .exp-fields.one{grid-template-columns:1fr}
+    .exp-lbl{display:block;font-size:9.5px;font-weight:800;letter-spacing:.9px;text-transform:uppercase;color:var(--txt-md);margin:0 0 5px 2px}
+    .exp-in{width:100%;background:var(--surf1);color:var(--txt);border:1px solid var(--bdr-hi);border-radius:10px;padding:9px 12px;font:inherit;font-size:13.5px;font-weight:700;color-scheme:dark;min-height:40px}
+    :root[data-theme="light"] .exp-in{color-scheme:light}
+    .exp-in.mono{font-family:var(--mono);letter-spacing:.3px}
+    .exp-in:focus{outline:none;border-color:var(--blue)}
+    .exp-in.bad{border-color:var(--red)}
+    .exp-acts{display:flex;align-items:center;gap:10px;margin-top:14px}
+    .exp-acts .sp{flex:1}
+    .exp-del{background:none;border:1px solid color-mix(in srgb,var(--red) 40%,transparent);color:var(--red);border-radius:999px;padding:8px 14px;font:inherit;font-size:12.5px;font-weight:700;cursor:pointer}
+    .exp-del:hover{background:var(--red-dim)}
+    .exp-save{background:var(--blue);color:#04121f;border:none;border-radius:999px;padding:8px 18px;font:inherit;font-size:12.5px;font-weight:800;cursor:pointer;box-shadow:0 4px 14px -4px var(--blue-glow)}
+    .exp-save:hover{filter:brightness(1.08)}
+    .exp-empty .exp-kinds{max-width:420px;margin:16px auto 0}
+    .exp-foot{font-size:11px;color:var(--txt-dim);text-align:center;margin:16px 0 4px}
+
     /* Crew */
     .crew-toggle{display:flex;align-items:center;gap:7px;background:none;border:none;color:var(--blue);font-size:12.5px;font-weight:700;cursor:pointer;padding:0;margin-top:10px;text-align:left;line-height:1.35;transition:opacity .15s}
     .crew-toggle:hover{opacity:.8}
+    .crew-toggle > span:last-child{display:inline-flex;flex-wrap:wrap;align-items:baseline;gap:3px 0}
+    .cs-g{white-space:nowrap}
+    .cs-r{font-size:9px;font-weight:800;letter-spacing:.9px;text-transform:uppercase;color:var(--txt-dim);margin-right:2px}
+    .cs-n{color:var(--txt);font-weight:700}
+    .cs-n.me{color:var(--accent,var(--blue))}
+    .cs-c{color:var(--txt-dim)}
+    .cs-more{margin-left:5px;font-family:var(--mono);font-size:10.5px;font-weight:700;color:var(--txt-md);padding:0 5px;border-radius:5px;background:var(--surf1)}
+    .cs-sep{color:var(--txt-dim);margin:0 8px;font-weight:400}
     .crew-arrow{transition:transform .2s;display:inline-block;font-size:9px;color:var(--txt-dim);flex-shrink:0}
     .crew-block{display:none;margin-top:10px;padding:12px 14px;background:var(--surf0);border:1px solid var(--bdr);border-radius:12px}
     .crew-block.open{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:0 22px}
@@ -407,6 +480,59 @@
     .fp-route-ttl svg{color:var(--blue);flex-shrink:0}
     .fp-enr{font-family:var(--mono);color:var(--txt-md);font-weight:700;letter-spacing:.2px;text-transform:none;font-size:11px}
     .fp-altn{display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+    .fp-hd-r{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-left:auto}
+    .fd-app-chip{display:inline-flex;align-items:center;gap:5px;font-family:var(--mono);font-size:10.5px;font-weight:700;padding:3px 9px;border-radius:7px;cursor:pointer;
+      background:transparent;color:var(--blue);border:1px dashed color-mix(in srgb,var(--blue) 50%,transparent);transition:all .15s;white-space:nowrap}
+    .fd-app-chip svg{width:12px;height:12px}
+    .fd-app-chip:hover{background:var(--blue-dim)}
+    .fd-app-chip.on{border-style:solid;background:var(--blue-dim);border-color:rgba(90,184,255,.32);color:var(--txt)}
+    .fd-app-chip.on svg{color:var(--blue)}
+    .fd-app-chip.open{background:var(--blue);border:1px solid var(--blue);color:#04121f}
+    .fd-app-chip.open svg{color:#04121f}
+    .fd-app-chip .k{font-family:var(--font);font-size:9px;font-weight:800;letter-spacing:.8px;color:var(--txt-dim)}
+    .fd-app-chip.open .k{color:#04121f}
+
+    /* Shared-flight-data editors (takeoff/landing, approach/runway) */
+    .fd-ed{margin-top:10px;padding:14px 14px 12px;border-radius:14px;cursor:default;
+      background:linear-gradient(160deg,var(--blue-dim),var(--surf0) 70%);border:1px solid color-mix(in srgb,var(--blue) 35%,transparent);
+      box-shadow:0 14px 34px -20px var(--blue-glow);animation:fd-in .2s ease both}
+    @keyframes fd-in{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+    .fd-hd{display:flex;justify-content:space-between;align-items:center;gap:6px 12px;margin-bottom:11px;flex-wrap:wrap}
+    .fd-ttl{font-size:9.5px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;color:var(--blue)}
+    .fd-ttl .mono{font-family:var(--mono);letter-spacing:.4px;color:var(--txt-md)}
+    .fd-note{font-size:10.5px;color:var(--txt-dim);display:inline-flex;gap:5px;align-items:center}
+    .fd-note svg{width:12px;height:12px}
+    .fd-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .fd-f{background:var(--bg-2);border:1px solid var(--bdr-hi);border-radius:12px;padding:9px 12px 10px;transition:border-color .15s,box-shadow .15s;min-width:0}
+    .fd-f:focus-within{border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-dim)}
+    .fd-f.bad{border-color:var(--red);box-shadow:0 0 0 3px var(--red-dim)}
+    .fd-lbl{display:flex;align-items:center;gap:6px;font-size:9.5px;font-weight:800;letter-spacing:.9px;text-transform:uppercase;color:var(--txt-md)}
+    .fd-lbl svg{width:14px;height:14px;color:var(--blue)}
+    .fd-ref{font-size:10.5px;color:var(--txt-dim);white-space:nowrap}
+    .fd-ref b{font-family:var(--mono);font-weight:700;color:var(--txt-md)}
+    .fd-in{width:100%;background:none;border:none;outline:none;color:var(--txt);font-family:var(--mono);font-size:28px;font-weight:700;letter-spacing:1px;padding:5px 0 3px;font-variant-numeric:tabular-nums;caret-color:var(--blue)}
+    .fd-in::placeholder{color:var(--txt-dim);opacity:.55}
+    .fd-q{display:flex;gap:5px;flex-wrap:wrap;margin-top:6px}
+    .fd-q button,.fd-seg button,.fd-recent button{min-height:32px;padding:5px 10px;border-radius:999px;border:1px solid var(--bdr-hi);background:var(--surf1);color:var(--txt-md);
+      font-family:var(--mono);font-size:11px;font-weight:700;cursor:pointer;transition:all .12s;-webkit-tap-highlight-color:transparent}
+    .fd-q button:hover,.fd-seg button:hover,.fd-recent button:hover{color:var(--blue);border-color:var(--blue)}
+    .fd-err{color:var(--red);font-size:11.5px;font-weight:600;margin-top:10px}
+    .fd-acts{display:flex;align-items:center;gap:10px;margin-top:12px}
+    .fd-acts .sp{flex:1}
+    .fd-apps{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+    .fd-apps button{min-height:40px;padding:6px 4px;border-radius:11px;border:1px solid var(--bdr-hi);background:var(--bg-2);color:var(--txt-md);
+      font-family:var(--mono);font-size:12px;font-weight:700;letter-spacing:.3px;cursor:pointer;transition:all .12s;-webkit-tap-highlight-color:transparent}
+    .fd-apps button:hover{color:var(--txt);border-color:var(--txt-dim)}
+    .fd-apps button.on{background:var(--blue);border-color:var(--blue);color:#04121f;box-shadow:0 4px 14px -6px var(--blue-glow)}
+    .fd-rwy{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:10px}
+    .fd-rwy .fd-f{display:flex;align-items:center;gap:10px;padding:6px 12px}
+    .fd-rwy .fd-in{width:2.6ch;font-size:26px;padding:2px 0}
+    .fd-seg{display:inline-flex;gap:4px}
+    .fd-seg button{min-width:38px;min-height:38px;border-radius:10px;font-size:13px}
+    .fd-seg button.on{background:var(--blue);border-color:var(--blue);color:#04121f}
+    .fd-recent{display:inline-flex;align-items:center;gap:5px;flex-wrap:wrap}
+    .fd-recent .k{font-size:9px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:var(--txt-dim)}
+    .fd-app-only .fp-route-ttl svg{color:var(--green)}
     .fp-altn-lbl{font-size:9px;font-weight:800;letter-spacing:1px;color:var(--txt-dim)}
     .fp-altn-chip{font-family:var(--mono);font-size:10.5px;font-weight:700;padding:2px 7px;border-radius:6px;background:var(--gold-dim);color:var(--gold);border:1px solid rgba(245,184,61,.28);cursor:default}
     .fp-tokens{display:none;flex-wrap:wrap;align-items:center;gap:5px 6px;line-height:1.7}
@@ -708,6 +834,17 @@
       .cur-ttl{font-size:16px}
       .cur-days{min-width:58px;padding:7px 8px}
       .cur-days-n{font-size:21px}
+      .vbtn{padding:6px 11px}
+      .exp-fields{grid-template-columns:1fr}
+      .exp-in{font-size:16px}   /* no iOS zoom-on-focus */
+      .exp-kind{font-size:10.5px}
+      .exp-renew{display:none}
+      .fd-in{font-size:26px}
+      .fd-apps{grid-template-columns:repeat(4,1fr)}
+      .fd-grid{gap:8px}
+      .fd-f{padding:8px 10px 9px}
+      .fd-q{gap:4px}
+      .fd-q button{padding:4px 8px;font-size:10.5px}
       .imp-ttl .lb-seg{margin-left:0;width:100%;justify-content:space-between}
       .lb-btn{flex:1;padding:6px 6px}
     }
@@ -725,7 +862,7 @@
       .ftag.live,.badge-dot{animation:none}
       .disc-box,.cal-modal-sheet{animation:none}
       .card-photo-bg{transition:none}
-      .cur-banner::after,.cur-banner.cur-orange,.cur-banner.cur-red{animation:none}
+      .cur-banner::after,.cur-banner.cur-orange,.cur-banner.cur-red,.cur-pill.show{animation:none}
       .cur-pill{transition:none}
     }
   </style>
@@ -850,7 +987,7 @@
         <polyline points="7 10 12 15 17 10"/>
         <line x1="12" y1="15" x2="12" y2="3"/>
       </svg>
-      Export JSON
+      Export all data
     </button>
     <label class="import-file-label">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
@@ -863,8 +1000,8 @@
     </label>
   </div>
   <div class="imp-note">
-    Export your snapshot history for backup or to transfer between devices.<br>
-    Importing merges with existing snapshots (de-duplicated by timestamp).
+    One JSON with everything this roster holds: snapshots, every flight ever seen with scheduled and actual times, PF and sim landings, takeoff/landing times, approach and runway, and expiries, plus a readable per-flight list. Use it as a backup or to move to another device.<br>
+    Importing merges into what's here; nothing is overwritten by older data. Your ICS link isn't included.
   </div>
 </div>
 
@@ -1149,34 +1286,100 @@ const PEXELS_QUERIES = {
   BNE:'Brisbane Australia',    NAN:'Fiji island tropical'
 };
 
-async function fetchPexelsPhoto(iata) {
-  if (!PEXELS_KEY || /^__.*__$/.test(PEXELS_KEY)) return null;
+// Destination photos. The Pexels key is shared by every user and capped at
+// 200 requests/hour, so each browser asks ONCE per city and keeps the result list
+// for 30 days (localStorage). Cards pick a stable photo from it (by city + date),
+// so re-renders never call the API; a 429 backs off for an hour. The images
+// themselves come from the service worker's cache-first store after first view.
+const LS_PHOTOS = 'schedule_photos_v2', PHOTO_TTL = 30 * 86400000, PHOTO_BACKOFF = 3600000;
+let _photos = null; const _photoReq = {};
+function photoStore(){
+  if (!_photos) { try { _photos = JSON.parse(localStorage.getItem(LS_PHOTOS) || '{}') || {}; } catch(_) { _photos = {}; } }
+  return _photos;
+}
+function photoSave(){ try { localStorage.setItem(LS_PHOTOS, JSON.stringify(_photos)); } catch(_) {} }
+function photoPick(iata, seed){
+  const c = photoStore()[iata];
+  if (!c || !c.urls || !c.urls.length) return '';
+  let h = 0; for (const ch of iata + '|' + (seed || '')) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+  return c.urls[h % c.urls.length];
+}
+function fetchPexelsPhotos(iata) {
+  if (!PEXELS_KEY || /^__.*__$/.test(PEXELS_KEY) || !navigator.onLine) return Promise.resolve(null);
+  const st = photoStore(), c = st[iata];
+  if (c && c.urls && c.urls.length && Date.now() - c.at < PHOTO_TTL) return Promise.resolve(c.urls);
+  if ((st._backoff || 0) > Date.now()) return Promise.resolve(c ? c.urls : null);
+  if (_photoReq[iata]) return _photoReq[iata];
   var query = PEXELS_QUERIES[iata];
   if (!query && AIRPORTS[iata]) query = AIRPORTS[iata].split('—')[0].split('–')[0].trim();
   if (!query) query = iata + ' city';
+  return (_photoReq[iata] = (async () => {
+    try {
+      const r = await fetch('https://api.pexels.com/v1/search?query=' + encodeURIComponent(query) + '&orientation=landscape&per_page=15',
+        { headers: { Authorization: PEXELS_KEY }, signal: AbortSignal.timeout(8000) });
+      if (r.status === 429) { st._backoff = Date.now() + PHOTO_BACKOFF; photoSave(); return c ? c.urls : null; }
+      if (!r.ok) return c ? c.urls : null;
+      const data = await r.json();
+      const urls = (data.photos || []).map(p => p.src && (p.src.landscape || p.src.large)).filter(Boolean);
+      if (!urls.length) return c ? c.urls : null;
+      st[iata] = { urls, at: Date.now() }; photoSave();
+      return urls;
+    } catch(e) { return c ? c.urls : null; }
+    finally { delete _photoReq[iata]; }
+  })());
+}
+// Server photo cache (tools/photos.py → photos/index.json + photos/<IATA>/*.jpg):
+// the normal source. The browser Pexels lookup above is only a fallback for a
+// city the server doesn't have yet.
+const LS_PHOTO_IDX = 'schedule_photo_index';
+let _photoIdx = null, _photoUse = {}, _photoIdxTried = false;
+function photoIndex(){
+  if (!_photoIdx) { try { _photoIdx = JSON.parse(localStorage.getItem(LS_PHOTO_IDX) || '{}') || {}; } catch(_) { _photoIdx = {}; } }
+  return _photoIdx;
+}
+async function photoIndexLoad(){
   try {
-    var page = Math.ceil(Math.random() * 3);
-    var r = await fetch(
-      'https://api.pexels.com/v1/search?query=' + encodeURIComponent(query) +
-      '&orientation=landscape&per_page=15&page=' + page,
-      { headers: { Authorization: PEXELS_KEY }, signal: AbortSignal.timeout(6000) }
-    );
-    if (!r.ok) return null;
-    var data = await r.json();
-    if (!data.photos || !data.photos.length) return null;
-    var photo = data.photos[Math.floor(Math.random() * data.photos.length)];
-    return photo.src.landscape || photo.src.large || null;
-  } catch(e) { return null; }
+    const r = await fetch('photos/index.json', { cache: 'no-cache' });
+    if (!r.ok) return;
+    const txt = await r.text(), before = JSON.stringify(photoIndex());
+    _photoIdx = JSON.parse(txt) || {};
+    try { localStorage.setItem(LS_PHOTO_IDX, txt); } catch(_) {}
+    if (JSON.stringify(_photoIdx) !== before && allEvents.length) render();
+  } catch(_) {}
+  finally { if (!_photoIdxTried) { _photoIdxTried = true; loadCardPhotos(); } }
+}
+// A different photo for each card of the same city: start from a per-city,
+// per-month offset and step through the set in card order (reset every render,
+// so the same card keeps its photo across re-renders).
+function photoFor(iata){
+  const set = photoIndex()[iata] && photoIndex()[iata].photos;
+  if (set && set.length) {
+    let h = 0; for (const ch of iata + '|' + curYear + '-' + curMonth) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+    const k = _photoUse[iata] = (_photoUse[iata] || 0) + 1;
+    const p = set[(h + (k - 1) * 7) % set.length];   // stride 7: neighbours look less alike
+    return { url: 'photos/' + p.f, by: p.by || '' };
+  }
+  const u = photoPick(iata, curYear + '-' + curMonth + '-' + ((_photoUse[iata] = (_photoUse[iata] || 0) + 1)));
+  return u ? { url: u, by: '' } : null;
+}
+function photoAttrs(iata){
+  const p = photoFor(iata);
+  if (!p) return { cls: '', attrs: '' };
+  const u = esc(p.url.replace(/'/g, '%27'));
+  return { cls: ' loaded', attrs: ` data-src="${u}" style="background-image:url('${u}')"${p.by ? ` aria-label="Photo: ${esc(p.by)} / Pexels"` : ''}` };
 }
 
 function loadCardPhotos() {
   document.querySelectorAll('.card-photo-bg[data-dest]').forEach(async function(bg) {
-    var iata = bg.dataset.dest;
-    if (!iata || iata === '---') return;
-    var url = await fetchPexelsPhoto(iata);
-    if (!url) return;
-    bg.style.backgroundImage = 'url(' + url + ')';
-    bg.classList.add('loaded');
+    const iata = bg.dataset.dest;
+    if (!iata || iata === '---' || bg.dataset.src) return;      // server photo already set at render
+    if (!_photoIdxTried || (photoIndex()[iata] && photoIndex()[iata].photos)) return;   // wait for the server index first
+    // Fallback: city not in the server cache yet → one browser lookup, cached 30 days.
+    const urls = await fetchPexelsPhotos(iata);
+    if (!urls || !urls.length) return;
+    const url = urls[Math.floor(Math.random() * urls.length)];
+    const ok = await new Promise(res => { const im = new Image(); im.onload = () => res(true); im.onerror = () => res(false); im.src = url; });
+    if (ok) { bg.style.backgroundImage = "url('" + url.replace(/'/g, '%27') + "')"; bg.classList.add('loaded'); }
   });
 }
 
@@ -1823,22 +2026,64 @@ function updateArchiveStats() {
   const snaps = getSnapshots();
   const raw   = localStorage.getItem(snapshotsKey()) || '';
   const kb    = Math.round(raw.length / 1024);
-  el.innerHTML = `<strong>${snaps.length}</strong> snapshot${snaps.length!==1?'s':''} saved · ~<strong>${kb}</strong> KB used`;
+  const nFlt = allEvents.filter(e => e.type === 'FLT').length;
+  const nPF  = Object.values(getLandings()).filter(v => ldgN(v) > 0).length;
+  const nExp = expiryStates().length;
+  el.innerHTML = `<strong>${snaps.length}</strong> snapshot${snaps.length!==1?'s':''} · <strong>${nFlt}</strong> flights · <strong>${nPF}</strong> PF/sim · <strong>${nExp}</strong> expir${nExp===1?'y':'ies'} · ~<strong>${kb}</strong> KB`;
 }
 
-function exportSnapshots() {
-  const snaps = getSnapshots();
-  if (!snaps.length) { alert('No snapshots to export yet.'); return; }
-  const payload = JSON.stringify({ version: 1, snapshots: snaps }, null, 2);
+// Full backup of this roster source (format v2). Machine part: the stores as
+// they are in localStorage, for a lossless re-import. Human part: `flights`,
+// one row per sector with every time and flag the app knows.
+async function exportSnapshots() {
+  const flts = allEvents.filter(e => e.type === 'FLT' && e.dtstart).sort((a, b) => a.dtstart - b.dtstart);
+  // Freshest shared takeoff/landing/approach records for our flown sectors.
+  const months = new Set(flts.filter(e => flightStatus(e) !== 'scheduled').map(e => fdMonth(fdKey(e))));
+  await Promise.all([...months].map(m => fdLoad(m, true)));
+  const flightData = {};
+  for (const e of flts) { const k = fdKey(e), r = fdFile(fdMonth(k))[k]; if (r) flightData[k] = r; }
+  const hm = d => d ? d.toISOString().slice(0, 16).replace('T', ' ') + 'Z' : '';
+  const flights = flts.map(e => {
+    const lt = legTimes4Export(e), fd = fdRec(e), plan = fpFindPlan(e), reg = e.posCode || plan?.reg || '';
+    const night = lt.state === 'actual' ? nightMs(e) : 0, dose = cariFor(e);
+    return {
+      date: (lt.schedDep || e.dtstart).toISOString().slice(0, 10), flight: e.flight || '', from: e.from || '', to: e.to || '',
+      fromIcao: IATA_ICAO[e.from] || '', toIcao: IATA_ICAO[e.to] || '',
+      role: e.role || '', aircraft: fmtReg(reg) || '', type: plan?.model || fpModelForReg(reg) || '',
+      status: lt.state,
+      schedOut: hm(lt.schedDep), schedIn: hm(lt.schedArr), out: hm(lt.actDep), takeoff: hm(fd.to), landing: hm(fd.ldg), in: hm(lt.actArr),
+      block: lt.blockMs ? fmtHM(lt.blockMs) : '', night: night > 0 ? fmtHM(night) : '',
+      pilotFlying: isPF(e), approach: (fd.app || '').toUpperCase(), runway: (fd.rwy || '').toUpperCase(),
+      route: plan?.route || '', doseUsv: typeof dose === 'number' ? dose : null,
+      crew: (e.crew || []).map(g => ({ role: g.role, members: (g.members || []).map(m => ({ code: m.code, name: m.name })) }))
+    };
+  });
+  const sims = allEvents.filter(e => isSimEvent(e) && landingCount(e) > 0)
+    .map(e => ({ date: e.dtstart.toISOString().slice(0, 10), type: e.type, landings: landingCount(e) }));
+  const src = getActiveSource();
+  const payload = JSON.stringify({
+    version: 2, app: 'roster', exportedAt: new Date().toISOString(),
+    source: { code: src ? src.code : '', company: companyFromUrl(src ? src.url : '') },
+    summary: { flights: flights.length, pilotFlying: flights.filter(f => f.pilotFlying).length, simLandings: sims.reduce((n, x) => n + x.landings, 0), expiries: expiryStates().length },
+    flights, simSessions: sims,
+    expiries: expiryStates().map(x => ({ kind: x.K.label, detail: x.a, expires: x.d, daysLeft: x.days })),
+    stores: {
+      snapshots: getSnapshots(), archive: getArchive(), schedTimes: getSchedStore(),
+      landings: getLandings(), expiries: getExpiries(), flightData
+    }
+  }, null, 2);
   const blob = new Blob([payload], { type: 'application/json' });
   const url  = URL.createObjectURL(blob);
   const a    = document.createElement('a');
-  const date = new Date().toISOString().slice(0, 10);
-  a.href = url; a.download = `schedule-history-${date}.json`;
-  a.click();
-  URL.revokeObjectURL(url);
+  a.href = url; a.download = `roster-${(src && src.code) || 'data'}-${new Date().toISOString().slice(0, 10)}.json`;
+  document.body.appendChild(a); a.click();
+  setTimeout(() => { a.remove(); URL.revokeObjectURL(url); }, 1500);
 }
 
+// Accepts v1 (snapshots only) and v2 (full backup). Everything merges:
+// snapshots by timestamp, archive by event key, scheduled times only where
+// missing, PF/landings and expiries newest-wins (then synced), shared flight
+// data only for fields nobody has filled in yet (then uploaded).
 function importSnapshots(input) {
   const file = input.files?.[0];
   if (!file) return;
@@ -1846,24 +2091,62 @@ function importSnapshots(input) {
   reader.onload = ev => {
     try {
       const data = JSON.parse(ev.target.result);
-      if (!data || data.version !== 1 || !Array.isArray(data.snapshots)) {
-        alert('Invalid snapshot file format.'); return;
-      }
-      const existing   = getSnapshots();
-      const existingTs = new Set(existing.map(s => s.ts));
-      const incoming   = data.snapshots.filter(s =>
-        s && typeof s.ts === 'number' && typeof s.raw === 'string' && !existingTs.has(s.ts)
-      );
-      const merged = [...existing, ...incoming].sort((a,b) => a.ts - b.ts);
+      const st = data && data.version === 2 && data.stores ? data.stores : data && data.version === 1 ? { snapshots: data.snapshots } : null;
+      if (!st || !Array.isArray(st.snapshots || [])) { alert('Invalid roster file format.'); return; }
+      const done = [];
+      // Snapshots
+      const existing = getSnapshots(), existingTs = new Set(existing.map(s => s.ts));
+      const incoming = (st.snapshots || []).filter(s => s && typeof s.ts === 'number' && typeof s.raw === 'string' && !existingTs.has(s.ts));
+      const merged = [...existing, ...incoming].sort((a, b) => a.ts - b.ts);
       if (merged.length > MAX_SNAPSHOTS) merged.splice(0, merged.length - MAX_SNAPSHOTS);
-      try {
-        localStorage.setItem(snapshotsKey(), JSON.stringify(merged));
-      } catch(_) {
-        alert('Storage quota exceeded; some snapshots may not have been imported.'); return;
+      try { localStorage.setItem(snapshotsKey(), JSON.stringify(merged)); }
+      catch(_) { alert('Storage quota exceeded; some snapshots may not have been imported.'); return; }
+      done.push(incoming.length + ' snapshot' + (incoming.length !== 1 ? 's' : ''));
+      // Event archive (past months the portal no longer serves)
+      if (Array.isArray(st.archive)) {
+        const map = new Map(getArchive().map(r => [evKey(r), r])); let n = 0;
+        for (const r of st.archive) if (r && r.DTSTART && !map.has(evKey(r))) { map.set(evKey(r), r); n++; }
+        if (n) {
+          const arr = [...map.values()].sort((a, b) => { const A = parseDate(a.DTSTART), B = parseDate(b.DTSTART); return (A ? +A : 0) - (B ? +B : 0); });
+          persistArchive(arr);
+          allEvents = arr.map(enrich);
+        }
+        done.push(n + ' archived event' + (n !== 1 ? 's' : ''));
+      }
+      // Scheduled times — only legs we don't know
+      if (st.schedTimes && typeof st.schedTimes === 'object') {
+        const cur = getSchedStore(); let n = 0;
+        for (const k in st.schedTimes) if (!cur[k]) { cur[k] = st.schedTimes[k]; n++; }
+        if (n) { try { localStorage.setItem(schedStoreKey(), JSON.stringify(cur)); } catch(_) {} }
+      }
+      // PF / sim landings + expiries (same merge as the device sync)
+      let dirty = false;
+      if (st.landings && typeof st.landings === 'object') {
+        const m = syncMerge(getLandings(), st.landings);
+        if (m.upLocal) { saveLandings(m.out); dirty = true; }
+        done.push(Object.values(m.out).filter(v => ldgN(v) > 0).length + ' PF/sim entries');
+      }
+      if (st.expiries && typeof st.expiries === 'object') {
+        const x = syncMergeT(getExpiries(), st.expiries);
+        if (x.upLocal) { saveExpiries(x.out); dirty = true; }
+        done.push(expiryStates().length + ' expiries');
+      }
+      if (dirty) { syncSetState({ dirty: true }); syncSoon(500); }
+      // Shared flight data — fill gaps only, never overwrite what the crew entered since
+      if (st.flightData && typeof st.flightData === 'object') {
+        const q = fdQueue(); let n = 0;
+        for (const key in st.flightData) {
+          if (!/^[A-Z0-9]+_[A-Z]{6}_\d{4}-\d{2}-\d{2}$/.test(key)) continue;
+          const m = fdMonth(key), have = fdFile(m)[key] || {}, inc = st.flightData[key] || {}, patch = {};
+          for (const f of ['to', 'ldg', 'app', 'rwy']) if (inc[f] && !have[f]) patch[f] = inc[f];
+          if (Object.keys(patch).length) { fdPatch(fdFile(m), key, patch); fdCache(m); q.push({ m, key, patch }); n++; }
+        }
+        if (n) { fdSetQueue(q); fdFlush(); }
+        done.push(n + ' flight' + (n !== 1 ? 's' : '') + ' with takeoff/landing/approach restored');
       }
       updateArchiveStats();
       render();
-      alert(`Imported ${incoming.length} new snapshot${incoming.length!==1?'s':''}. Total: ${merged.length}.`);
+      alert('Imported: ' + done.join(', ') + '.');
     } catch(e) {
       alert('Could not read file: ' + e.message);
     }
@@ -1884,10 +2167,15 @@ function monthEvs() {
 
 /* ── MAIN RENDER ─────────────────────────────────────────────── */
 function render() {
+  _photoUse = {};           // photoFor(): one different photo per card of the same city
   updateTzBar();
   updateTzMonthLabel();
   computeMyCode();          // refresh roster-owner identity for stopover-tips gating
-  _cur = currencyState();   // landing currency (banner + bottom pill)
+  _isPilot = detectPilot();  // cabin crew: no PF / landing currency
+  _cur = _isPilot ? currencyState() : { have: 0 };   // landing currency (banner + bottom pill)
+  _exps = expiryStates();                              // medical / ratings / passports (banners + pills)
+  if (view !== 'expiries') _expEdit = null;          // leaving the tab drops a half-filled form
+  const expWorst = _exps.reduce((w, x) => LEVEL_RANK[x.level] > LEVEL_RANK[w] ? x.level : w, 'green');
   const evs = monthEvs();
   const name = new Date(curYear,curMonth,1).toLocaleDateString('en-US',{month:'long'});
 
@@ -1957,6 +2245,7 @@ function render() {
         <button class="vbtn ${view==='list'?'on':''}"     onclick="setView('list')">List</button>
         <button class="vbtn ${view==='calendar'?'on':''}" onclick="setView('calendar')">Calendar</button>
         <button class="vbtn ${view==='changes'?'on':''}"  onclick="setView('changes')">Changes${_hasNewChanges?'<span class="badge-dot"></span>':''}</button>
+        <button class="vbtn ${view==='expiries'?'on':''}" onclick="setView('expiries')">Expiries${expWorst!=='green'?`<span class="exp-dot cur-${expWorst}"></span>`:''}</button>
       </div>
       <div class="legend" aria-hidden="true">
         <span><i style="background:var(--blue)"></i>Flight</span>
@@ -1966,11 +2255,13 @@ function render() {
         <span><i style="background:var(--lavender)"></i>Ground</span>
       </div>
     </div>
-    ${view==='list' ? renderList(evs) : view==='calendar' ? renderCal(evs) : renderChanges()}
+    ${view==='list' ? renderList(evs) : view==='calendar' ? renderCal(evs) : view==='expiries' ? renderExpiries() : renderChanges()}
   `;
 
   loadCardPhotos();
-  updateCurPill();
+  updateWarnDock();
+  if (view === 'list') fdEnsure(evs);
+  fdRefocus();
 
   // Keep the import panel's month button/count in step with the displayed month
   if (document.getElementById('importPanel')?.classList.contains('open')) updateImportCount();
@@ -1993,7 +2284,10 @@ function renderList(evs) {
   const mm = `${curYear}-${String(curMonth+1).padStart(2,'0')}`;
   const curKey = _cur.limit != null ? dayKey(_cur.limit) : '';
   const curHere = curKey.startsWith(mm);
-  if (!evs.length && !curHere) return `<div class="scr">
+  // Expiry banners due this month, by day
+  const expBy = {};
+  for (const x of _exps) { const k = dayKey(x.day); if (k.startsWith(mm)) (expBy[k] = expBy[k] || []).push(x); }
+  if (!evs.length && !curHere && !Object.keys(expBy).length) return `<div class="scr">
     <div class="scr-ico">📅</div>
     <div class="scr-ttl">No duties this month</div>
     <div class="scr-txt">Navigate to another month.</div>
@@ -2020,6 +2314,7 @@ function renderList(evs) {
   }
   // The currency limit gets its own day node even on a day without duties.
   if (curHere && !groups[curKey]) groups[curKey]=[];
+  for (const k in expBy) if (!groups[k]) groups[k]=[];
 
   const now = new Date();
   let upcomingKey = null;
@@ -2036,16 +2331,20 @@ function renderList(evs) {
     const dayEvs = groups[k];
     const anchor = k === upcomingKey ? ' id="upcoming"' : '';
     const isCur = curHere && k === curKey;
+    const exps = expBy[k] || [];
+    // Day node takes the most urgent warning's colour
+    let lv = isCur ? _cur.level : '';
+    for (const x of exps) if (!lv || LEVEL_RANK[x.level] > LEVEL_RANK[lv]) lv = x.level;
     const hd = new Date(k+'T00:00:00Z');
     const isToday = k === todayKey;
     const wd = hd.toLocaleDateString('en-US',{weekday:'short',timeZone:'UTC'});
     const mo = hd.toLocaleDateString('en-US',{month:'short',timeZone:'UTC'});
-    html+=`<section class="day${isToday?' today':''}${isCur?' cur-day cur-'+_cur.level:''}"${anchor}>
+    html+=`<section class="day${isToday?' today':''}${lv?' cur-day cur-'+lv:''}"${anchor}>
       <div class="day-node" title="${hd.toLocaleDateString('en-US',{weekday:'long',day:'numeric',month:'long',timeZone:'UTC'})}">
         <div class="day-num">${hd.getUTCDate()}</div>
         <div class="day-wd">${wd}<span class="day-mo"> ${mo}</span></div>
       </div>
-      <div class="day-items">${isCur?curBannerHTML(_cur):''}${dayEvs.map(cardHTML).join('')}</div>
+      <div class="day-items">${isCur?curBannerHTML(_cur):''}${exps.map(expBannerHTML).join('')}${dayEvs.map(cardHTML).join('')}</div>
     </section>`;
   }
   return html+'</div>';
@@ -2082,6 +2381,13 @@ const ICON = {
   rad:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="22"/><line x1="2" y1="12" x2="5" y2="12"/><line x1="19" y1="12" x2="22" y2="12"/></svg>',
   tail:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 22h20"/><path d="M6.36 17.4 4 17l-2-4 1.1-.55a2 2 0 0 1 1.8 0l.17.1a2 2 0 0 0 1.8 0L8 12 5 6l.9-.45a2 2 0 0 1 2.09.2l4.02 3a2 2 0 0 0 2.1.2l4.19-2.06a2.41 2.41 0 0 1 3.02.8 1.1 1.1 0 0 1-.38 1.62L7.37 18.9a2 2 0 0 1-1.01.5z"/></svg>',
   land:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 22h20"/><path d="M3.77 10.77 2 9l2-4.5 1.1.55c.55.28.9.84.9 1.45s.35 1.17.9 1.45L8 8.5l3-6 1.05.53a2 2 0 0 1 1.09 1.52l.72 5.4a2 2 0 0 0 1.09 1.52l4.4 2.2c.42.22.78.55 1.01.96l.6 1.03c.49.88-.06 1.98-1.06 2.1l-1.18.15c-.47.06-.95-.02-1.37-.24L4.29 11.15a2 2 0 0 1-.52-.38Z"/></svg>',
+  medical:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9a2 2 0 0 0-2 2v2a2 2 0 0 0 2 2h4a1 1 0 0 1 1 1v4a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2v-4a1 1 0 0 1 1-1h4a2 2 0 0 0 2-2v-2a2 2 0 0 0-2-2h-4a1 1 0 0 1-1-1V4a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v4a1 1 0 0 1-1 1z"/></svg>',
+  rating: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15.477 12.89 1.515 8.526a.5.5 0 0 1-.81.47l-3.58-2.687a1 1 0 0 0-1.197 0l-3.586 2.686a.5.5 0 0 1-.81-.469l1.514-8.526"/><circle cx="12" cy="8" r="6"/><path d="M9.6 8.2h4.8M12 5.6v5.2" stroke-width="1.6"/></svg>',
+  passport:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4.5" y="2" width="15" height="20" rx="2.5"/><circle cx="12" cy="10" r="3.5"/><path d="M8.5 10h7M12 6.5c-.95 1-1.4 2.15-1.4 3.5s.45 2.5 1.4 3.5c.95-1 1.4-2.15 1.4-3.5s-.45-2.5-1.4-3.5"/><path d="M9 17.5h6"/></svg>',
+  instr:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z"/><path d="M22 10v6"/><path d="M6 12.5V16a6 3 0 0 0 12 0v-3.5"/></svg>',
+  takeoff:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 22h20"/><path d="M6.36 17.4 4 17l-2-4 1.1-.55a2 2 0 0 1 1.8 0l.17.1a2 2 0 0 0 1.8 0L8 12 5 6l.9-.45a2 2 0 0 1 2.09.2l4.02 3a2 2 0 0 0 2.1.2l4.19-2.06a2.41 2.41 0 0 1 1.73-.17L21 7a1.4 1.4 0 0 1 .87 1.99l-.38.76c-.23.46-.6.84-1.07 1.08L7.58 17.2a2 2 0 0 1-1.22.18Z"/></svg>',
+  plus:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>',
+  pen:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/></svg>',
   dl:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>'
 };
 // Monochrome seat icon — kept as a function for callers that size it explicitly.
@@ -2146,7 +2452,7 @@ function cardFLT(e){
 
   const ltState      = legTimes4Export(e).state;
   const ltBtnClass   = ltState==='actual' ? 'lt-btn lt-btn-actual' : 'lt-btn';
-  const ltBtnLabel   = ltState==='actual' ? 'Block times' : ltState==='pending' ? 'Actuals pending' : 'Scheduled';
+  const ltBtnLabel   = ltState==='actual' ? 'Actuals' : ltState==='pending' ? 'Actuals pending' : 'Scheduled';
   const dose=cariFor(e);
   const pf=isPF(e);
   const nightHTML=(()=>{if(!showNightHours())return '';const n=nightMs(e);if(!n)return '';const h=Math.floor(n/3600000),m=Math.floor((n%3600000)/60000);return `<div class="mi lav" title="Night block">${ICON.moon} <strong>${h}h${String(m).padStart(2,'0')}</strong> night</div>`;})();
@@ -2169,14 +2475,16 @@ function cardFLT(e){
     </div>
     ${timeStripHTML(e,L.dts)}
     <div class="fmeta">
-      ${e.peq?`<div class="mi" title="Crew on board">${ICON.users} <strong>${esc(e.peq)}</strong> crew</div>`:''}
+      ${e.peq?`<div class="mi" title="Crew on board">${ICON.users} <strong>${esc(e.peq)}</strong></div>`:''}
       ${e.tft?`<div class="mi" title="Total flight time">${ICON.clock} TFT <strong>${esc(e.tft)}</strong></div>`:''}
       ${dose==null?'':`<div class="mi gold" title="ICRP-103 effective dose (CARI-7)">${ICON.rad} <strong>${fmtDose(dose)}</strong> cosmic</div>`}
       ${nightHTML}
+      ${fdTLChipHTML(e,id)}
       <button class="${ltBtnClass}" onclick="importSingle('${id}')" title="Export this flight to your logbook">${ICON.dl.replace('<svg ','<svg width="10" height="10" ')} ${ltBtnLabel}</button>
-      <button class="pf-btn${pf?' on':''}" onclick="togglePF('${id}')" aria-pressed="${pf}" title="${pf?'Pilot flying — counts as 1 landing (tap to undo)':'Mark as pilot flying (1 landing)'}">${pf?'':ICON.land} ${pf?'Pilot flying':'PF'}</button>
+      ${_isPilot?`<button class="pf-btn${pf?' on':''}" onclick="togglePF('${id}')" aria-pressed="${pf}" title="${pf?'Pilot flying — counts as 1 landing (tap to undo)':'Mark as pilot flying (1 landing)'}">${pf?'':ICON.land} ${pf?'Pilot flying':'PF'}</button>`:''}
     </div>
-    ${fpRouteHTML(e)}
+    ${fdTLEditorHTML(e,id)}
+    ${fpRouteHTML(e,id)}
     ${extraInfoHTML(e)}
     ${e.crew&&e.crew.length?`
     <button class="crew-toggle" onclick="toggleCrew('${id}')">
@@ -2191,7 +2499,7 @@ function cardFLT(e){
 // foot: extra HTML (extra-info, tips, crew) rendered under the row.
 function tileHTML(o){
   return `<div class="card tile ${o.kind}${o.past?' past':''}${o.extraCls||''}">
-    ${o.photo?`<div class="card-photo-bg" data-dest="${esc(o.photo)}"></div>`:''}
+    ${o.photo?(()=>{const a=photoAttrs(o.photo);return `<div class="card-photo-bg${a.cls}" data-dest="${esc(o.photo)}"${a.attrs}></div>`;})():''}
     <div class="tile-row">
       <div class="tile-ic">${ICON[o.icon]||ICON.pin}</div>
       <div class="tile-main">
@@ -2246,17 +2554,22 @@ function cardMEP(e){
   return tileHTML({kind:'mep',icon:'seat',past:flightStatus(e)==='completed',kindHTML:kind,ttlHTML:ttl,subHTML:sub,dur,foot:extraInfoHTML(e)});
 }
 
+// "CAPTAIN Frank · FIRST OFFICER Benjamin · RELIEF CREW Philippe" — role as a small
+// caps label, first names bold, your own name in the card's accent colour.
 function buildCrewSummary(crew){
-  if(!crew||!crew.length) return 'Crew';
+  if(!crew||!crew.length) return '<span class="cs-n">Crew</span>';
   const parts=[];
   for(const g of crew){
     if(g.members.length){
       const label=ROLES[g.role]||g.role;
-      const names=g.members.slice(0,2).map(m=>fmtName(m.name).split(' ')[0]).join(', ');
-      parts.push(`${label}: ${names}${g.members.length>2?' +'+(g.members.length-2):''}`)
+      const names=g.members.slice(0,2).map(m=>{
+        const me=myCode&&(m.code||'').trim().toUpperCase()===myCode;
+        return `<span class="cs-n${me?' me':''}">${esc(fmtName(m.name).split(' ')[0])}</span>`;
+      }).join('<span class="cs-c">,</span> ');
+      parts.push(`<span class="cs-g"><span class="cs-r">${esc(label)}</span> ${names}${g.members.length>2?`<span class="cs-more">+${g.members.length-2}</span>`:''}</span>`);
     }
   }
-  return parts.slice(0,3).join(' · ')||'Crew';
+  return parts.slice(0,3).join('<span class="cs-sep">·</span>')||'<span class="cs-n">Crew</span>';
 }
 
 function buildCrewBlock(crew,id){
@@ -2317,7 +2630,7 @@ function cardOFF(e){
   const start=fmtTzD(e.dtstart);
   const end=fmtTzD(new Date(e.dtend.getTime()-1)); // DTEND is exclusive; -1ms = last inclusive instant
   const range=start===end?start:`${start} → ${end}`;
-  return tileHTML({kind:'off',icon:'sun',past:flightStatus(e)==='completed',
+  return tileHTML({kind:'off',icon:'sun',past:flightStatus(e)==='completed',photo:city,
     kindHTML:'Days off',ttlHTML:cityTitleHTML(city),subHTML:`<span class="t-time">${esc(range)}</span>`,dur});
 }
 
@@ -2350,12 +2663,13 @@ function cardUnknown(e){
   const crewSummary=buildCrewSummary(e.crew);
   const crewBlock=buildCrewBlock(e.crew,id);
   const sub=spanTimesHTML(a,b)+(dateRange?`<span class="t-dim">${esc(dateRange)}</span>`:'');
-  const foot=(isSimEvent(e)?ldgStepHTML(id,landingCount(e)):'')+extraInfoHTML(e)+(e.crew&&e.crew.length?`
+  const foot=(_isPilot&&isSimEvent(e)?ldgStepHTML(id,landingCount(e)):'')+extraInfoHTML(e)+(e.crew&&e.crew.length?`
     <button class="crew-toggle" onclick="toggleCrew('${id}')">
       <span class="crew-arrow" id="arr_${id}">▶</span> <span>${crewSummary}</span>
     </button>
     <div class="crew-block" id="cb_${id}">${crewBlock}</div>`:'');
-  return tileHTML({kind:'unk',icon:meta.icon,past,
+  // JD (duty day at a station) gets the destination photo, like hotel rest and days off
+  return tileHTML({kind:'unk',icon:meta.icon,past,photo:/^JD/i.test(e.type||'')?city:'',
     kindHTML:esc(e.type)+(meta.label?KSEP+meta.label:''),
     ttlHTML:city?cityTitleHTML(city):(meta.label||esc(e.type)),subHTML:sub,dur,foot});
 }
@@ -2439,7 +2753,7 @@ function currencyState(){
     t = nxt.day; a = anchorAt(t); limit = L[a].day + CUR_DAYS;
   }
   const days = limit - today;
-  const level = days < 0 ? 'red' : days < 10 ? 'orange' : days < 30 ? 'yellow' : 'green';
+  const level = warnLevel(days);
   // What-if: k more PF landings (before the limit) move the anchor to L[a+k] —
   // the limits they'd give, skipping same-day duplicates and the current one.
   const next = [];
@@ -2450,6 +2764,173 @@ function currencyState(){
   return { have: L.length, anchor: L[a], ldgs: L.slice(a, a + CUR_NEED), limit, days, level, from, today, next };
 }
 let _cur = { have: 0 };
+// Shared by the landing currency and the expiries: green ≥ 30 days, yellow < 30, orange < 10, red once past.
+const warnLevel = days => days < 0 ? 'red' : days < 10 ? 'orange' : days < 30 ? 'yellow' : 'green';
+const LEVEL_RANK = { green: 0, yellow: 1, orange: 2, red: 3 };
+const daysLbl = d => { const n = Math.abs(d); return d < 0 ? (n === 1 ? 'day ago' : 'days ago') : d === 0 ? 'last day' : d === 1 ? 'day left' : 'days left'; };
+
+/* ── EXPIRIES (medical, type ratings, passports, instructor) ────
+   Stored like the PF ticks: per roster source, { id: { k, a, d, t } } with
+   k = kind, a = type / number, d = 'YYYY-MM-DD' (last valid day), t = last change;
+   a deletion is kept as { del:1, t } so it syncs. Synced in the same encrypted blob. */
+const LS_EXPIRIES = 'schedule_expiries';
+const EXP_KINDS = {
+  medical:  { label:'Medical',     icon:'medical',  field:'',       ph:'',                pilot:false },
+  tr:       { label:'Type rating', icon:'rating',   field:'Type',   ph:'A330',            pilot:true  },
+  passport: { label:'Passport',    icon:'passport', field:'Number', ph:'Passport number', pilot:false },
+  instr:    { label:'Instructor',  icon:'instr',    field:'Type',   ph:'TRI A330',        pilot:true  }
+};
+const expKinds = () => Object.keys(EXP_KINDS).filter(k => _isPilot || !EXP_KINDS[k].pilot);
+function expiriesKey(){ return LS_EXPIRIES + '_' + activeSourceKey(); }
+let _expCache = null, _expCacheKey = '';
+function getExpiries(){
+  const k = expiriesKey();
+  if (_expCache && _expCacheKey === k) return _expCache;
+  try { _expCache = JSON.parse(localStorage.getItem(k) || '{}') || {}; } catch(_) { _expCache = {}; }
+  _expCacheKey = k;
+  return _expCache;
+}
+function saveExpiries(st){
+  _expCache = st; _expCacheKey = expiriesKey();
+  try { localStorage.setItem(expiriesKey(), JSON.stringify(st)); }
+  catch(e) { console.warn('[Schedule] expiries not saved:', e && e.name); }
+}
+const expDay = d => { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(d || ''); return m ? Date.UTC(+m[1], m[2] - 1, +m[3]) / 86400000 : null; };
+// Passport numbers stay readable in the Expiries view, but banners/pills only show the last 4.
+const expMask = (k, a) => k === 'passport' && a && a.length > 4 ? '•• ' + a.slice(-4) : a;
+// Live expiries, soonest first.
+function expiryStates(){
+  const st = getExpiries(), today = dayNo(new Date()), out = [];
+  for (const id in st) {
+    const x = st[id], K = EXP_KINDS[x && x.k], day = x && expDay(x.d);
+    if (!K || x.del || day == null) continue;
+    const days = day - today;
+    out.push({ id, k: x.k, K, a: x.a || '', d: x.d, day, days, level: warnLevel(days) });
+  }
+  return out.sort((p, q) => p.day - q.day || p.K.label.localeCompare(q.K.label));
+}
+let _exps = [];
+// "Type rating A330" — detail masked for passports unless full.
+function expTitleHTML(x, full){
+  const det = full ? x.a : expMask(x.k, x.a);
+  return esc(x.K.label) + (det ? `<span class="t-det">${esc(det)}</span>` : '');
+}
+function expBannerHTML(x){
+  const d = x.days;
+  return `<div class="cur-banner exp-banner cur-${x.level}" id="expB_${x.id}" role="status">
+    <div class="cur-top">
+      <div class="cur-ic">${ICON[x.K.icon]}</div>
+      <div>
+        <div class="cur-kind">${d < 0 ? 'Expired' : d === 0 ? 'Expires today' : 'Expiry'}</div>
+        <div class="cur-ttl">${expTitleHTML(x)}</div>
+        <div class="cur-sub">${d < 0 ? 'Expired' : 'Valid until'} <span class="mono">${fmtDMY(x.day)}</span>${d >= 0 && d < 30 ? '<span class="exp-renew"> · time to renew</span>' : ''}<button class="exp-edit" onclick="expOpen('${x.id}')">Edit</button></div>
+      </div>
+      <div class="cur-days"><div class="cur-days-n">${Math.abs(d)}</div><div class="cur-days-l">${daysLbl(d)}</div></div>
+    </div>
+  </div>`;
+}
+
+/* Expiries view (4th tab). _expEdit = null | { id (null = new), k, a, d } */
+let _expEdit = null;
+function expOpen(id){
+  const x = id && getExpiries()[id];
+  _expEdit = x ? { id, k: x.k, a: x.a || '', d: x.d || '' } : { id: null, k: id && EXP_KINDS[id] ? id : expKinds()[0], a: '', d: '' };
+  if (view !== 'expiries') { view = 'expiries'; localStorage.setItem(LS_VIEW, 'expiries'); }
+  render();
+  requestAnimationFrame(() => {
+    window.scrollTo({ top: Math.max(0, (document.getElementById('expForm')?.getBoundingClientRect().top || 0) + scrollY - 120), behavior: 'smooth' });
+    const f = document.getElementById(EXP_KINDS[_expEdit.k].field ? 'expA' : 'expD'); if (f && !id) f.focus({ preventScroll: true });
+  });
+}
+function expPickKind(k){
+  if (!_expEdit) return;
+  _expEdit.a = document.getElementById('expA')?.value || _expEdit.a;
+  _expEdit.d = document.getElementById('expD')?.value || _expEdit.d;
+  _expEdit.k = k; render();
+}
+function expCancel(){ _expEdit = null; render(); }
+function expCommit(st){
+  saveExpiries(st);
+  syncSetState({ dirty: true });
+  _expEdit = null;
+  render();
+  syncSoon(1500);
+}
+function expSave(){
+  if (!_expEdit) return;
+  const K = EXP_KINDS[_expEdit.k];
+  const aEl = document.getElementById('expA'), dEl = document.getElementById('expD');
+  const a = (aEl?.value || '').trim().replace(/\s+/g, ' ').slice(0, 40), d = dEl?.value || '';
+  let ok = true;
+  if (K.field && !a) { aEl.classList.add('bad'); ok = false; }
+  if (expDay(d) == null) { dEl.classList.add('bad'); ok = false; }
+  if (!ok) return;
+  const st = Object.assign({}, getExpiries());
+  const id = _expEdit.id || ('x' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7));
+  st[id] = { k: _expEdit.k, a: K.field ? (_expEdit.k === 'passport' ? a.toUpperCase() : a) : '', d, t: Date.now() };
+  expCommit(st);
+}
+function expDelete(){
+  if (!_expEdit || !_expEdit.id) return;
+  if (!confirm('Delete this ' + EXP_KINDS[_expEdit.k].label.toLowerCase() + '?')) return;
+  const st = Object.assign({}, getExpiries());
+  st[_expEdit.id] = { del: 1, t: Date.now() };
+  expCommit(st);
+}
+function expKindsHTML(sel, onclick){
+  const ks = expKinds();
+  return `<div class="exp-kinds" style="--n:${ks.length}">${ks.map(k => `<button type="button" class="exp-kind${k === sel ? ' on' : ''}" onclick="${onclick}('${k}')">${ICON[EXP_KINDS[k].icon]}${esc(EXP_KINDS[k].label)}</button>`).join('')}</div>`;
+}
+function expFormHTML(){
+  const E = _expEdit, K = EXP_KINDS[E.k];
+  return `<div class="card exp-form" id="expForm">
+    <div class="exp-form-hd">${E.id ? 'Edit' : 'New'} expiry</div>
+    ${E.id ? '' : expKindsHTML(E.k, 'expPickKind')}
+    <div class="exp-fields${K.field ? '' : ' one'}">
+      ${K.field ? `<label><span class="exp-lbl">${esc(K.field)}</span><input id="expA" class="exp-in${E.k === 'passport' ? ' mono' : ''}" value="${esc(E.a)}" placeholder="${esc(K.ph)}" maxlength="40" autocomplete="off" oninput="this.classList.remove('bad')" onkeydown="if(event.key==='Enter')expSave()"></label>` : ''}
+      <label><span class="exp-lbl">Expiry date</span><input id="expD" type="date" class="exp-in mono" value="${esc(E.d)}" oninput="this.classList.remove('bad')"></label>
+    </div>
+    <div class="exp-acts">
+      ${E.id ? '<button class="exp-del" onclick="expDelete()">Delete</button>' : ''}
+      <span class="sp"></span>
+      <button class="tip-cancel-btn" onclick="expCancel()">Cancel</button>
+      <button class="exp-save" onclick="expSave()">${E.id ? 'Save' : 'Add'}</button>
+    </div>
+  </div>`;
+}
+// "26 d" under ~3 months, then months, then years.
+function expLeftTxt(d){
+  if (d < 0) return 'Expired';
+  if (d < 100) return d + ' d';
+  if (d < 730) return Math.round(d / 30.44) + ' mo';
+  return (d / 365.25).toFixed(1).replace(/\.0$/, '') + ' y';
+}
+function renderExpiries(){
+  const L = _exps;
+  const head = `<div class="exp-hd">
+    <div><div class="exp-h">Expiries</div><div class="exp-hs">Licences, ratings and documents · ${syncStatusHTML()}</div></div>
+    ${_expEdit ? '' : `<button class="exp-add" onclick="expOpen()">${ICON.plus}Add</button>`}
+  </div>`;
+  const form = _expEdit ? expFormHTML() : '';
+  if (!L.length) return head + form + (_expEdit ? '' : `<div class="scr exp-empty">
+      <div class="scr-ttl">No expiries yet</div>
+      <div class="scr-txt">Add your medical, type ratings, passports… A banner shows up on the expiry date in the roster, and a reminder at the bottom of the screen from 30 days before.</div>
+      ${expKindsHTML('', 'expOpen')}
+    </div>`);
+  const cards = L.map(x => `<div class="card tile exp-card cur-${x.level}" onclick="expOpen('${x.id}')" role="button" tabindex="0" onkeydown="if(event.key==='Enter')expOpen('${x.id}')">
+      <div class="tile-row">
+        <div class="tile-ic">${ICON[x.K.icon]}</div>
+        <div class="tile-main">
+          <div class="tile-kind">${esc(x.K.label)}${x.days < 0 ? '<span class="k-sep">·</span>expired' : ''}</div>
+          <div class="tile-ttl">${x.a ? `<span class="t-code">${esc(x.a)}</span>` : esc(x.k === 'medical' ? 'Medical certificate' : x.K.label)}</div>
+          <div class="tile-sub"><span>${x.days < 0 ? 'Expired' : 'Valid until'} <span class="mono">${fmtDMY(x.day)}</span></span>${x.days >= 0 && x.days < 100 ? `<span class="t-dim">${x.days === 0 ? 'last day' : x.days + ' ' + daysLbl(x.days)}</span>` : ''}</div>
+        </div>
+        <div class="exp-left"><span class="tile-dur">${expLeftTxt(x.days)}</span><span class="exp-ed">${ICON.pen}Edit</span></div>
+      </div>
+    </div>`).join('');
+  return head + form + `<div class="exp-list">${cards}</div>
+    <div class="exp-foot">Stored on this device and synced end-to-end encrypted between your devices.</div>`;
+}
 
 function curBannerHTML(cs){
   const d = cs.days, n = Math.abs(d);
@@ -2545,6 +3026,17 @@ function syncMerge(local, remote){
   return { out, upLocal, upRemote };
 }
 let _syncBusy = null, _syncAgain = false, _syncTimer = 0;
+// Same newest-wins merge for records that carry their own t (expiries; deletions = { del:1, t }).
+function syncMergeT(local, remote){
+  const out = {}; let upLocal = false, upRemote = false;
+  for (const id of new Set([...Object.keys(local), ...Object.keys(remote)])) {
+    const l = local[id], r = remote[id], lt = l ? +l.t || 0 : -1, rt = r ? +r.t || 0 : -1;
+    if (lt > rt) { out[id] = l; upRemote = true; }
+    else if (rt > lt) { out[id] = r; upLocal = true; }
+    else out[id] = l;
+  }
+  return { out, upLocal, upRemote };
+}
 function syncNow(){
   if (_syncBusy) { _syncAgain = true; return _syncBusy; }
   _syncBusy = (async () => {
@@ -2552,21 +3044,23 @@ function syncNow(){
     if (!k) return;
     const src = activeSourceKey();
     const r = await fetch(k.file, { cache:'no-store' });
-    let remote = {};
+    let remote = {}, remoteExp = {};
     if (r.ok) {
-      try { remote = (await syncDecrypt(k, new Uint8Array(await r.arrayBuffer()))).landings || {}; }
+      try { const p = await syncDecrypt(k, new Uint8Array(await r.arrayBuffer())); remote = p.landings || {}; remoteExp = p.expiries || {}; }
       catch(e) { console.warn('[Sync] remote blob unreadable, replacing it:', e && e.message); }
     } else if (r.status !== 404) throw new Error('GET ' + r.status);
     if (activeSourceKey() !== src) return;                 // source switched mid-sync
     const m = syncMerge(getLandings(), remote);
+    const x = syncMergeT(getExpiries(), remoteExp);
     if (m.upLocal || m.upRemote) saveLandings(m.out);
-    if (m.upRemote || (!r.ok && Object.keys(m.out).length)) {
+    if (x.upLocal || x.upRemote) saveExpiries(x.out);
+    if (m.upRemote || x.upRemote || (!r.ok && (Object.keys(m.out).length || Object.keys(x.out).length))) {
       const p = await fetch(k.file, { method:'PUT', headers:{ 'Content-Type':'application/octet-stream' },
-        body: await syncEncrypt(k, { v:1, at:Date.now(), landings:m.out }) });
+        body: await syncEncrypt(k, { v:1, at:Date.now(), landings:m.out, expiries:x.out }) });
       if (!p.ok) throw new Error('PUT ' + p.status);
     }
     syncSetState({ at:Date.now(), dirty:false, err:null });
-    if (m.upLocal) landingsChanged(); else updateSyncStatus();
+    if (m.upLocal || x.upLocal) landingsChanged(); else updateSyncStatus();
   })().catch(e => {
     console.warn('[Sync] PF/landings sync failed:', e && e.message);
     syncSetState({ err:String(e && e.message || e) });
@@ -2593,46 +3087,71 @@ function syncStatusText(){
 }
 function updateSyncStatus(){ const el = document.getElementById('curSync'); if (el) el.textContent = syncStatusText(); }
 
-// Bottom pill: shown whenever the banner isn't on screen (other month, calendar
-// view, scrolled away). Tap → jump to the banner.
-let _curObs = null;
-function updateCurPill(){
-  let pill = document.getElementById('curPill');
-  if (!pill) {
-    pill = document.createElement('button');
-    pill.id = 'curPill'; pill.type = 'button'; pill.onclick = curGo;
-    document.body.appendChild(pill);
-  }
-  if (_curObs) { _curObs.disconnect(); _curObs = null; }
-  const cs = _cur;
-  if (!cs.have) { pill.className = 'cur-pill'; return; }
+// Bottom dock: one pill per warning whose banner isn't on screen (other month,
+// calendar view, scrolled away) — the landing currency always, expiries from
+// 30 days before. Most urgent sits at the bottom; beyond 2, a "+n more" pill.
+// Tap → jump to that banner. Not shown on the Expiries tab (it is the full list).
+let _warnObs = null;
+const SHOW_PILLS = 2;
+function updateWarnDock(){
+  let dock = document.getElementById('warnDock');
+  if (!dock) { dock = document.createElement('div'); dock.id = 'warnDock'; dock.className = 'warn-dock'; document.body.appendChild(dock); }
+  if (_warnObs) { _warnObs.disconnect(); _warnObs = null; }
   const chev = `<svg ${SI}><polyline points="9 18 15 12 9 6"/></svg>`;
-  if (!cs.limit) {
-    pill.className = 'cur-pill cur-none show';
-    pill.innerHTML = `<span class="dot"></span>Landing currency <span class="dim">· <span class="mono">${cs.have}/${CUR_NEED}</span> landings recorded</span>`;
-    return;
-  }
-  const d = cs.days;
-  pill.className = 'cur-pill cur-' + cs.level;
-  pill.innerHTML = `<span class="dot"></span>${CUR_DAYS} days from <span class="mono">${fmtDM(cs.anchor.day)}</span>`
-    + `<span class="dim">· ${d < 0 ? 'expired ' + (-d) + ' d ago' : d + ' d left'}</span>${chev}`;
-  pill.setAttribute('aria-label', 'Landing currency: limit ' + fmtDMY(cs.limit));
-  const banner = document.getElementById('curBanner');
-  if (!banner || !('IntersectionObserver' in window)) { pill.classList.toggle('show', !banner); return; }
-  const r = banner.getBoundingClientRect();           // right state now; the observer fires async
-  pill.classList.toggle('show', !(r.bottom > 0 && r.top < innerHeight));
-  _curObs = new IntersectionObserver(en => pill.classList.toggle('show', !en[0].isIntersecting));
-  _curObs.observe(banner);
-}
-function curGo(){
+  const items = [];
   const cs = _cur;
-  if (!cs.limit) return;
-  const k = dayKey(cs.limit);
+  if (view === 'expiries') { dock.innerHTML = ''; return; }
+  if (cs.have && !cs.limit) items.push({ go: 'cur', bid: '', days: 1e9, cls: 'cur-none', aria: 'Landing currency',
+    html: `<span class="pill-ic">${ICON.land}</span>Landing currency <span class="dim">· <span class="mono">${cs.have}/${CUR_NEED}</span> landings recorded</span>` });
+  else if (cs.limit) items.push({ go: 'cur', bid: 'curBanner', days: cs.days, cls: 'cur-' + cs.level, aria: 'Landing currency: limit ' + fmtDMY(cs.limit),
+    html: `<span class="pill-ic">${ICON.land}</span>${CUR_DAYS} days from <span class="mono">${fmtDM(cs.anchor.day)}</span>`
+      + `<span class="dim">· ${cs.days < 0 ? 'expired ' + (-cs.days) + ' d ago' : cs.days + ' d left'}</span>${chev}` });
+  for (const x of _exps) {
+    if (x.level === 'green') continue;
+    const det = expMask(x.k, x.a), thisYear = dayKey(x.day).slice(0, 4) === dayKey(dayNo(new Date())).slice(0, 4);
+    items.push({ go: x.id, bid: 'expB_' + x.id, days: x.days, cls: 'cur-' + x.level, aria: x.K.label + ' expires ' + fmtDMY(x.day),
+      html: `<span class="pill-ic">${ICON[x.K.icon]}</span>${esc(x.K.label)}${det ? ` <span class="mono">${esc(det)}</span>` : ''}`
+        + `<span class="dim">· ${x.days < 0 ? 'expired ' + (-x.days) + ' d ago' : x.days === 0 ? 'expires today' : (thisYear ? fmtDM(x.day) : fmtDMY(x.day)) + ' · ' + x.days + ' d'}</span>${chev}` });
+  }
+  items.sort((a, b) => a.days - b.days);
+  dock.innerHTML = items.map((it, i) => `<button type="button" class="cur-pill ${it.cls}" data-i="${i}" aria-label="${esc(it.aria)}">${it.html}</button>`).join('')
+    + `<button type="button" class="cur-pill more" onclick="setView('expiries')"></button>`;
+  const btns = dock.querySelectorAll('.cur-pill[data-i]');
+  // A pill is wanted while its banner is off screen; the 2 most urgent wanted ones show, the rest fold into "+n more".
+  const layout = () => {
+    const want = [...btns].filter(b => b._want);
+    btns.forEach(b => b.classList.toggle('show', b._want && want.indexOf(b) < (want.length > SHOW_PILLS ? SHOW_PILLS - 1 : SHOW_PILLS)));
+    const rest = want.length > SHOW_PILLS ? want.length - (SHOW_PILLS - 1) : 0, more = dock.querySelector('.cur-pill.more');
+    more.classList.toggle('show', rest > 0);
+    if (rest) more.innerHTML = `+${rest} more · Expiries${chev}`;
+  };
+  const io = 'IntersectionObserver' in window ? (_warnObs = new IntersectionObserver(en => {
+    for (const x of en) { const b = dock.querySelector(`.cur-pill[data-bid="${x.target.id}"]`); if (b) b._want = !x.isIntersecting; }
+    layout();
+  })) : null;
+  items.forEach((it, i) => {
+    const b = btns[i]; b.onclick = () => warnGo(it.go);
+    const banner = it.bid && document.getElementById(it.bid);
+    b._want = true;
+    if (!banner) return;
+    b.dataset.bid = it.bid;
+    const r = banner.getBoundingClientRect();           // right state now; the observer fires async
+    b._want = !(r.bottom > 0 && r.top < innerHeight);
+    if (io) io.observe(banner);
+  });
+  layout();
+}
+// Jump to a warning's banner: 'cur' = landing currency, else an expiry id.
+function warnGo(go){
+  let day = null, bid = '';
+  if (go === 'cur') { if (!_cur.limit) return; day = _cur.limit; bid = 'curBanner'; }
+  else { const x = _exps.find(y => y.id === go); if (!x) return; day = x.day; bid = 'expB_' + x.id; }
+  const k = dayKey(day);
   if (view !== 'list') { view = 'list'; localStorage.setItem(LS_VIEW, 'list'); }
   curYear = +k.slice(0, 4); curMonth = +k.slice(5, 7) - 1;
   wantScroll = false;
   render();
-  requestAnimationFrame(() => document.getElementById('curBanner')?.scrollIntoView({ behavior: 'smooth', block: 'center' }));
+  requestAnimationFrame(() => document.getElementById(bid)?.scrollIntoView({ behavior: 'smooth', block: 'center' }));
 }
 // Landings stepper for a simulator tile.
 function ldgStepHTML(id, n){
@@ -2688,7 +3207,12 @@ function renderCal(evs){
     const isToday=todayTz.getUTCFullYear()===curYear&&todayTz.getUTCMonth()===curMonth&&todayTz.getUTCDate()===d;
     const hasEv=dayEvs.length>0;
     const isCur=_cur.limit!=null&&k===dayKey(_cur.limit);
-    html+=`<div class="cday${isToday?' today':''}${hasEv?' has-ev':''}${isCur?' cur-day cur-'+_cur.level:''}"${isCur?` title="Landing currency limit — ${CUR_DAYS} days from ${fmtDM(_cur.anchor.day)}" onclick="if(event.target===this)curGo()"`:''}>
+    const exps=_exps.filter(x=>dayKey(x.day)===k);
+    let lv=isCur?_cur.level:'';
+    for(const x of exps) if(!lv||LEVEL_RANK[x.level]>LEVEL_RANK[lv]) lv=x.level;
+    const tip=[isCur?`Landing currency limit — ${CUR_DAYS} days from ${fmtDM(_cur.anchor.day)}`:'',...exps.map(x=>`${x.K.label}${x.a?' '+expMask(x.k,x.a):''} expires`)].filter(Boolean).join(' · ');
+    const go=isCur?'cur':exps.length?exps[0].id:'';
+    html+=`<div class="cday${isToday?' today':''}${hasEv?' has-ev':''}${lv?' cur-day cur-'+lv:''}"${lv?` title="${esc(tip)}" onclick="if(event.target===this)warnGo('${go}')"`:''}>
       <div class="cdn">${d}</div>
       ${dayEvs.slice(0,3).map(e=>{
         const label=e.type==='FLT'?e.flight
@@ -2799,6 +3323,12 @@ function legTimes4Export(e){
   return { state:'actual', schedDep, schedArr, actDep:curDep, actArr:curArr, blockMs };
 }
 
+// The owner's own entry in the RFT seat: their code, else the seat's only occupant.
+function rftSelf(e){
+  const ms = e.crew?.find(g => g.role === 'RFT')?.members || [];
+  return ms.find(m => (m.code || '').trim().toUpperCase() === myCode) || (ms.length === 1 ? ms[0] : null);
+}
+
 function buildEntity(e) {
   const flightDate = e.dtstart.toISOString().slice(0, 10);
   const lt    = legTimes4Export(e);
@@ -2818,6 +3348,8 @@ function buildEntity(e) {
   // Role from summary e.g. "(F/O)" → sic capacity; captain → pic capacity
   const isFO  = e.role === 'F/O';
   const isCPT = e.role && /CPT|CMD/i.test(e.role);
+  const isRFT = e.role === 'RFT';   // relief pilot → own name in LogTen's Relief crew slot, no PIC/SIC time
+  const fd    = fdRec(e);
 
   // Attach the planned route (ICAO) when a matching flight plan is available.
   const plan  = fpFindPlan(e);
@@ -2830,7 +3362,7 @@ function buildEntity(e) {
     flight_key: `${e.flight}-${flightDate}-${e.from}`,
     flight_flightDate: flightDate,
     flight_flightNumber: e.flight || '',
-    flight_TotalTime: block,
+    flight_totalTime: block,
     flight_from: e.from || '',
     flight_to: e.to || '',
     flight_route: route,
@@ -2851,9 +3383,15 @@ function buildEntity(e) {
     flight_selectedCrewCustom2ID: acm?.code  || '',
     flight_selectedCrewCustom3:   fmtName(acm2?.name),
     flight_selectedCrewCustom3ID: acm2?.code || '',
+    flight_selectedCrewRelief: isRFT ? fmtName(rftSelf(e)?.name || myName) : '',
+    // Takeoff/landing + approach shared by the crew. Approach = LogTen's "count;type;runway;place".
+    ...(fd.to  ? { flight_takeoffTime: fmtLT(fd.to) }  : {}),
+    ...(fd.ldg ? { flight_landingTime: fmtLT(fd.ldg) } : {}),
+    ...(fd.app || fd.rwy ? { flight_selectedApproach1: ['1', fd.app || '', fd.rwy || '', IATA_ICAO[e.to] || e.to || ''].join(';').toUpperCase() } : {}),
     flight_pilotFlyingCapacity: isPF(e),
-    flight_picCapacity: isCPT ? block : '',
-    flight_sicCapacity: isFO  ? block : ''
+    flight_picCapacity: !!isCPT,
+    flight_sicCapacity: !!isFO,
+    ...(isRFT ? { flight_pic: '0:00', flight_sic: '0:00' } : {})   // keep Typical-Role auto-fill off it
   };
 }
 
@@ -2869,7 +3407,8 @@ function openLogten(entities) {
 const PLOG_HEADERS = [
   'PILOTLOG_DATE','FLIGHTNUMBER','AF_DEP','AF_ARR',
   'TIME_DEPSCH','TIME_ARRSCH','TIME_DEP','TIME_ARR',
-  'TIME_TOTAL','TIME_PIC','TIME_SIC','TIME_NIGHT','PF',
+  'TIME_TO','TIME_LDG',
+  'TIME_TOTAL','TIME_PIC','TIME_SIC','TIME_NIGHT','PF','CAPACITY','APP_1','RWY_ARR',
   'AC_MODEL','AC_REG',
   'PILOT1_ID','PILOT1_NAME','PILOT2_ID','PILOT2_NAME',
   'PILOT3_ID','PILOT3_NAME','PILOT4_ID','PILOT4_NAME',
@@ -2904,6 +3443,7 @@ function buildPlogRow(e) {
   const acm  = e.crew?.find(g => g.role === 'SFP')?.members?.[0];
   const acm2 = e.crew?.find(g => g.role === 'F/P')?.members?.[0];
   const night = lt.state === 'actual' ? nightMs(e) : 0;
+  const fd = fdRec(e);
 
   return {
     PILOTLOG_DATE: e.dtstart.toISOString().slice(0,10),
@@ -2919,6 +3459,9 @@ function buildPlogRow(e) {
     TIME_SIC:   isFO  ? block : '',
     TIME_NIGHT: night > 0 ? fmtHM(night) : '',
     PF:         isPF(e) ? 'PF' : '',          // only when ticked — blank leaves PilotLog's default
+    CAPACITY:   e.role === 'RFT' ? 'OBS' : '', // relief pilot → observer: no function time
+    TIME_TO:    hm(fd.to), TIME_LDG: hm(fd.ldg),
+    APP_1:      (fd.app || '').toUpperCase(), RWY_ARR: (fd.rwy || '').toUpperCase(),
     AC_MODEL: plan?.model || fpModelForReg(reg),
     AC_REG:   fmtReg(reg) || '',
     PILOT1_ID: pic?.code  || '', PILOT1_NAME: fmtName(pic?.name),
@@ -2950,8 +3493,8 @@ function downloadCSV(headers, rows, filename) {
 // times must be UTC, durations hh:mm (not decimal).
 const RB_HEADERS = [
   'Date','Flight #','Departure','Arrival','Aircraft ID','Type',
-  'Sched Out','Sched In','Out','In','Total Block','PIC','SIC','Night','PF',
-  'Crew PIC','Crew SIC','Crew Relief1','Crew Relief2','Notes1','Notes2'
+  'Sched Out','Sched In','Out','Off','On','In','Total Block','PIC','SIC','Night','PF',
+  'Crew PIC','Crew SIC','Crew Relief1','Crew Relief2','Notes1','Notes2','Notes3'
 ];
 
 function buildRbRow(e) {
@@ -2969,6 +3512,7 @@ function buildRbRow(e) {
   const acm  = e.crew?.find(g => g.role === 'SFP')?.members?.[0];
   const acm2 = e.crew?.find(g => g.role === 'F/P')?.members?.[0];
   const night = lt.state === 'actual' ? nightMs(e) : 0;
+  const fd = fdRec(e);
 
   return {
     'Date':        e.dtstart.toISOString().slice(0,10),
@@ -2980,6 +3524,8 @@ function buildRbRow(e) {
     'Sched Out':   hm(lt.schedDep),
     'Sched In':    hm(lt.schedArr),
     'Out':         hm(lt.actDep),
+    'Off':         hm(fd.to),
+    'On':          hm(fd.ldg),
     'In':          hm(lt.actArr),
     'Total Block': block,
     'PIC':         isCPT ? block : '',
@@ -2991,7 +3537,8 @@ function buildRbRow(e) {
     'Crew Relief1': fmtName(acm?.name),
     'Crew Relief2': fmtName(acm2?.name),
     'Notes1': plan && plan.route ? 'Route: '+plan.route : '',
-    'Notes2': plan && typeof plan.usv === 'number' ? 'Cosmic '+plan.usv+' uSv (CARI-7)' : ''
+    'Notes2': plan && typeof plan.usv === 'number' ? 'Cosmic '+plan.usv+' uSv (CARI-7)' : '',
+    'Notes3': fd.app || fd.rwy ? ('Approach ' + [fd.app, fd.rwy && 'RWY ' + fd.rwy].filter(Boolean).join(' ') + ' ' + (IATA_ICAO[e.to] || e.to || '')).toUpperCase() : ''
   };
 }
 
@@ -3326,6 +3873,8 @@ async function load(){
   updateTzBar();
   updateActiveBadge();
   syncSoon(0);              // PF/landings: pull other devices' ticks, push ours
+  photoIndexLoad();         // server photo cache index
+  fdFlush();                // shared takeoff/landing/approach edits made offline
 }
 
 /* ── NAV + HELPERS ───────────────────────────────────────────── */
@@ -3590,9 +4139,9 @@ function fpFmtEnroute(s){
   var h=parseInt(s.slice(0,s.length-2),10), m=s.slice(-2);
   return h+'h'+m;
 }
-function fpRouteHTML(e){
+function fpRouteHTML(e,id){
   var p=fpFindPlan(e);
-  if(!p||!p.route) return '';
+  if(!p||!p.route) return fdAppOnlyHTML(e,id);
   var seen={}, alts=[];
   (p.alts||[]).forEach(function(a){ var k=a.toUpperCase(); if(!seen[k]){ seen[k]=1; alts.push(a); } });
   var altHTML=alts.length?('<div class="fp-altn"><span class="fp-altn-lbl">ALTN</span>'+alts.map(function(a){
@@ -3606,12 +4155,283 @@ function fpRouteHTML(e){
   // tokens are collapsed by default and expand on click.
   return '<div class="fp-route">'
     +'<div class="fp-route-hd fp-route-toggle" onclick="fpToggle(\''+fid+'\')">'
-      +'<div class="fp-route-ttl"><span class="crew-arrow" id="fparr_'+fid+'">▶</span> <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="2.2"/><circle cx="18" cy="18" r="2.2"/><path d="M8 6h6a3 3 0 0 1 0 6H10a3 3 0 0 0 0 6h6"/></svg> Flight plan route '+enrHTML+'</div>'
-      +altHTML
+      +'<div class="fp-route-ttl"><span class="crew-arrow" id="fparr_'+fid+'">▶</span> <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="2.2"/><circle cx="18" cy="18" r="2.2"/><path d="M8 6h6a3 3 0 0 1 0 6H10a3 3 0 0 0 0 6h6"/></svg> Route '+enrHTML+'</div>'
+      +'<div class="fp-hd-r">'+altHTML+fdAppChipHTML(e,id)+'</div>'
     +'</div>'
+    +fdAppEditorHTML(e,id)
     +'<div class="fp-tokens" id="fptok_'+fid+'">'+fpRouteTokensHTML(p.route)+'</div>'
   +'</div>';
 }
+/* ── SHARED FLIGHT DATA: takeoff / landing times, approach + runway ──
+   Entered by any pilot of the flight, seen by all: one JSON per company and
+   month under /roster/flights/ (script-less WebDAV, like the tips), keyed by
+   flight + route + scheduled departure date (UTC), e.g. "SB501_CDGBKK_2026-09-28":
+   { to:'2026-09-28T19:42Z', ldg:'2026-09-29T07:02Z', app:'ILS', rwy:'21L', t }.
+   Operational data only — no names or crew codes. Edits apply locally at once
+   and queue; each flush GETs the freshest file and patches only the edited
+   fields before PUT, so two pilots editing the same month don't overwrite each
+   other. Times are always typed, shown and stored in UTC, whatever zone the roster shows. */
+const FD_BASE = 'flights/';
+const LS_FD = 'schedule_fltdata', LS_FD_Q = 'schedule_fltdata_queue';
+const FD_APPS = ['ILS','RNP','RNP AR','LOC','VOR','NDB','GLS','LPV','RNAV','VISUAL'];
+const FD_TOL = 2 * 60000;                     // feed out/in are minute-rounded
+let _fd = {}, _fdAt = {}, _fdEdit = null;     // _fdEdit: the one open editor (draft survives re-renders)
+function fdCompany(){ const s = getActiveSource(); return (companyFromUrl(s ? s.url : '') || 'shared').replace(/[^a-z0-9-]/g, '').slice(0, 40) || 'shared'; }
+function fdUrl(m){ return FD_BASE + 'flt_' + fdCompany() + '_' + m + '.json'; }
+function fdKey(e){
+  const lt = legTimes4Export(e), d = lt.schedDep || legTimes(e).depDt || e.dtstart;
+  return (e.flight || 'FLT').toUpperCase().replace(/[^A-Z0-9]/g, '') + '_' + (e.from || '') + (e.to || '') + '_' + d.toISOString().slice(0, 10);
+}
+const fdMonth = key => key.slice(-10, -3);
+function fdFile(m){
+  if (!_fd[m]) { try { _fd[m] = JSON.parse(localStorage.getItem(LS_FD + '_' + fdCompany() + '_' + m) || '{}') || {}; } catch(_) { _fd[m] = {}; } }
+  return _fd[m];
+}
+function fdCache(m){ try { localStorage.setItem(LS_FD + '_' + fdCompany() + '_' + m, JSON.stringify(_fd[m] || {})); } catch(_) {} }
+// The shared record, sanitized (the file is world-writable for the app: trust nothing).
+const FD_ISO = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}Z$/;
+function fdRec(e){
+  const r = fdFile(fdMonth(fdKey(e)))[fdKey(e)] || {}, out = {};
+  if (FD_ISO.test(r.to || ''))  out.to  = new Date(r.to.replace('Z', ':00Z'));
+  if (FD_ISO.test(r.ldg || '')) out.ldg = new Date(r.ldg.replace('Z', ':00Z'));
+  if (/^[A-Z0-9 /-]{2,10}$/.test(r.app || '')) out.app = r.app;
+  if (/^\d{2}[LCR]?$/.test(r.rwy || '')) out.rwy = r.rwy;
+  return out;
+}
+const fdIso = d => d.toISOString().slice(0, 16) + 'Z';
+// Load the month files the shown flights live in (at most once a minute each).
+function fdEnsure(evs){
+  if (!_isPilot) return;
+  const ms = new Set();
+  for (const e of evs) if (e.type === 'FLT' && e.dtstart && flightStatus(e) !== 'scheduled') ms.add(fdMonth(fdKey(e)));
+  for (const m of ms) fdLoad(m);
+}
+async function fdLoad(m, force){
+  if (!navigator.onLine || (!force && Date.now() - (_fdAt[m] || 0) < 60000)) return;
+  _fdAt[m] = Date.now();
+  try {
+    const r = await fetch(fdUrl(m), { cache: 'no-store' });
+    if (!r.ok && r.status !== 404) return;
+    const txt = r.ok ? await r.text() : '';
+    const srv = txt.trim() ? JSON.parse(txt) : {};
+    // Our own unsent edits stay on top of what the server has.
+    for (const q of fdQueue()) if (q.m === m) fdPatch(srv, q.key, q.patch);
+    const before = JSON.stringify(fdFile(m));
+    _fd[m] = srv; fdCache(m);
+    if (JSON.stringify(srv) !== before && allEvents.length) render();
+  } catch(err) { console.warn('[Flights] load failed:', err && err.message); }
+}
+function fdPatch(store, key, patch){
+  const r = Object.assign({}, store[key] || {});
+  for (const k in patch) { if (patch[k] == null) delete r[k]; else r[k] = patch[k]; }
+  r.t = Date.now();
+  if (Object.keys(r).length > 1) store[key] = r; else delete store[key];
+}
+function fdQueue(){ try { return JSON.parse(localStorage.getItem(LS_FD_Q + '_' + fdCompany()) || '[]') || []; } catch(_) { return []; } }
+function fdSetQueue(q){ try { localStorage.setItem(LS_FD_Q + '_' + fdCompany(), JSON.stringify(q)); } catch(_) {} }
+function fdSave(e, patch){
+  const key = fdKey(e), m = fdMonth(key);
+  fdPatch(fdFile(m), key, patch); fdCache(m);
+  fdSetQueue(fdQueue().concat([{ m, key, patch }]));
+  _fdEdit = null;
+  render();
+  fdFlush();
+}
+let _fdFlushing = null;
+function fdFlush(){
+  if (_fdFlushing || !navigator.onLine) return _fdFlushing;
+  _fdFlushing = (async () => {
+    const q = fdQueue();
+    for (const m of [...new Set(q.map(x => x.m))]) {
+      const mine = q.filter(x => x.m === m);
+      const g = await fetch(fdUrl(m), { cache: 'no-store' });
+      if (!g.ok && g.status !== 404) throw new Error('GET ' + g.status);
+      const txt = g.ok ? await g.text() : '';
+      const store = txt.trim() ? JSON.parse(txt) : {};
+      for (const x of mine) fdPatch(store, x.key, x.patch);
+      const p = await fetch(fdUrl(m), { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(store) });
+      if (!p.ok) throw new Error('PUT ' + p.status);
+      _fd[m] = store; fdCache(m); _fdAt[m] = Date.now();
+      const sent = new Set(mine.map(x => JSON.stringify(x)));   // edits queued meanwhile stay queued
+      fdSetQueue(fdQueue().filter(x => !sent.has(JSON.stringify(x))));
+    }
+  })().catch(err => console.warn('[Flights] save pending (will retry):', err && err.message))
+     .finally(() => { _fdFlushing = null; });
+  return _fdFlushing;
+}
+const fdCanEdit = e => _isPilot && e.type === 'FLT' && !!e.dtstart && flightStatus(e) !== 'scheduled';
+const fdTz = () => 'UTC';
+const fdUTC = d => d.toISOString().slice(11, 16);
+const fdHM = d => d ? fdUTC(d) + 'z' : '';
+// "0942" / "09:42" (UTC) → the Date nearest to ref.
+function fdParse(str, ref){
+  const m = /^([01]\d|2[0-3]):?([0-5]\d)$/.exec((str || '').trim());
+  if (!m || !ref) return null;
+  const base = Date.UTC(ref.getUTCFullYear(), ref.getUTCMonth(), ref.getUTCDate(), +m[1], +m[2]);
+  let best = base;
+  for (const dd of [-1, 1]) { const t = base + dd * 86400000; if (Math.abs(t - ref) < Math.abs(best - ref)) best = t; }
+  return new Date(best);
+}
+const fdDigits = d => d ? fdUTC(d).replace(':', '') : '';
+const fdFmtDraft = v => { const s = String(v || '').replace(/\D/g, '').slice(0, 4); return s.length > 2 ? s.slice(0, 2) + ':' + s.slice(2) : s; };
+function fdRefs(e){
+  const lt = legTimes4Export(e), L = legTimes(e);
+  return { out: lt.actDep || L.depDt, inn: lt.actArr || L.arrDt };
+}
+
+/* Takeoff / landing */
+function fdTLChipHTML(e, id){
+  if (!fdCanEdit(e)) return '';
+  const r = fdRec(e), open = _fdEdit && _fdEdit.kind === 'tl' && _fdEdit.key === fdKey(e);
+  const has = r.to || r.ldg;
+  return `<button class="tl-chip${has ? ' on' : ''}${open ? ' open' : ''}" onclick="fdOpen('${id}','tl')" title="Takeoff and landing times — shared with everyone on this flight">${ICON.takeoff}`
+    + (has ? `<span class="mono">${r.to ? fdHM(r.to) : '--:--'}</span><span class="sep">→</span><span class="mono">${r.ldg ? fdHM(r.ldg) : '--:--'}</span>` : 'T/O · LDG')
+    + `</button>`;
+}
+function fdOpen(id, kind){
+  const e = eventById[id]; if (!e) return;
+  const key = fdKey(e);
+  if (_fdEdit && _fdEdit.key === key && _fdEdit.kind === kind) { _fdEdit = null; render(); return; }
+  const r = fdRec(e);
+  _fdEdit = kind === 'tl'
+    ? { kind, key, to: fdFmtDraft(fdDigits(r.to)), ldg: fdFmtDraft(fdDigits(r.ldg)), err: '', focus: r.to ? '' : 'fdTo' }
+    : { kind, key, app: r.app || '', rwy: (r.rwy || '').replace(/[LCR]$/, ''), side: (/[LCR]$/.exec(r.rwy || '') || [''])[0], err: '', focus: '' };
+  render();
+}
+function fdTLEditorHTML(e, id){
+  const E = _fdEdit;
+  if (!E || E.kind !== 'tl' || E.key !== fdKey(e) || !fdCanEdit(e)) return '';
+  const R = fdRefs(e);
+  const q = (fld, base, ns, sign) => base ? ns.map(n => `<button type="button" onclick="fdQuick('${id}','${fld}',${sign * n})">${sign > 0 ? '+' : '−'}${n}</button>`).join('') : '';
+  const inp = (fld, idn, ph, ref) => `<input id="${idn}" class="fd-in" value="${esc(E[fld])}" placeholder="${ph}" inputmode="numeric" pattern="[0-9]*" autocomplete="off" enterkeyhint="${fld === 'to' ? 'next' : 'done'}" aria-label="${fld === 'to' ? 'Takeoff' : 'Landing'} time, ${fdTz()}"
+      oninput="fdTypeTime(this,'${fld}','${id}')" onfocus="_fdEdit&&(_fdEdit.focus=this.id)" onkeydown="if(event.key==='Enter'){event.preventDefault();${fld === 'to' ? "document.getElementById('fdLdg').focus()" : `fdSaveTL('${id}')`}}">`;
+  return `<div class="fd-ed" onclick="event.stopPropagation()">
+    <div class="fd-hd"><span class="fd-ttl">Takeoff &amp; landing · <span class="mono">${esc(fdTz())}</span></span><span class="fd-note">${ICON.users}Shared with everyone on this flight</span></div>
+    <div class="fd-grid">
+      <div class="fd-f${E.err === 'to' ? ' bad' : ''}">
+        <div class="fd-lbl">${ICON.takeoff}Takeoff</div>
+        ${inp('to', 'fdTo', '--:--')}
+        ${R.out ? `<div class="fd-ref">Off-block <b>${fdHM(R.out)}</b></div>` : ''}
+        <div class="fd-q">${q('to', R.out, [5, 10, 15], 1)}</div>
+      </div>
+      <div class="fd-f${E.err === 'ldg' ? ' bad' : ''}">
+        <div class="fd-lbl">${ICON.land}Landing</div>
+        ${inp('ldg', 'fdLdg', '--:--')}
+        ${R.inn ? `<div class="fd-ref">On-block <b>${fdHM(R.inn)}</b></div>` : ''}
+        <div class="fd-q">${q('ldg', R.inn, [3, 5, 8], -1)}</div>
+      </div>
+    </div>
+    ${E.msg ? `<div class="fd-err">${esc(E.msg)}</div>` : ''}
+    <div class="fd-acts">
+      ${fdRec(e).to || fdRec(e).ldg ? `<button class="exp-del" onclick="fdClear('${id}','tl')">Clear</button>` : ''}
+      <span class="sp"></span>
+      <button class="tip-cancel-btn" onclick="fdCancel()">Cancel</button>
+      <button class="exp-save" onclick="fdSaveTL('${id}')">Save</button>
+    </div>
+  </div>`;
+}
+// Digits only, colon added after the hours; a full takeoff time jumps to landing.
+function fdTypeTime(el, fld, id){
+  if (!_fdEdit) return;
+  const v = fdFmtDraft(el.value);
+  el.value = v; _fdEdit[fld] = v;
+  if (_fdEdit.err) { _fdEdit.err = ''; _fdEdit.msg = ''; el.closest('.fd-f')?.classList.remove('bad'); }
+  if (fld === 'to' && v.length === 5) document.getElementById('fdLdg')?.focus();
+}
+function fdQuick(id, fld, mins){
+  const e = eventById[id]; if (!e || !_fdEdit) return;
+  const R = fdRefs(e), base = fld === 'to' ? R.out : R.inn;
+  if (!base) return;
+  _fdEdit[fld] = fdFmtDraft(fdDigits(new Date(base.getTime() + mins * 60000)));
+  _fdEdit.err = ''; _fdEdit.msg = '';
+  _fdEdit.focus = fld === 'to' && !_fdEdit.ldg ? 'fdLdg' : '';
+  render();
+}
+function fdCancel(){ _fdEdit = null; render(); }
+function fdClear(id, kind){
+  const e = eventById[id]; if (!e) return;
+  fdSave(e, kind === 'tl' ? { to: null, ldg: null } : { app: null, rwy: null });
+}
+function fdSaveTL(id){
+  const e = eventById[id], E = _fdEdit; if (!e || !E) return;
+  const R = fdRefs(e);
+  const to = E.to ? fdParse(E.to, R.out || R.inn) : null, ldg = E.ldg ? fdParse(E.ldg, R.inn || R.out) : null;
+  const fail = (fld, msg) => { E.err = fld; E.msg = msg; E.focus = fld === 'to' ? 'fdTo' : 'fdLdg'; render(); };
+  if (E.to && !to) return fail('to', 'Takeoff: type 4 digits, e.g. 0942.');
+  if (E.ldg && !ldg) return fail('ldg', 'Landing: type 4 digits, e.g. 1355.');
+  if (to && R.out && to < R.out - FD_TOL) return fail('to', 'Takeoff is before off-block (' + fdHM(R.out) + ').');
+  if (ldg && R.inn && ldg > +R.inn + FD_TOL) return fail('ldg', 'Landing is after on-block (' + fdHM(R.inn) + ').');
+  if (to && ldg && ldg <= to) return fail('ldg', 'Landing must be after takeoff.');
+  fdSave(e, { to: to ? fdIso(to) : null, ldg: ldg ? fdIso(ldg) : null });
+}
+
+/* Approach + runway (on the flight-plan route line) */
+function fdAppChipHTML(e, id){
+  if (!fdCanEdit(e)) return '';
+  const r = fdRec(e), open = _fdEdit && _fdEdit.kind === 'app' && _fdEdit.key === fdKey(e);
+  return `<button class="fd-app-chip${r.app || r.rwy ? ' on' : ''}${open ? ' open' : ''}" onclick="event.stopPropagation();fdOpen('${id}','app')" title="Approach and runway at ${esc(e.to || '')} — shared with everyone on this flight">${ICON.land}`
+    + (r.app || r.rwy ? `${esc(r.app || '')}${r.rwy ? ` <span class="k">RWY</span> ${esc(r.rwy)}` : ''}` : '<span>Approach</span>') + `</button>`;
+}
+function fdAppOnlyHTML(e, id){
+  if (!fdCanEdit(e)) return '';
+  return `<div class="fp-route fd-app-only"><div class="fp-route-hd"><div class="fp-route-ttl">${ICON.land.replace('<svg ', '<svg width="12" height="12" ')} Arrival ${esc(e.to || '')}</div><div class="fp-hd-r">${fdAppChipHTML(e, id)}</div></div>${fdAppEditorHTML(e, id)}</div>`;
+}
+// Runways already logged at this airport (any loaded month) — one tap to reuse.
+function fdRecentRwys(apt, key){
+  const seen = {};
+  for (const m in _fd) for (const k in _fd[m]) {
+    const r = _fd[m][k];
+    if (k !== key && k.split('_')[1]?.slice(-3) === apt && /^\d{2}[LCR]?$/.test(r.rwy || '')) seen[r.rwy] = (seen[r.rwy] || 0) + 1;
+  }
+  return Object.keys(seen).sort((a, b) => seen[b] - seen[a]).slice(0, 4);
+}
+function fdAppEditorHTML(e, id){
+  const E = _fdEdit;
+  if (!E || E.kind !== 'app' || E.key !== fdKey(e) || !fdCanEdit(e)) return '';
+  const recent = fdRecentRwys(e.to || '', E.key);
+  return `<div class="fd-ed" onclick="event.stopPropagation()">
+    <div class="fd-hd"><span class="fd-ttl">Approach · <span class="mono">${esc(e.to || '')}</span></span><span class="fd-note">${ICON.users}Shared with everyone on this flight</span></div>
+    <div class="fd-apps">${FD_APPS.map(a => `<button type="button" class="${E.app === a ? 'on' : ''}" onclick="fdPick('app','${a}')">${a}</button>`).join('')}</div>
+    <div class="fd-rwy">
+      <div class="fd-f${E.err === 'rwy' ? ' bad' : ''}"><span class="fd-lbl">RWY</span><input id="fdRwy" class="fd-in" value="${esc(E.rwy)}" placeholder="--" inputmode="numeric" pattern="[0-9]*" maxlength="2" autocomplete="off" enterkeyhint="done" aria-label="Runway number"
+        oninput="this.value=this.value.replace(/\D/g,'').slice(0,2);_fdEdit.rwy=this.value;_fdEdit.err='';this.closest('.fd-f').classList.remove('bad')" onfocus="_fdEdit&&(_fdEdit.focus=this.id)" onkeydown="if(event.key==='Enter'){event.preventDefault();fdSaveApp('${id}')}"></div>
+      <div class="fd-seg">${['L', 'C', 'R'].map(x => `<button type="button" class="${E.side === x ? 'on' : ''}" onclick="fdPick('side','${x}')">${x}</button>`).join('')}</div>
+      ${recent.length ? `<div class="fd-recent"><span class="k">Recent</span>${recent.map(r => `<button type="button" onclick="fdPick('rwyFull','${r}')">${r}</button>`).join('')}</div>` : ''}
+    </div>
+    ${E.msg ? `<div class="fd-err">${esc(E.msg)}</div>` : ''}
+    <div class="fd-acts">
+      ${fdRec(e).app || fdRec(e).rwy ? `<button class="exp-del" onclick="fdClear('${id}','app')">Clear</button>` : ''}
+      <span class="sp"></span>
+      <button class="tip-cancel-btn" onclick="fdCancel()">Cancel</button>
+      <button class="exp-save" onclick="fdSaveApp('${id}')">Save</button>
+    </div>
+  </div>`;
+}
+function fdPick(what, v){
+  const E = _fdEdit; if (!E) return;
+  E.rwy = document.getElementById('fdRwy')?.value ?? E.rwy;
+  if (what === 'app') E.app = E.app === v ? '' : v;
+  else if (what === 'side') E.side = E.side === v ? '' : v;
+  else { E.rwy = v.slice(0, 2); E.side = v.slice(2); }
+  E.err = ''; E.msg = '';
+  E.focus = what === 'app' && !E.rwy ? 'fdRwy' : '';
+  render();
+}
+function fdSaveApp(id){
+  const e = eventById[id], E = _fdEdit; if (!e || !E) return;
+  E.rwy = (document.getElementById('fdRwy')?.value ?? E.rwy).replace(/\D/g, '');
+  if (E.rwy && !(/^\d{2}$/.test(E.rwy) && +E.rwy >= 1 && +E.rwy <= 36)) { E.err = 'rwy'; E.msg = 'Runway: 01 to 36.'; E.focus = 'fdRwy'; render(); return; }
+  if (!E.rwy && E.side) { E.err = 'rwy'; E.msg = 'Runway number missing.'; E.focus = 'fdRwy'; render(); return; }
+  fdSave(e, { app: E.app ? E.app.toUpperCase() : null, rwy: E.rwy ? (E.rwy + E.side).toUpperCase() : null });
+}
+// After a render, put the caret back where the pilot was typing.
+function fdRefocus(){
+  const f = _fdEdit && _fdEdit.focus && document.getElementById(_fdEdit.focus);
+  if (!f) return;
+  f.focus({ preventScroll: true });
+  try { const n = f.value.length; f.setSelectionRange(n, n); } catch(_) {}
+}
+
 // Expand/collapse a flight-plan route's token list.
 function fpToggle(id){
   var t=document.getElementById('fptok_'+id), a=document.getElementById('fparr_'+id);
@@ -3642,12 +4462,14 @@ function computeMyCode(){
   var ov=(localStorage.getItem(LS_TIP_MYCODE)||'').trim().toUpperCase();
   var freq={}, nameOf={};
   for(var i=0;i<allEvents.length;i++){
-    var cr=allEvents[i].crew||[];
+    var cr=allEvents[i].crew||[], own=allEvents[i].role||'';
     for(var r=0;r<cr.length;r++){
       var ms=cr[r].members||[];
+      // sitting in the seat the summary names as the owner's own role ("… (F/O)") counts far more
+      var w=(own && cr[r].role===own && ms.length===1) ? 10 : 1;
       for(var m=0;m<ms.length;m++){
         var c=(ms[m].code||'').trim().toUpperCase(); if(!c) continue;
-        freq[c]=(freq[c]||0)+1;
+        freq[c]=(freq[c]||0)+w;
         if(ms[m].name && !nameOf[c]) nameOf[c]=ms[m].name;
       }
     }
@@ -3659,6 +4481,33 @@ function computeMyCode(){
     myCode=best;
   }
   myName = (myCode && nameOf[myCode]) ? nameOf[myCode] : '';
+}
+// Pilot or cabin crew? Each flight's summary names the owner's own role ("… (F/O)").
+// Known codes decide; any other code is placed by where the owner's 3-letter code sits
+// in the crew list (cockpit groups always come before the cabin ones). Majority of all
+// flights in the history, so a one-off observer/positioning seat can't flip it.
+const PILOT_ROLE_RE = /^(CPT|CDB|CMD|F\/O|FO|OPL|RFT)\b/;
+const CABIN_ROLE_RE = /^(SFP|F\/P|HST|CCP|CCA|PNC|PUR|CSD|FA)\b/;
+let _isPilot = true;
+function flightDeckVote(e){
+  const r = (e.role || '').toUpperCase();
+  if (PILOT_ROLE_RE.test(r)) return 1;
+  if (CABIN_ROLE_RE.test(r)) return -1;
+  const cr = e.crew || [];
+  let mine = r ? cr.findIndex(g => (g.role || '').toUpperCase() === r) : -1;   // the owner's own seat group
+  if (mine < 0 && myCode) mine = cr.findIndex(g => (g.members || []).some(m => (m.code || '').trim().toUpperCase() === myCode));
+  const cab  = cr.findIndex(g => CABIN_ROLE_RE.test(g.role || ''));
+  if (mine < 0 || cab < 0) return 0;
+  return mine < cab ? 1 : -1;
+}
+function detectPilot(){
+  let p = 0, c = 0;
+  for (const e of allEvents) {
+    if (e.type !== 'FLT') continue;
+    const v = flightDeckVote(e);
+    if (v > 0) p++; else if (v < 0) c++;
+  }
+  return p || c ? p >= c : true;   // no flights to go by yet: keep the pilot features
 }
 function tipIsAdmin(){ return !!myCode && TIP_ADMINS.indexOf(myCode)>=0; }
 function tipHasContributed(){
@@ -3928,7 +4777,7 @@ tipsLoad();
 document.addEventListener('visibilitychange', function(){ if(document.visibilityState==='visible'){ fpMaybeRefresh(); tipMaybeRefresh(); rosterMaybeRefresh(); syncMaybeRefresh(); } });
 window.addEventListener('pageshow', function(e){ if(e.persisted){ fpMaybeRefresh(); tipMaybeRefresh(); rosterMaybeRefresh(); syncMaybeRefresh(); } }); // bfcache back/forward
 window.addEventListener('focus', function(){ fpMaybeRefresh(); tipMaybeRefresh(); rosterMaybeRefresh(); syncMaybeRefresh(); });
-window.addEventListener('online', function(){ fpMaybeRefresh(); tipMaybeRefresh(); rosterMaybeRefresh(); syncMaybeRefresh(); });
+window.addEventListener('online', function(){ fpMaybeRefresh(); tipMaybeRefresh(); rosterMaybeRefresh(); syncMaybeRefresh(); fdFlush(); });
 
 // Disclaimer — show once (deferred: element is parsed after this script block)
 window.addEventListener('load', function() {

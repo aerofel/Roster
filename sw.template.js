@@ -5,7 +5,7 @@
  *       Online  → the freshest copy is fetched and the cache updated, so a new build
  *                 (new CSS/JS) shows up on the very next open — no stale-cache problem.
  *       Offline / slow → the last cached copy is served (inflight use).
- *   Google Fonts + destination photos         : CACHE-FIRST (immutable assets).
+ *   Google Fonts + destination photos (Pexels CDN and our photos/ cache) : CACHE-FIRST.
  *   Roster ICS, CORS proxy, Pexels API, tips  : not intercepted (the app has its own
  *                                              localStorage caches and PUTs tips).
  *
@@ -89,6 +89,11 @@ self.addEventListener('fetch', function (event) {
   }
   if (url.href === DATA_URL) {
     event.respondWith(networkFirst(req, DATA_URL));
+    return;
+  }
+  // Destination photos cached on our server (tools/photos.py): immutable files.
+  if (url.origin === self.location.origin && /\/photos\/[A-Z]{3}\/\d+\.jpg$/.test(url.pathname)) {
+    event.respondWith(cacheFirst(req));
     return;
   }
   if (CACHE_FIRST_HOSTS.indexOf(url.hostname) >= 0) {
