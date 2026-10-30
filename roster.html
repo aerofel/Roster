@@ -307,6 +307,84 @@
     .lt-btn-actual{background:var(--blue-dim);color:var(--blue);border-color:rgba(90,184,255,.22)}
     .lt-btn-actual:hover{background:var(--blue-glow);border-color:var(--blue)}
 
+    /* ─── PILOT FLYING / LANDING CURRENCY ────────────────────── */
+    .pf-btn{
+      display:inline-flex;align-items:center;gap:5px;padding:5px 11px;border-radius:999px;cursor:pointer;
+      background:var(--surf0);color:var(--txt-md);border:1px dashed var(--bdr-hi);
+      font-family:var(--font);font-size:10.5px;font-weight:800;letter-spacing:.3px;transition:all .15s;
+    }
+    .pf-btn svg{width:12px;height:12px}
+    .pf-btn:hover{color:var(--green);border-color:var(--green)}
+    .pf-btn.on{background:var(--green-dim);color:var(--green);border:1px solid var(--green-glow);box-shadow:0 0 14px -4px var(--green-glow)}
+    .pf-btn.on::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green)}
+    .ldg-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:4px 0 0}
+    .ldg-lbl{display:inline-flex;align-items:center;gap:5px;font-size:9.5px;font-weight:800;letter-spacing:.9px;text-transform:uppercase;color:var(--txt-md)}
+    .ldg-lbl svg{width:12px;height:12px}
+    .ldg-row.on .ldg-lbl{color:var(--green)}
+    .ldg-step{display:inline-flex;align-items:center;gap:1px;padding:2px;background:var(--surf0);border:1px solid var(--bdr);border-radius:999px}
+    .ldg-row.on .ldg-step{border-color:var(--green-glow);background:var(--green-dim)}
+    .ldg-step button{width:22px;height:22px;padding:0;border-radius:999px;border:none;background:var(--surf1);color:var(--txt);font-family:var(--mono);font-size:13px;font-weight:700;line-height:1;cursor:pointer;transition:background .15s,color .15s}
+    .ldg-step button:hover:not(:disabled){background:var(--surf2);color:var(--green)}
+    .ldg-step button:disabled{opacity:.35;cursor:default}
+    .ldg-n{min-width:24px;text-align:center;font-family:var(--mono);font-size:12px;font-weight:700;color:var(--txt);font-variant-numeric:tabular-nums}
+    .ldg-row.on .ldg-n{color:var(--green)}
+
+    /* Currency level: green ≥ 30 d · yellow 10–29 · orange 0–9 · red expired */
+    .cur-green {--lv:var(--green); --lv-dim:var(--green-dim); --lv-glow:var(--green-glow)}
+    .cur-yellow{--lv:var(--gold);  --lv-dim:var(--gold-dim);  --lv-glow:var(--gold-glow)}
+    .cur-orange{--lv:var(--orange);--lv-dim:var(--orange-dim);--lv-glow:color-mix(in srgb,var(--orange) 30%,transparent)}
+    .cur-red   {--lv:var(--red);   --lv-dim:var(--red-dim);   --lv-glow:var(--red-glow)}
+    .cur-none  {--lv:var(--lavender);--lv-dim:var(--lav-dim); --lv-glow:color-mix(in srgb,var(--lavender) 26%,transparent)}
+    .cur-banner{
+      position:relative;overflow:hidden;border-radius:var(--r);padding:16px 18px 14px;scroll-margin-top:calc(var(--sticky-top) + 16px);
+      background:radial-gradient(120% 140% at 0% 0%,color-mix(in srgb,var(--lv) 24%,transparent) 0%,transparent 60%),
+                 linear-gradient(135deg,var(--lv-dim),var(--bg-2) 85%);
+      border:1px solid color-mix(in srgb,var(--lv) 45%,transparent);
+      box-shadow:0 0 0 1px color-mix(in srgb,var(--lv) 12%,transparent) inset,0 14px 40px -16px var(--lv-glow),0 0 32px -10px var(--lv-glow);
+    }
+    .cur-banner::after{content:'';position:absolute;inset:0;pointer-events:none;
+      background:linear-gradient(105deg,transparent 30%,color-mix(in srgb,var(--lv) 14%,transparent) 45%,transparent 60%);
+      transform:translateX(-100%);animation:cur-sheen 4.5s ease-in-out infinite}
+    @keyframes cur-sheen{0%,55%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+    .cur-banner.cur-orange,.cur-banner.cur-red{animation:cur-pulse 2.2s ease-in-out infinite}
+    @keyframes cur-pulse{0%,100%{box-shadow:0 0 0 1px color-mix(in srgb,var(--lv) 12%,transparent) inset,0 14px 40px -16px var(--lv-glow),0 0 32px -10px var(--lv-glow)}
+                         50%{box-shadow:0 0 0 1px color-mix(in srgb,var(--lv) 30%,transparent) inset,0 14px 44px -12px var(--lv-glow),0 0 44px -6px var(--lv-glow)}}
+    .cur-top{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:14px;position:relative;z-index:1}
+    .cur-ic{width:46px;height:46px;border-radius:14px;display:flex;align-items:center;justify-content:center;
+      background:color-mix(in srgb,var(--lv) 18%,transparent);color:var(--lv);border:1px solid color-mix(in srgb,var(--lv) 40%,transparent);box-shadow:0 0 22px -6px var(--lv-glow)}
+    .cur-ic svg{width:24px;height:24px}
+    .cur-kind{font-size:9.5px;font-weight:800;letter-spacing:1.4px;text-transform:uppercase;color:var(--lv)}
+    .cur-ttl{font-size:19px;font-weight:800;letter-spacing:-.4px;line-height:1.2;margin-top:3px;color:var(--txt)}
+    .cur-ttl .mono{font-family:var(--mono);color:var(--lv);letter-spacing:-.3px}
+    .cur-sub{font-size:12px;color:var(--txt-md);margin-top:4px}
+    .cur-sub .mono{font-family:var(--mono);color:var(--txt);font-weight:600}
+    .cur-days{text-align:center;min-width:70px;padding:8px 10px;border-radius:14px;background:color-mix(in srgb,var(--lv) 14%,var(--bg-2));border:1px solid color-mix(in srgb,var(--lv) 35%,transparent)}
+    .cur-days-n{font-family:var(--mono);font-size:26px;font-weight:700;line-height:1;color:var(--lv);letter-spacing:-1px;font-variant-numeric:tabular-nums}
+    .cur-days-l{font-size:8.5px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--txt-md);margin-top:4px;white-space:nowrap}
+    .cur-ldgs{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px;padding-top:11px;border-top:1px dashed color-mix(in srgb,var(--lv) 30%,transparent);position:relative;z-index:1}
+    .cur-ldg{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;font-size:11px;color:var(--txt-md);background:var(--surf0);border:1px solid var(--bdr)}
+    .cur-ldg .mono{font-family:var(--mono);font-weight:700;color:var(--txt)}
+    .cur-ldg.anchor{border-color:color-mix(in srgb,var(--lv) 50%,transparent);color:var(--lv)}
+    .cur-ldg.anchor .mono{color:var(--lv)}
+    .cur-ldg.plan{border-style:dashed}
+    .cur-sync{margin-left:auto;align-self:center;font-size:10px;font-weight:700;letter-spacing:.4px;color:var(--txt-dim);white-space:nowrap}
+    .day.cur-day .day-num{border-color:var(--lv);color:var(--lv);box-shadow:0 0 0 4px var(--bg),0 0 20px -2px var(--lv-glow)}
+    .cday.cur-day{box-shadow:inset 0 0 0 2px var(--lv);background:var(--lv-dim)}
+    .cday.cur-day .cdn{color:var(--lv);font-weight:800}
+    .cur-pill{
+      position:fixed;left:50%;bottom:max(16px,env(safe-area-inset-bottom));z-index:40;
+      transform:translate(-50%,calc(100% + 40px));opacity:0;transition:transform .3s ease,opacity .3s ease;
+      display:inline-flex;align-items:center;gap:9px;max-width:calc(100vw - 32px);padding:9px 14px 9px 12px;border-radius:999px;cursor:pointer;
+      font-family:var(--font);font-size:12px;font-weight:700;color:var(--txt);white-space:nowrap;
+      background:var(--glass);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);
+      border:1px solid color-mix(in srgb,var(--lv) 55%,transparent);box-shadow:0 10px 30px -10px rgba(0,0,0,.6),0 0 24px -6px var(--lv-glow);
+    }
+    .cur-pill.show{transform:translate(-50%,0);opacity:1}
+    .cur-pill .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;background:var(--lv);box-shadow:0 0 10px var(--lv)}
+    .cur-pill .mono{font-family:var(--mono);color:var(--lv)}
+    .cur-pill .dim{color:var(--txt-md);font-weight:600;overflow:hidden;text-overflow:ellipsis}
+    .cur-pill svg{width:13px;height:13px;color:var(--txt-md);flex-shrink:0}
+
     /* Crew */
     .crew-toggle{display:flex;align-items:center;gap:7px;background:none;border:none;color:var(--blue);font-size:12.5px;font-weight:700;cursor:pointer;padding:0;margin-top:10px;text-align:left;line-height:1.35;transition:opacity .15s}
     .crew-toggle:hover{opacity:.8}
@@ -623,6 +701,13 @@
       .tz-row{padding-left:12px}
       .tz-bar.tz-compact .tz-seg-btn{padding:4px 8px}
       .crew-block.open{grid-template-columns:1fr}
+      .cur-banner{padding:14px 14px 12px}
+      .cur-top{gap:11px}
+      .cur-ic{width:38px;height:38px;border-radius:12px}
+      .cur-ic svg{width:20px;height:20px}
+      .cur-ttl{font-size:16px}
+      .cur-days{min-width:58px;padding:7px 8px}
+      .cur-days-n{font-size:21px}
       .imp-ttl .lb-seg{margin-left:0;width:100%;justify-content:space-between}
       .lb-btn{flex:1;padding:6px 6px}
     }
@@ -640,6 +725,8 @@
       .ftag.live,.badge-dot{animation:none}
       .disc-box,.cal-modal-sheet{animation:none}
       .card-photo-bg{transition:none}
+      .cur-banner::after,.cur-banner.cur-orange,.cur-banner.cur-red{animation:none}
+      .cur-pill{transition:none}
     }
   </style>
 </head>
@@ -1388,6 +1475,7 @@ let myCode   = null;      // inferred/overridden crew code of the roster owner
 let myName   = '';        // full name for myCode
 const tipOpen = new Set();// stopover cards whose tips section is expanded (by cid)
 let tipEditingId = null;   // id of the tip currently being edited inline
+let tipEditingCid = null;  // card the editor is open on (same city can appear on several cards)
 let wantScroll = true;     // scroll to today's duty on load/nav, but NOT on background refreshes
 
 /* ── SNAPSHOT STORAGE ────────────────────────────────────────── */
@@ -1799,6 +1887,7 @@ function render() {
   updateTzBar();
   updateTzMonthLabel();
   computeMyCode();          // refresh roster-owner identity for stopover-tips gating
+  _cur = currencyState();   // landing currency (banner + bottom pill)
   const evs = monthEvs();
   const name = new Date(curYear,curMonth,1).toLocaleDateString('en-US',{month:'long'});
 
@@ -1881,6 +1970,7 @@ function render() {
   `;
 
   loadCardPhotos();
+  updateCurPill();
 
   // Keep the import panel's month button/count in step with the displayed month
   if (document.getElementById('importPanel')?.classList.contains('open')) updateImportCount();
@@ -1900,7 +1990,10 @@ function render() {
 
 /* ── LIST VIEW (timeline) ────────────────────────────────────── */
 function renderList(evs) {
-  if (!evs.length) return `<div class="scr">
+  const mm = `${curYear}-${String(curMonth+1).padStart(2,'0')}`;
+  const curKey = _cur.limit != null ? dayKey(_cur.limit) : '';
+  const curHere = curKey.startsWith(mm);
+  if (!evs.length && !curHere) return `<div class="scr">
     <div class="scr-ico">📅</div>
     <div class="scr-ttl">No duties this month</div>
     <div class="scr-txt">Navigate to another month.</div>
@@ -1925,6 +2018,8 @@ function renderList(evs) {
     const k=new Date(e.dtstart.getTime()+tzMs(e.dtstart)).toISOString().slice(0,10);
     (groups[k]=groups[k]||[]).push(e);
   }
+  // The currency limit gets its own day node even on a day without duties.
+  if (curHere && !groups[curKey]) groups[curKey]=[];
 
   const now = new Date();
   let upcomingKey = null;
@@ -1937,18 +2032,20 @@ function renderList(evs) {
 
   const todayKey = new Date(Date.now()+tzMs(new Date())).toISOString().slice(0,10);
   let html='<div class="cards">';
-  for(const[k,dayEvs] of Object.entries(groups)){
+  for(const k of Object.keys(groups).sort()){
+    const dayEvs = groups[k];
     const anchor = k === upcomingKey ? ' id="upcoming"' : '';
+    const isCur = curHere && k === curKey;
     const hd = new Date(k+'T00:00:00Z');
     const isToday = k === todayKey;
     const wd = hd.toLocaleDateString('en-US',{weekday:'short',timeZone:'UTC'});
     const mo = hd.toLocaleDateString('en-US',{month:'short',timeZone:'UTC'});
-    html+=`<section class="day${isToday?' today':''}"${anchor}>
+    html+=`<section class="day${isToday?' today':''}${isCur?' cur-day cur-'+_cur.level:''}"${anchor}>
       <div class="day-node" title="${hd.toLocaleDateString('en-US',{weekday:'long',day:'numeric',month:'long',timeZone:'UTC'})}">
         <div class="day-num">${hd.getUTCDate()}</div>
         <div class="day-wd">${wd}<span class="day-mo"> ${mo}</span></div>
       </div>
-      <div class="day-items">${dayEvs.map(cardHTML).join('')}</div>
+      <div class="day-items">${isCur?curBannerHTML(_cur):''}${dayEvs.map(cardHTML).join('')}</div>
     </section>`;
   }
   return html+'</div>';
@@ -1984,6 +2081,7 @@ const ICON = {
   clock: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',
   rad:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="22"/><line x1="2" y1="12" x2="5" y2="12"/><line x1="19" y1="12" x2="22" y2="12"/></svg>',
   tail:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 22h20"/><path d="M6.36 17.4 4 17l-2-4 1.1-.55a2 2 0 0 1 1.8 0l.17.1a2 2 0 0 0 1.8 0L8 12 5 6l.9-.45a2 2 0 0 1 2.09.2l4.02 3a2 2 0 0 0 2.1.2l4.19-2.06a2.41 2.41 0 0 1 3.02.8 1.1 1.1 0 0 1-.38 1.62L7.37 18.9a2 2 0 0 1-1.01.5z"/></svg>',
+  land:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 22h20"/><path d="M3.77 10.77 2 9l2-4.5 1.1.55c.55.28.9.84.9 1.45s.35 1.17.9 1.45L8 8.5l3-6 1.05.53a2 2 0 0 1 1.09 1.52l.72 5.4a2 2 0 0 0 1.09 1.52l4.4 2.2c.42.22.78.55 1.01.96l.6 1.03c.49.88-.06 1.98-1.06 2.1l-1.18.15c-.47.06-.95-.02-1.37-.24L4.29 11.15a2 2 0 0 1-.52-.38Z"/></svg>',
   dl:    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>'
 };
 // Monochrome seat icon — kept as a function for callers that size it explicitly.
@@ -2050,6 +2148,7 @@ function cardFLT(e){
   const ltBtnClass   = ltState==='actual' ? 'lt-btn lt-btn-actual' : 'lt-btn';
   const ltBtnLabel   = ltState==='actual' ? 'Block times' : ltState==='pending' ? 'Actuals pending' : 'Scheduled';
   const dose=cariFor(e);
+  const pf=isPF(e);
   const nightHTML=(()=>{if(!showNightHours())return '';const n=nightMs(e);if(!n)return '';const h=Math.floor(n/3600000),m=Math.floor((n%3600000)/60000);return `<div class="mi lav" title="Night block">${ICON.moon} <strong>${h}h${String(m).padStart(2,'0')}</strong> night</div>`;})();
 
   return `<div class="card flt${status==='completed'?' past done':status==='active'?' live':''}">
@@ -2075,6 +2174,7 @@ function cardFLT(e){
       ${dose==null?'':`<div class="mi gold" title="ICRP-103 effective dose (CARI-7)">${ICON.rad} <strong>${fmtDose(dose)}</strong> cosmic</div>`}
       ${nightHTML}
       <button class="${ltBtnClass}" onclick="importSingle('${id}')" title="Export this flight to your logbook">${ICON.dl.replace('<svg ','<svg width="10" height="10" ')} ${ltBtnLabel}</button>
+      <button class="pf-btn${pf?' on':''}" onclick="togglePF('${id}')" aria-pressed="${pf}" title="${pf?'Pilot flying — counts as 1 landing (tap to undo)':'Mark as pilot flying (1 landing)'}">${pf?'':ICON.land} ${pf?'Pilot flying':'PF'}</button>
     </div>
     ${fpRouteHTML(e)}
     ${extraInfoHTML(e)}
@@ -2250,7 +2350,7 @@ function cardUnknown(e){
   const crewSummary=buildCrewSummary(e.crew);
   const crewBlock=buildCrewBlock(e.crew,id);
   const sub=spanTimesHTML(a,b)+(dateRange?`<span class="t-dim">${esc(dateRange)}</span>`:'');
-  const foot=extraInfoHTML(e)+(e.crew&&e.crew.length?`
+  const foot=(isSimEvent(e)?ldgStepHTML(id,landingCount(e)):'')+extraInfoHTML(e)+(e.crew&&e.crew.length?`
     <button class="crew-toggle" onclick="toggleCrew('${id}')">
       <span class="crew-arrow" id="arr_${id}">▶</span> <span>${crewSummary}</span>
     </button>
@@ -2258,6 +2358,292 @@ function cardUnknown(e){
   return tileHTML({kind:'unk',icon:meta.icon,past,
     kindHTML:esc(e.type)+(meta.label?KSEP+meta.label:''),
     ttlHTML:city?cityTitleHTML(city):(meta.label||esc(e.type)),subHTML:sub,dur,foot});
+}
+
+/* ── PILOT FLYING / LANDING CURRENCY ─────────────────────────── */
+// Recency: 3 landings as pilot flying in the preceding 90 days. A PF tick on a
+// flight sector = 1 landing (at its arrival); a simulator session carries a −/+
+// landing count. Stored per source in localStorage as { legId: landings } —
+// legId() (type|flight|from|to|checkin date), not evKey, so an aircraft swap in
+// the summary keeps the tick. Planned (future) sectors count too.
+// Values are { n, t } (t = last change, ms; n 0 = removed, kept as a tombstone so
+// the removal syncs); plain numbers from before sync are read as { n, t:0 }.
+const LS_LANDINGS = 'schedule_landings';
+const CUR_DAYS = 90, CUR_NEED = 3;
+function landingsKey(){ return LS_LANDINGS + '_' + activeSourceKey(); }
+let _ldgCache = null, _ldgCacheKey = '';
+function getLandings(){
+  const k = landingsKey();
+  if (_ldgCache && _ldgCacheKey === k) return _ldgCache;
+  try { _ldgCache = JSON.parse(localStorage.getItem(k) || '{}') || {}; } catch(_) { _ldgCache = {}; }
+  _ldgCacheKey = k;
+  return _ldgCache;
+}
+function saveLandings(st){
+  _ldgCache = st; _ldgCacheKey = landingsKey();
+  try { localStorage.setItem(landingsKey(), JSON.stringify(st)); }
+  catch(e) { console.warn('[Schedule] landings not saved:', e && e.name); }
+}
+const isSimEvent = e => !!e && e.type !== 'FLT' && !(e.from && e.to) && dutyMeta(e.type).icon === 'sim';
+const ldgN = v => typeof v === 'number' ? v : (v && v.n) || 0;
+function landingCount(e){ return e && e.dtstart ? ldgN(getLandings()[legId(e, e.dtstart)]) : 0; }
+function isPF(e){ return !!e && e.type === 'FLT' && landingCount(e) > 0; }
+function setLandingCount(e, n){
+  const st = getLandings();
+  st[legId(e, e.dtstart)] = { n, t: Date.now() };
+  saveLandings(st);
+  syncSetState({ dirty: true });
+  landingsChanged();
+  syncSoon(1500);
+}
+function landingsChanged(){
+  render();
+  if (document.getElementById('calModal')?.classList.contains('open') && _calModalIdx >= 0) showCalEvent(_calModalIdx);
+}
+function togglePF(id){ const e = eventById[id]; if (e) setLandingCount(e, isPF(e) ? 0 : 1); }
+function stepLandings(id, d){ const e = eventById[id]; if (e) setLandingCount(e, Math.max(0, Math.min(99, landingCount(e) + d))); }
+
+// Display-TZ day number (days since epoch) — same day split as the list view.
+const dayNo  = d => Math.floor((d.getTime() + tzMs(d)) / 86400000);
+const dayKey = n => new Date(n * 86400000).toISOString().slice(0, 10);
+const fmtDMY = n => { const k = dayKey(n); return k.slice(8, 10) + '/' + k.slice(5, 7) + '/' + k.slice(0, 4); };
+const fmtDM  = n => fmtDMY(n).slice(0, 5);
+
+// Every recorded landing, oldest first (a sim with n landings yields n entries).
+function landingList(){
+  const st = getLandings(), seen = new Set(), out = [];
+  for (const e of allEvents) {
+    if (!e.dtstart || !(e.type === 'FLT' || isSimEvent(e))) continue;
+    const id = legId(e, e.dtstart), n = ldgN(st[id]);
+    if (!n || seen.has(id)) continue;
+    seen.add(id);
+    const at = e.type === 'FLT' ? (legTimes(e).arrDt || e.dtend || e.dtstart) : e.dtstart;
+    for (let i = 0; i < n; i++) out.push({ day: dayNo(at), at, e, id });
+  }
+  return out.sort((a, b) => a.at - b.at);
+}
+
+// Limit = 3rd most recent landing + 90 days. Planned landings only extend it
+// when they happen before the running limit (a gap > 90 days lapses currency
+// even if three landings are planned afterwards).
+function currencyState(){
+  const L = landingList(), today = dayNo(new Date());
+  if (L.length < CUR_NEED) return { have: L.length };
+  const anchorAt = t => { let k = -1; for (let i = 0; i < L.length && L[i].day <= t; i++) k = i; return k - (CUR_NEED - 1); };
+  let t = today, a = anchorAt(t), from = null;
+  if (a < 0) { t = L[CUR_NEED - 1].day; a = anchorAt(t); from = t; }   // not current yet: starts on the 3rd landing
+  let limit = L[a].day + CUR_DAYS;
+  for (;;) {
+    const nxt = L.find(x => x.day > t && x.day <= limit);
+    if (!nxt) break;
+    t = nxt.day; a = anchorAt(t); limit = L[a].day + CUR_DAYS;
+  }
+  const days = limit - today;
+  const level = days < 0 ? 'red' : days < 10 ? 'orange' : days < 30 ? 'yellow' : 'green';
+  // What-if: k more PF landings (before the limit) move the anchor to L[a+k] —
+  // the limits they'd give, skipping same-day duplicates and the current one.
+  const next = [];
+  for (let k = 1; k < CUR_NEED; k++) {
+    const d = L[a + k].day + CUR_DAYS;
+    if (d !== limit && !next.some(x => x.day === d)) next.push({ k, day: d });
+  }
+  return { have: L.length, anchor: L[a], ldgs: L.slice(a, a + CUR_NEED), limit, days, level, from, today, next };
+}
+let _cur = { have: 0 };
+
+function curBannerHTML(cs){
+  const d = cs.days, n = Math.abs(d);
+  const lbl = d < 0 ? (n === 1 ? 'day ago' : 'days ago') : d === 0 ? 'last day' : d === 1 ? 'day left' : 'days left';
+  // One chip per event: "NF101 NOU→PPT 15/09" / "SIMU ×3 25/08"
+  const chips = [];
+  for (const l of cs.ldgs) {
+    const c = chips.find(x => x.id === l.id);
+    if (c) { c.n++; continue; }
+    chips.push({ id: l.id, e: l.e, day: l.day, n: 1, anchor: l === cs.anchor });
+  }
+  const chipHTML = chips.map(c => {
+    const what = c.e.type === 'FLT' ? esc(c.e.flight || 'FLT') + ' ' + esc(c.e.from || '') + '→' + esc(c.e.to || '') : esc(c.e.type) + ' ×' + c.n;
+    return `<span class="cur-ldg${c.anchor ? ' anchor' : ''}${c.day > cs.today ? ' plan' : ''}" title="${c.anchor ? 'Oldest of the last 3 landings' : ''}${c.day > cs.today ? ' (planned)' : ''}">`
+      + `${c.e.type === 'FLT' ? '' : ICON.sim.replace('<svg ', '<svg width="12" height="12" ')}<span class="mono">${fmtDMY(c.day).slice(0, 5)}</span>${what}${c.day > cs.today ? ' · planned' : ''}</span>`;
+  }).join('');
+  // "Next 10/12 then 15/12" — limits after 1 and 2 more PF landings
+  const nextHTML = !cs.next.length
+    ? `Limit moves after ${CUR_NEED} new PF landings`
+    : 'Next ' + cs.next.map(x => `<span class="mono">${fmtDM(x.day)}</span>`).join(' then ');
+  return `<div class="cur-banner cur-${cs.level}" id="curBanner" role="status">
+    <div class="cur-top">
+      <div class="cur-ic">${ICON.land}</div>
+      <div>
+        <div class="cur-kind">${d < 0 ? 'Landing currency expired' : 'Landing currency limit'}</div>
+        <div class="cur-ttl">${CUR_DAYS} days from <span class="mono">${fmtDM(cs.anchor.day)}</span></div>
+        <div class="cur-sub">${nextHTML}${cs.from ? ` · current from <span class="mono">${fmtDM(cs.from)}</span>` : ''}</div>
+      </div>
+      <div class="cur-days"><div class="cur-days-n">${n}</div><div class="cur-days-l">${lbl}</div></div>
+    </div>
+    <div class="cur-ldgs">${chipHTML}${syncStatusHTML()}</div>
+  </div>`;
+}
+
+/* ── PF / LANDINGS SYNC (end-to-end encrypted, /roster/sync) ─── */
+// No passphrase: the key and the file name are both derived (HKDF) from the
+// roster's own ICS URL — its hash= token is a 128-bit secret every device
+// already has. The server only stores s_<64 hex>.bin AES-GCM blobs it can
+// neither read nor link to a person. Merge = per leg, newest change wins;
+// GET → merge → PUT, and any device holding a newer entry re-pushes it on its
+// next sync, so concurrent writers converge.
+const SYNC_DIR    = 'sync/';
+const SYNC_PEPPER = 'roster-pf-sync-v1:8f3c1e9a6b2d4f70'; // not secret: makes a bare ICS URL alone useless to derive the key
+const LS_SYNC     = 'schedule_landings_sync';
+const syncStateKey = () => LS_SYNC + '_' + activeSourceKey();
+function syncGetState(){ try { return JSON.parse(localStorage.getItem(syncStateKey()) || '{}') || {}; } catch(_) { return {}; } }
+function syncSetState(p){ try { localStorage.setItem(syncStateKey(), JSON.stringify(Object.assign(syncGetState(), p))); } catch(_) {} }
+
+function syncSecret(url){
+  try {
+    const u = new URL(url), h = u.searchParams.get('hash');
+    if (h) return u.host.toLowerCase() + '|' + h;
+    u.searchParams.delete('_');
+    return u.host.toLowerCase() + u.pathname + '?' + u.searchParams.toString();
+  } catch(_) { return url || ''; }
+}
+const _syncKeys = {};
+async function syncKeys(){
+  const url = activeUrl();
+  if (!url || !(window.crypto && crypto.subtle)) return null;
+  const sec = syncSecret(url);
+  if (_syncKeys[sec]) return _syncKeys[sec];
+  const te = new TextEncoder(), salt = te.encode(SYNC_PEPPER);
+  const ikm = await crypto.subtle.importKey('raw', te.encode(sec), 'HKDF', false, ['deriveBits', 'deriveKey']);
+  const idBits = await crypto.subtle.deriveBits({ name:'HKDF', hash:'SHA-256', salt, info:te.encode('file-id') }, ikm, 256);
+  const key = await crypto.subtle.deriveKey({ name:'HKDF', hash:'SHA-256', salt, info:te.encode('aes-gcm-key') }, ikm, { name:'AES-GCM', length:256 }, false, ['encrypt', 'decrypt']);
+  const id = Array.from(new Uint8Array(idBits), b => b.toString(16).padStart(2, '0')).join('');
+  return (_syncKeys[sec] = { file: SYNC_DIR + 's_' + id + '.bin', key, aad: te.encode('s_' + id) });
+}
+// Blob = [version 1][12-byte IV][AES-GCM ciphertext of the JSON payload]
+async function syncEncrypt(k, obj){
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const ct = new Uint8Array(await crypto.subtle.encrypt({ name:'AES-GCM', iv, additionalData:k.aad }, k.key, new TextEncoder().encode(JSON.stringify(obj))));
+  const out = new Uint8Array(13 + ct.length);
+  out[0] = 1; out.set(iv, 1); out.set(ct, 13);
+  return out;
+}
+async function syncDecrypt(k, buf){
+  if (buf.length < 29 || buf[0] !== 1) throw new Error('unknown sync format');
+  const pt = await crypto.subtle.decrypt({ name:'AES-GCM', iv:buf.slice(1, 13), additionalData:k.aad }, k.key, buf.slice(13));
+  return JSON.parse(new TextDecoder().decode(pt));
+}
+// Per-leg newest-wins merge. upLocal: remote had something newer; upRemote: we did.
+function syncMerge(local, remote){
+  const norm = v => typeof v === 'number' ? { n:v, t:0 } : v && typeof v === 'object' ? { n:+v.n || 0, t:+v.t || 0 } : null;
+  const out = {}; let upLocal = false, upRemote = false;
+  for (const id of new Set([...Object.keys(local), ...Object.keys(remote)])) {
+    const l = norm(local[id]), r = norm(remote[id]);
+    if (l && (!r || l.t > r.t)) { out[id] = l; if (!r || l.n !== r.n || l.t !== r.t) upRemote = true; }
+    else if (r && (!l || r.t > l.t)) { out[id] = r; upLocal = true; }
+    else { out[id] = l; if (typeof local[id] === 'number') upRemote = true; }
+  }
+  return { out, upLocal, upRemote };
+}
+let _syncBusy = null, _syncAgain = false, _syncTimer = 0;
+function syncNow(){
+  if (_syncBusy) { _syncAgain = true; return _syncBusy; }
+  _syncBusy = (async () => {
+    const k = await syncKeys();
+    if (!k) return;
+    const src = activeSourceKey();
+    const r = await fetch(k.file, { cache:'no-store' });
+    let remote = {};
+    if (r.ok) {
+      try { remote = (await syncDecrypt(k, new Uint8Array(await r.arrayBuffer()))).landings || {}; }
+      catch(e) { console.warn('[Sync] remote blob unreadable, replacing it:', e && e.message); }
+    } else if (r.status !== 404) throw new Error('GET ' + r.status);
+    if (activeSourceKey() !== src) return;                 // source switched mid-sync
+    const m = syncMerge(getLandings(), remote);
+    if (m.upLocal || m.upRemote) saveLandings(m.out);
+    if (m.upRemote || (!r.ok && Object.keys(m.out).length)) {
+      const p = await fetch(k.file, { method:'PUT', headers:{ 'Content-Type':'application/octet-stream' },
+        body: await syncEncrypt(k, { v:1, at:Date.now(), landings:m.out }) });
+      if (!p.ok) throw new Error('PUT ' + p.status);
+    }
+    syncSetState({ at:Date.now(), dirty:false, err:null });
+    if (m.upLocal) landingsChanged(); else updateSyncStatus();
+  })().catch(e => {
+    console.warn('[Sync] PF/landings sync failed:', e && e.message);
+    syncSetState({ err:String(e && e.message || e) });
+    updateSyncStatus();
+  }).finally(() => {
+    _syncBusy = null;
+    if (_syncAgain) { _syncAgain = false; syncNow(); }
+  });
+  return _syncBusy;
+}
+function syncSoon(ms){ clearTimeout(_syncTimer); _syncTimer = setTimeout(syncNow, ms || 0); }
+function syncMaybeRefresh(){                              // tab return / focus / online: at most every 30 s
+  if (!allEvents.length || Date.now() - (syncMaybeRefresh._t || 0) < 30000) return;
+  syncMaybeRefresh._t = Date.now();
+  syncNow();
+}
+function syncStatusHTML(){ return `<span class="cur-sync" id="curSync">${syncStatusText()}</span>`; }
+function syncStatusText(){
+  if (!(window.crypto && crypto.subtle)) return 'This device only';
+  const s = syncGetState();
+  if (s.dirty) return 'Sync pending';
+  if (s.err && !s.at) return 'Not synced';
+  return s.at ? 'Synced ' + new Date(s.at).toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' }) : 'Syncing…';
+}
+function updateSyncStatus(){ const el = document.getElementById('curSync'); if (el) el.textContent = syncStatusText(); }
+
+// Bottom pill: shown whenever the banner isn't on screen (other month, calendar
+// view, scrolled away). Tap → jump to the banner.
+let _curObs = null;
+function updateCurPill(){
+  let pill = document.getElementById('curPill');
+  if (!pill) {
+    pill = document.createElement('button');
+    pill.id = 'curPill'; pill.type = 'button'; pill.onclick = curGo;
+    document.body.appendChild(pill);
+  }
+  if (_curObs) { _curObs.disconnect(); _curObs = null; }
+  const cs = _cur;
+  if (!cs.have) { pill.className = 'cur-pill'; return; }
+  const chev = `<svg ${SI}><polyline points="9 18 15 12 9 6"/></svg>`;
+  if (!cs.limit) {
+    pill.className = 'cur-pill cur-none show';
+    pill.innerHTML = `<span class="dot"></span>Landing currency <span class="dim">· <span class="mono">${cs.have}/${CUR_NEED}</span> landings recorded</span>`;
+    return;
+  }
+  const d = cs.days;
+  pill.className = 'cur-pill cur-' + cs.level;
+  pill.innerHTML = `<span class="dot"></span>${CUR_DAYS} days from <span class="mono">${fmtDM(cs.anchor.day)}</span>`
+    + `<span class="dim">· ${d < 0 ? 'expired ' + (-d) + ' d ago' : d + ' d left'}</span>${chev}`;
+  pill.setAttribute('aria-label', 'Landing currency: limit ' + fmtDMY(cs.limit));
+  const banner = document.getElementById('curBanner');
+  if (!banner || !('IntersectionObserver' in window)) { pill.classList.toggle('show', !banner); return; }
+  const r = banner.getBoundingClientRect();           // right state now; the observer fires async
+  pill.classList.toggle('show', !(r.bottom > 0 && r.top < innerHeight));
+  _curObs = new IntersectionObserver(en => pill.classList.toggle('show', !en[0].isIntersecting));
+  _curObs.observe(banner);
+}
+function curGo(){
+  const cs = _cur;
+  if (!cs.limit) return;
+  const k = dayKey(cs.limit);
+  if (view !== 'list') { view = 'list'; localStorage.setItem(LS_VIEW, 'list'); }
+  curYear = +k.slice(0, 4); curMonth = +k.slice(5, 7) - 1;
+  wantScroll = false;
+  render();
+  requestAnimationFrame(() => document.getElementById('curBanner')?.scrollIntoView({ behavior: 'smooth', block: 'center' }));
+}
+// Landings stepper for a simulator tile.
+function ldgStepHTML(id, n){
+  return `<div class="ldg-row${n ? ' on' : ''}">
+    <span class="ldg-lbl">${ICON.land} Landings</span>
+    <div class="ldg-step">
+      <button type="button" onclick="stepLandings('${id}',-1)" aria-label="One landing less"${n ? '' : ' disabled'}>−</button>
+      <span class="ldg-n" aria-live="polite">${n}</span>
+      <button type="button" onclick="stepLandings('${id}',1)" aria-label="One landing more">+</button>
+    </div>
+  </div>`;
 }
 
 /* ── CALENDAR VIEW ───────────────────────────────────────────── */
@@ -2301,7 +2687,8 @@ function renderCal(evs){
     const todayTz=new Date(today.getTime()+tzMs(today));
     const isToday=todayTz.getUTCFullYear()===curYear&&todayTz.getUTCMonth()===curMonth&&todayTz.getUTCDate()===d;
     const hasEv=dayEvs.length>0;
-    html+=`<div class="cday${isToday?' today':''}${hasEv?' has-ev':''}">
+    const isCur=_cur.limit!=null&&k===dayKey(_cur.limit);
+    html+=`<div class="cday${isToday?' today':''}${hasEv?' has-ev':''}${isCur?' cur-day cur-'+_cur.level:''}"${isCur?` title="Landing currency limit — ${CUR_DAYS} days from ${fmtDM(_cur.anchor.day)}" onclick="if(event.target===this)curGo()"`:''}>
       <div class="cdn">${d}</div>
       ${dayEvs.slice(0,3).map(e=>{
         const label=e.type==='FLT'?e.flight
@@ -2464,7 +2851,7 @@ function buildEntity(e) {
     flight_selectedCrewCustom2ID: acm?.code  || '',
     flight_selectedCrewCustom3:   fmtName(acm2?.name),
     flight_selectedCrewCustom3ID: acm2?.code || '',
-    flight_pilotFlyingCapacity: false,
+    flight_pilotFlyingCapacity: isPF(e),
     flight_picCapacity: isCPT ? block : '',
     flight_sicCapacity: isFO  ? block : ''
   };
@@ -2482,7 +2869,7 @@ function openLogten(entities) {
 const PLOG_HEADERS = [
   'PILOTLOG_DATE','FLIGHTNUMBER','AF_DEP','AF_ARR',
   'TIME_DEPSCH','TIME_ARRSCH','TIME_DEP','TIME_ARR',
-  'TIME_TOTAL','TIME_PIC','TIME_SIC','TIME_NIGHT',
+  'TIME_TOTAL','TIME_PIC','TIME_SIC','TIME_NIGHT','PF',
   'AC_MODEL','AC_REG',
   'PILOT1_ID','PILOT1_NAME','PILOT2_ID','PILOT2_NAME',
   'PILOT3_ID','PILOT3_NAME','PILOT4_ID','PILOT4_NAME',
@@ -2531,6 +2918,7 @@ function buildPlogRow(e) {
     TIME_PIC:   isCPT ? block : '',
     TIME_SIC:   isFO  ? block : '',
     TIME_NIGHT: night > 0 ? fmtHM(night) : '',
+    PF:         isPF(e) ? 'PF' : '',          // only when ticked — blank leaves PilotLog's default
     AC_MODEL: plan?.model || fpModelForReg(reg),
     AC_REG:   fmtReg(reg) || '',
     PILOT1_ID: pic?.code  || '', PILOT1_NAME: fmtName(pic?.name),
@@ -2562,7 +2950,7 @@ function downloadCSV(headers, rows, filename) {
 // times must be UTC, durations hh:mm (not decimal).
 const RB_HEADERS = [
   'Date','Flight #','Departure','Arrival','Aircraft ID','Type',
-  'Sched Out','Sched In','Out','In','Total Block','PIC','SIC','Night',
+  'Sched Out','Sched In','Out','In','Total Block','PIC','SIC','Night','PF',
   'Crew PIC','Crew SIC','Crew Relief1','Crew Relief2','Notes1','Notes2'
 ];
 
@@ -2597,6 +2985,7 @@ function buildRbRow(e) {
     'PIC':         isCPT ? block : '',
     'SIC':         isFO  ? block : '',
     'Night':       night > 0 ? fmtHM(night) : '',
+    'PF':          isPF(e) ? 'Yes' : '',
     'Crew PIC':    fmtName(pic?.name),
     'Crew SIC':    fmtName(sic?.name),
     'Crew Relief1': fmtName(acm?.name),
@@ -2936,6 +3325,7 @@ async function load(){
   }
   updateTzBar();
   updateActiveBadge();
+  syncSoon(0);              // PF/landings: pull other devices' ticks, push ours
 }
 
 /* ── NAV + HELPERS ───────────────────────────────────────────── */
@@ -3070,6 +3460,7 @@ const SI='width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="current
 function showCalEvent(idx) {
   const e = allEvents[idx];
   if (!e) return;
+  _calModalIdx = idx;
   const sheet = document.getElementById('calModalSheet');
   sheet.innerHTML =
     `<div class="cal-modal-handle"></div>
@@ -3078,7 +3469,9 @@ function showCalEvent(idx) {
   document.getElementById('calModal').classList.add('open');
   document.body.style.overflow = 'hidden';
 }
+let _calModalIdx = -1;
 function closeCalModal() {
+  _calModalIdx = -1;
   document.getElementById('calModal').classList.remove('open');
   document.body.style.overflow = '';
 }
@@ -3365,9 +3758,9 @@ function tipEditFormHTML(city,t,cid){
   var opts=TIP_CATS.map(function(c){ return '<option value="'+c.slug+'"'+(c.slug===t.cat?' selected':'')+'>'+c.icon+' '+esc(c.label)+'</option>'; }).join('');
   return '<div class="tip-edit">'
     +'<div class="tip-edit-hd">✎ Edit tip</div>'
-    +'<select class="tip-select" id="tipecat_'+t.id+'">'+opts+'</select>'
-    +'<input type="text" class="tip-title-input" id="tipetitle_'+t.id+'" maxlength="'+TIP_TITLELEN+'" value="'+esc(t.title||'')+'" placeholder="Title — e.g. Best rooftop bar">'
-    +'<textarea class="tip-input" id="tipetxt_'+t.id+'" maxlength="'+TIP_MAXLEN+'" rows="3" placeholder="Details">'+esc(t.text||'')+'</textarea>'
+    +'<select class="tip-select" id="tipecat_'+cid+'_'+t.id+'">'+opts+'</select>'
+    +'<input type="text" class="tip-title-input" id="tipetitle_'+cid+'_'+t.id+'" maxlength="'+TIP_TITLELEN+'" value="'+esc(t.title||'')+'" placeholder="Title — e.g. Best rooftop bar">'
+    +'<textarea class="tip-input" id="tipetxt_'+cid+'_'+t.id+'" maxlength="'+TIP_MAXLEN+'" rows="3" placeholder="Details">'+esc(t.text||'')+'</textarea>'
     +'<div class="tip-edit-actions">'
       +'<button class="tip-cancel-btn" onclick="tipCancelEdit(\''+cid+'\')">Cancel</button>'
       +'<button class="tip-save-btn" onclick="tipSaveEdit(\''+esc(city)+'\',\''+t.id+'\',\''+cid+'\')">Save changes</button>'
@@ -3375,7 +3768,7 @@ function tipEditFormHTML(city,t,cid){
   +'</div>';
 }
 function tipItemHTML(city,t,cid){
-  if(t.id===tipEditingId) return tipEditFormHTML(city,t,cid);
+  if(t.id===tipEditingId && cid===tipEditingCid) return tipEditFormHTML(city,t,cid);
   var canEdit = ((t.by||'').toUpperCase()===myCode) || tipIsAdmin();
   var when = t.ts ? fmtAge(Date.now()-t.ts*1000) : '';
   if(t.edited) when += ' · edited';
@@ -3456,11 +3849,12 @@ async function tipDelete(city,id,cid){
   if(cid) tipOpen.add(cid); render();
 }
 function tipEdit(city,id,cid){        // open the inline editor for this tip
-  tipEditingId=id; if(cid) tipOpen.add(cid); render();
+  tipEditingId=id; tipEditingCid=cid; if(cid) tipOpen.add(cid); render();
 }
 function tipCancelEdit(cid){ tipEditingId=null; if(cid) tipOpen.add(cid); render(); }
 async function tipSaveEdit(city,id,cid){
-  var sel=document.getElementById('tipecat_'+id), ttl=document.getElementById('tipetitle_'+id), txt=document.getElementById('tipetxt_'+id);
+  var k=cid+'_'+id;   // ids are per card: the same city's tips can be on several stopover cards
+  var sel=document.getElementById('tipecat_'+k), ttl=document.getElementById('tipetitle_'+k), txt=document.getElementById('tipetxt_'+k);
   if(!txt) return;
   var title=(ttl&&ttl.value||'').trim().slice(0,TIP_TITLELEN);
   var text=(txt.value||'').trim().slice(0,TIP_MAXLEN);
@@ -3531,10 +3925,10 @@ fpLoad();
 tipsLoad();
 
 // Loaded/refreshed → handled above. Displayed (returning to the page) → refresh here.
-document.addEventListener('visibilitychange', function(){ if(document.visibilityState==='visible'){ fpMaybeRefresh(); tipMaybeRefresh(); rosterMaybeRefresh(); } });
-window.addEventListener('pageshow', function(e){ if(e.persisted){ fpMaybeRefresh(); tipMaybeRefresh(); rosterMaybeRefresh(); } }); // bfcache back/forward
-window.addEventListener('focus', function(){ fpMaybeRefresh(); tipMaybeRefresh(); rosterMaybeRefresh(); });
-window.addEventListener('online', function(){ fpMaybeRefresh(); tipMaybeRefresh(); rosterMaybeRefresh(); });
+document.addEventListener('visibilitychange', function(){ if(document.visibilityState==='visible'){ fpMaybeRefresh(); tipMaybeRefresh(); rosterMaybeRefresh(); syncMaybeRefresh(); } });
+window.addEventListener('pageshow', function(e){ if(e.persisted){ fpMaybeRefresh(); tipMaybeRefresh(); rosterMaybeRefresh(); syncMaybeRefresh(); } }); // bfcache back/forward
+window.addEventListener('focus', function(){ fpMaybeRefresh(); tipMaybeRefresh(); rosterMaybeRefresh(); syncMaybeRefresh(); });
+window.addEventListener('online', function(){ fpMaybeRefresh(); tipMaybeRefresh(); rosterMaybeRefresh(); syncMaybeRefresh(); });
 
 // Disclaimer — show once (deferred: element is parsed after this script block)
 window.addEventListener('load', function() {

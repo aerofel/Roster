@@ -4,6 +4,30 @@ All notable changes to Roster are recorded here.
 
 ## [Unreleased]
 
+## 2026-10-30
+
+### Added
+- **PF / landings sync across devices, end-to-end encrypted, no passphrase.** The encryption key and the file name are derived separately (HKDF-SHA-256) in the browser from the roster's own ICS URL (host + `hash=` token, 128-bit), plus a fixed app value, so every device holding the same URL reaches the same file with no setup. Data is encrypted with AES-GCM; the file name is bound in as additional authenticated data. The server stores only `roster/sync/s_<64 hex>.bin` blobs, with no name, crew code or URL, and can't read them. Merge is per leg, newest change wins. A removed tick is kept as a tombstone (`n: 0`) so the removal syncs too. Every sync is GET → merge → PUT, and any device that still holds a newer entry re-pushes it, so devices editing at the same time converge. Sync runs after each roster load, 1.5 s after a tick, and on tab return, focus or coming back online (throttled to every 30 s). Status ("Synced hh:mm" / "Sync pending" / "Not synced") is shown in the currency banner. Local format changed from `{legId: n}` to `{legId: {n, t}}`; old values are read transparently.
+- **Apache `/roster/sync` (vhost `00b-looping.org-ssl`)** — script-less WebDAV like `/roster/tips`: GET/HEAD/PUT only, whitelist `s_<64 hex>.bin` (bare directory denied, nothing to list), separate script-extension deny, `LimitRequestBody 65536`, `Cache-Control: no-store`, strong ETags. Backup of the previous vhost: `/root/00b-looping.org-ssl.bak-rostersync-20261030`. Directory `roster/sync/` owned by www-data, setgid.
+
+- **`/roster/data/` is now app-only and not indexed** (Apache, `00b-looping.org-ssl`; backup `/root/00b-looping.org-ssl.bak-rosterdata-20261030`). `flightplans.json` is served only to the app's own requests (`Sec-Fetch-Site: same-origin`, or a `https://(www.)looping.org/roster/` Referer for browsers without Fetch Metadata). Typing the URL, curl and hot-linking from other sites get 403. `X-Robots-Tag: noindex, nofollow, noarchive` is sent on every response. This is obscurity, not access control: the headers can be forged. Verified live: the app loads it on first visit and through the service worker.
+
+### Changed
+- **Currency banner shows the next limits.** "Limit dd/mm/yyyy · 3 landings in 90 days" is replaced by what the next PF landings would give: "Next **14/12** then **30/12**" (2nd and 3rd most recent landings + 90 days, i.e. the limit after 1 and after 2 more PF landings). A duplicate is shown once (landings on the same day, or a date equal to the current limit). If all three landings are on one day: "Limit moves after 3 new PF landings".
+- Banner title, bottom pill and calendar tooltip read "90 days from **dd/mm**" (no year).
+- Simulator **− n +** stepper resized to match the other pills (22 px buttons, 12 px count, tile-kind-style label) instead of 30 px buttons.
+
+### Fixed
+- **Editing a tip didn't save the new title or text when the same city appeared on two stopover cards in the month** (e.g. BKK outbound and inbound). The inline editor was drawn on every card showing that city's tips, and its inputs were named only after the tip (`tipetitle_<tipId>`). `tipSaveEdit` therefore read the first form on the page, the one inside the other, collapsed card, which still held the old values. The save went through (the tip got an "edited" stamp) but with unchanged content. Now the editor opens only on the card where Edit was tapped (`tipEditingCid`) and its ids include the card (`<cid>_<tipId>`), like the add-tip form already did. Reproduced with Playwright on the old build (2 forms, hidden first one) and verified on the new one (1 form, new title saved).
+- **Daily tips backups were deleted as soon as they were made.** `/etc/cron.d/roster-tips` copied with `cp -p`, which keeps the live file's modification date (unchanged since 18 Sep). The `find -mtime +30 -delete` prune on the same line then removed the fresh copy, so `tips/.backups/` stayed empty. Now a plain `cp` (old cron saved as `/root/cron.roster-tips.bak-20261030`). Verified by running the line as www-data: today's copy is kept and identical to the live file.
+- The bottom currency pill could flash over a visible banner until the IntersectionObserver fired; its initial state is now set synchronously.
+
+## 2026-10-28
+
+### Added
+- **Pilot-flying landing currency (3 landings in 90 days).** Every flight card has a **PF** button (green "Pilot flying" when on); a ticked sector counts as one landing at its arrival time. Simulator sessions (`SIMU`/`ENTM`/`OPSM`/`LOFT`/`OPC`/`LPC`/`UPRT`/`ATQP`) get a **− n +** landings stepper. The limit is the 3rd most recent landing + 90 days. Planned (future) PF sectors and sims count, but only when they fall before the running limit, so a gap of more than 90 days still shows as a lapse. A banner reading **"90 days from dd/mm/yyyy"** (the 3rd most recent landing), with the limit date, a days-left counter and chips for the three landings that count, sits on the limit date in the list view, with its own day node even on a day without duties. Colours: green ≥ 30 days, yellow 10–29, orange 0–9 (pulsing), red when expired ("n days ago"). In the calendar the limit day is outlined in the same colour. A bottom pill shows the currency whenever the banner is off screen (another month, calendar view, scrolled away); tap it to jump to the banner. If fewer than 3 landings are recorded, the pill shows "n/3 landings recorded". Stored in localStorage per roster source (`schedule_landings_<source>`, keyed by `legId()`, so aircraft swaps keep the tick).
+- **PF in logbook exports.** LogTen Pro `flight_pilotFlyingCapacity` (was always `false`), PilotLog `PF` column (`PF` when ticked, blank otherwise, per CrewLounge import article 24000034487), RB Logbook `PF` column (`Yes` when ticked; not in CAE's template, so map it once in the importer if it isn't picked up).
+
 ## 2026-10-26 (2)
 
 ### Changed
