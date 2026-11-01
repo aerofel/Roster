@@ -1,19 +1,10 @@
 #!/usr/bin/env bash
-# Injects secrets from .env into roster.html → roster.built.html
+# roster.html → index.html (served) + sw.js. No secret is injected into the page:
+# the Pexels key and Jeppesen login are used only by the server jobs in tools/.
 set -euo pipefail
+cd "$(dirname "$0")"
 
-if [ ! -f .env ]; then
-  echo "Error: .env not found. Copy .env.example and fill in your keys." >&2
-  exit 1
-fi
-
-source .env
-
-sed \
-  -e "s|__PEXELS_API_KEY__|${PEXELS_API_KEY:-}|g" \
-  -e "s|__JEPPESEN_USER__|${JEPPESEN_USER:-}|g" \
-  -e "s|__JEPPESEN_PASS__|${JEPPESEN_PASS:-}|g" \
-  roster.html > index.html
+cp roster.html index.html
 echo "Built index.html"
 
 # Service worker: stamp the build hash so every deploy installs a fresh worker/cache.

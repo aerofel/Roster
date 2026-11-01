@@ -4,6 +4,36 @@ All notable changes to Roster are recorded here.
 
 ## [Unreleased]
 
+## 2026-11-01 — iPhone keyboard over the shared flight forms
+
+### Fixed
+- **Takeoff/landing times and approach/runway forms hidden by the iPhone keyboard.** Safari didn't scroll them into view, so crews had to scroll by hand to see what they typed. Now the page scrolls by itself so the open form sits between the sticky bars at the top (time-zone bar, plus the date row on phones) and the keyboard. It does this when the form opens, when a field gets focus, and again once the keyboard has slid in (`visualViewport` resize). It only scrolls when the form is actually covered. `fdReveal()` / `fdRevealSoon()`. Tested at 390 px with the visible area cut to 500 px: the whole form, Save button included, ends 10 px above the keyboard edge and starts below the date row.
+
+## 2026-11-01 — security audit fixes
+
+No change for users: same app, no login, no password.
+
+### Security (app)
+- **Stored XSS through the shared tips file (critical).** Anyone can PUT the tips file, and a tip's `id` went raw into an `onclick`. A crafted id ran code in every crew member's browser on page load, without a click, with access to all stored roster links and passports. Tips are now validated on load (`tipsClean`: id `t_[a-z0-9]`, known category, string fields cut to their limits, crew code `[A-Z0-9]{1,8}`). Malformed entries are dropped, and the next save writes the cleaned file back.
+- **XSS through roster-feed values.** A hotel city like `x')">…` broke out of the tips handlers. `esc()` now escapes `'`. The new `jsq()` (JS escaping, then HTML escaping) is used for every data value in an inline handler: tips, expiries, calendar warnings, sources, timezone buttons, landings stepper and recent runways. The tips card id is letters and digits only (`tipCid`).
+- **A broken shared file no longer blanks the app.** Tips and flight-data files that aren't objects (`[1,2,null]`, `{"CDG":{"tips":"x"}}`…) read as empty. A corrupt flight file is rewritten on the next save instead of blocking it.
+- **Roster link no longer sent to corsproxy.io** for the Aircalin portal. The app now tries direct → our relay `/roster/ics` → corsproxy.io (only when the relay answers 404/403, i.e. isn't deployed, or for other portals).
+- **Pexels key removed from the page.** The browser Pexels lookup is gone; photos come only from the server cache, which already covers every airport in `AIRPORTS`. `build.sh` no longer injects anything, and its dead Jeppesen lines are gone.
+- **CSV export**: cells starting with `= + @`, tab or a non-numeric `-` get a leading `'`, so a spreadsheet won't run them as formulas. **LogTen link**: `% # & + ?` in the package are percent-encoded.
+- Service worker: the runtime cache (photos, fonts) is capped at 400 entries.
+- Tested in headless Chromium with a hostile tips file and a hostile feed. The old build ran the injected code from both (tip id and city); the new one ran none and showed the hostile text as text. Add / edit / delete tip, timezone switch, relay and fallback all work, with no CSP violation under the new policy.
+
+### Security (server) — `tools/harden-20261101.sh`, run once as root
+- Tips file names are `tips_[a-z0-9-]{1,40}.json`: no dots, so `tips_x.var.json` can't become an Apache type-map serving HTML on looping.org. `RemoveHandler .var` for the roster too.
+- WebDAV folders: `Content-Security-Policy: default-src 'none'; sandbox` + nosniff. Tips uploads are capped at 1 MB.
+- App page: CSP, HSTS, Referrer-Policy. `*.md`, `tools/`, `build.sh`, `sw.template.js`, `roster.html` and `.env*` are no longer served.
+- Port 80: any Host (bare IP included) now redirects to HTTPS. Before, `http://<ip>/roster/data/…` served the flight plans with no gate.
+- ICS relay: `ProxyPass` to the Aircalin portal only, GET only, app requests only, cookies stripped, not logged.
+- Backups copy a file only when it changed. A daily mail goes out if tips + flights + sync pass 200 MB.
+- Stale `*.bak` vhosts moved out of `sites-enabled/` (Apache was loading them).
+- `cari.py` is owned by root. A second script (`tools/harden-cari-20261101.sh`) moves the CARI-7 binary to a root-only `cari7/bin/` and the lock file to `cari7/run/`, and makes `cari7/` no longer group-writable, so the web user (every PHP site) can't change code that `looping` runs. Sticky folders were tried first and dropped: with `fs.protected_regular=2` they block appending to the logs (the first script's self-test caught this and reverted it).
+- The first server script also rolled back once by itself: Apache checks upstream certificate chains only one level deep by default (`SSLProxyVerifyDepth 1`), and the portal's chain has an intermediate. Fixed with `SSLProxyVerifyDepth 5`. Verified live: the relay returns the real feed (47 events, HTTP 200). The Jeppesen login moved to `cari7/jeppesen.env`. The roster `.env` is now `600`, so www-data no longer reads the feed URLs.
+
 ## 2026-10-30
 
 ### Added (server photo cache)

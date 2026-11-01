@@ -6,8 +6,8 @@
  *                 (new CSS/JS) shows up on the very next open — no stale-cache problem.
  *       Offline / slow → the last cached copy is served (inflight use).
  *   Google Fonts + destination photos (Pexels CDN and our photos/ cache) : CACHE-FIRST.
- *   Roster ICS, CORS proxy, Pexels API, tips  : not intercepted (the app has its own
- *                                              localStorage caches and PUTs tips).
+ *   Roster ICS (relay or CORS proxy), tips, flight data : not intercepted (the app has
+ *                                              its own localStorage caches and PUTs).
  *
  * `__BUILD__` is replaced by build.sh with a hash of index.html, so every deploy
  * installs a new worker and starts a fresh cache (old ones are deleted on activate).
@@ -64,13 +64,21 @@ function networkFirst(req, cacheKey) {
   });
 }
 
+// Photos and fonts pile up over months: keep the newest RUNTIME_MAX entries.
+var RUNTIME_MAX = 400;
+function trimRuntime(c) {
+  return c.keys().then(function (keys) {
+    return Promise.all(keys.slice(0, Math.max(0, keys.length - RUNTIME_MAX)).map(function (k) { return c.delete(k); }));
+  });
+}
+
 function cacheFirst(req) {
   return caches.match(req).then(function (hit) {
     if (hit) return hit;
     return fetch(req).then(function (res) {
       if (res && (res.ok || res.type === 'opaque')) {
         var copy = res.clone();
-        caches.open(RUNTIME).then(function (c) { c.put(req, copy); });
+        caches.open(RUNTIME).then(function (c) { return c.put(req, copy).then(function () { return trimRuntime(c); }); });
       }
       return res;
     });
@@ -100,5 +108,5 @@ self.addEventListener('fetch', function (event) {
     event.respondWith(cacheFirst(req));
     return;
   }
-  // Everything else (roster ICS, proxy, Pexels API, tips JSON, sw.js): network as usual.
+  // Everything else (roster ICS relay/proxy, tips + flight JSON, sw.js): network as usual.
 });

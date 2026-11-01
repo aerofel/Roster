@@ -43,17 +43,19 @@ Roster parses your crew ICS feed and presents your schedule with richer context 
 2. On first launch, enter your ICS feed URL in the URL panel. Your personal ICS link is available in the Alexis portal under your account — it looks like `https://alexis.[domainname]/crew-web/ics?trig=AIR&…`.
 3. The app caches the feed locally; use the refresh button to pull updates.
 
-### Build (Pexels photos + flight-plan credentials)
+### Build
 
-1. Copy `.env.example` to `.env` and fill in the values you want (an optional
-   [Pexels API key](https://www.pexels.com/api/) for background photos, and the
-   optional flight-plan provider login — see `.env.example` for the variable names).
-2. Run `./build.sh` — it injects the values from `.env` into `roster.html` and writes `index.html` (the served file).
-3. Open / deploy `index.html` together with the generated `sw.js` (the build stamps its hash into the worker so clients pick up every deploy).
+1. Run `./build.sh` — it copies `roster.html` to `index.html` (the served file) and writes `sw.js`.
+2. Deploy `index.html` together with the generated `sw.js` (the build stamps its hash into the worker so clients pick up every deploy).
 
-Secrets never live in tracked source: `roster.html` carries only `__PLACEHOLDER__` tokens, and both `.env` and the generated `index.html` are gitignored.
+No secret is ever put in the page. `.env` (copy `.env.example`) only feeds the server jobs in `tools/`: the Pexels key for the photo cache, the crew feeds and alert address for the timezone check. The flight-plan provider login lives in `/home/looping/cari7/jeppesen.env`, used by `cari.py` only.
 
-All data is stored in browser LocalStorage — nothing is sent to any external server beyond fetching your ICS feed (with a CORS proxy fallback if needed), the optional flight-plan feed, and the optional Pexels photo API.
+All data is stored in browser LocalStorage. The only outside request is your ICS feed: directly when the portal allows it, otherwise through looping.org's own relay (`/roster/ics`, Aircalin portal) so the secret link never goes to a third party. Other portals still fall back to the public CORS proxy.
+
+## Security
+
+- Shared files (tips, flight data, PF sync) are anonymous WebDAV: the app treats them as hostile. It validates them on load (`tipsClean`, `fdObj`, `fdRec`), escapes every value it shows (`esc`, which also escapes `'`), and passes every value put in an inline handler through `jsq()` (JS escaping first, then HTML escaping). Use `jsq()` for any new `onclick="f('…')"`.
+- Apache side (`tools/harden-20261101.sh`): strict file names and size caps on the WebDAV folders, `Content-Security-Policy: sandbox` on them, `.var` type-maps off, HSTS + CSP + Referrer-Policy on the app, internal files (`*.md`, `tools/`, `build.sh`, `roster.html`) not served, port 80 always redirects to HTTPS, backups only when a file changed, and a storage alert past 200 MB.
 
 ## Optional server-side helpers
 
@@ -63,7 +65,7 @@ helpers (outside this repo) so that no provider credentials ever reach the brows
 ### Flight plan routes + cosmic-radiation dose
 
 A stdlib-only Python job (`cari.py`) fetches the flight-plan provider feed **hourly** using
-credentials in `.env`, accumulates the plans (so an entry that briefly drops out of the provider's
+credentials in `/home/looping/cari7/jeppesen.env`, accumulates the plans (so an entry that briefly drops out of the provider's
 rolling window is never lost), runs the FAA **CARI-7** program to compute each flight's ICRP-103
 effective dose, and writes a static `data/flightplans.json` the app reads. A monthly pass refreshes
 the finalized solar-modulation data and upgrades provisional doses to final. The browser only reads
@@ -123,8 +125,8 @@ DavLockDB /var/lib/apache2/dav/lockdb
 
 ```
 roster.html        — source application (~2 700 lines of HTML/CSS/JS)
-build.sh           — injects secrets from .env → index.html
-.env.example       — template for required secrets
+build.sh           — roster.html → index.html + sw.js (no secrets)
+.env.example       — template for the server jobs' settings (tools/)
 sw.template.js     — service worker source (offline shell); build.sh → sw.js
 icon.svg / apple-touch-icon.png / icon-512.png — app icons
 .gitignore         — excludes .env, index.html, sw.js, roster.built.html

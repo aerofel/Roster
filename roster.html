@@ -1080,6 +1080,14 @@ const TIP_COLORS = { blue:['--blue','--blue-dim'], gold:['--gold','--gold-dim'],
 const HOME_TZ           = 11; // Pacific/Noumea UTC+11 (used for date-only ICS values)
 const MAX_SNAPSHOTS   = 30;
 const PROXY           = 'https://corsproxy.io/?';
+// The Aircalin crew portal sends no CORS headers, so the browser can't read the feed
+// directly. Our own same-origin relay (an Apache ProxyPass at /roster/ics) fetches it
+// instead, so the secret roster link never reaches a third party. corsproxy.io is only
+// used for other portals, or while the relay isn't deployed (404/403).
+function relayUrl(u){
+  try { const x = new URL(u); if (x.origin === 'https://alexis.aircalin.nc' && x.pathname === '/crew-web/ics') return 'ics' + x.search; } catch(_) {}
+  return null;
+}
 
 // ─── FLIGHT PLANS + COSMIC-RADIATION DOSE ────────────────────────────────────
 // Flight plans AND their CARI-7 doses are produced entirely server-side (cari.py
@@ -1170,7 +1178,7 @@ function renderSourcesList() {
       html+='<div class="src-item" style="flex-wrap:wrap;gap:6px">'+
         '<span class="src-code">'+esc(s.code)+'</span>'+
         '<input type="text" id="srcEditUrl" class="url-input" value="'+esc(s.url)+'" style="flex:1;min-width:120px">'+
-        '<button class="src-select-btn" onclick="saveEditSource(\''+esc(s.code)+'\')">Save</button>'+
+        '<button class="src-select-btn" onclick="saveEditSource(\''+jsq(s.code)+'\')">Save</button>'+
         '<button class="src-del-btn" onclick="cancelEditSource()" title="Cancel">&#215;</button>'+
         '</div>';
     } else {
@@ -1179,9 +1187,9 @@ function renderSourcesList() {
         '<span class="src-code">'+esc(s.code)+'</span>'+
         '<span class="src-url" title="'+esc(s.url)+'">'+esc(shortUrl)+'</span>'+
         (act?'<span class="src-active-lbl">Active</span>':
-             '<button class="src-select-btn" onclick="setActiveSource(\''+esc(s.code)+'\')">Use</button>')+
-        '<button class="src-edit-btn" onclick="startEditSource(\''+esc(s.code)+'\')" title="Edit">&#9998;</button>'+
-        '<button class="src-del-btn" onclick="removeSource(\''+esc(s.code)+'\')">&#215;</button>'+
+             '<button class="src-select-btn" onclick="setActiveSource(\''+jsq(s.code)+'\')">Use</button>')+
+        '<button class="src-edit-btn" onclick="startEditSource(\''+jsq(s.code)+'\')" title="Edit">&#9998;</button>'+
+        '<button class="src-del-btn" onclick="removeSource(\''+jsq(s.code)+'\')">&#215;</button>'+
         '</div>';
     }
   }
@@ -1272,8 +1280,8 @@ const ROLES = {
   'ELV':'Trainee','INS':'Instructor','INS-C':'Instructor (C)','EXM':'Examiner'
 };
 
-/* ── PEXELS BACKGROUND PHOTOS ───────────────────────────────── */
-const PEXELS_KEY = '__PEXELS_API_KEY__';
+/* ── DESTINATION PHOTOS ──────────────────────────────────────── */
+// Search terms per city, read by the server photo job (tools/photos.py).
 const PEXELS_QUERIES = {
   NOU:'Noumea New Caledonia',  SIN:'Singapore city skyline',
   CDG:'Paris France city',     BKK:'Bangkok Thailand',
@@ -1286,53 +1294,11 @@ const PEXELS_QUERIES = {
   BNE:'Brisbane Australia',    NAN:'Fiji island tropical'
 };
 
-// Destination photos. The Pexels key is shared by every user and capped at
-// 200 requests/hour, so each browser asks ONCE per city and keeps the result list
-// for 30 days (localStorage). Cards pick a stable photo from it (by city + date),
-// so re-renders never call the API; a 429 backs off for an hour. The images
-// themselves come from the service worker's cache-first store after first view.
-const LS_PHOTOS = 'schedule_photos_v2', PHOTO_TTL = 30 * 86400000, PHOTO_BACKOFF = 3600000;
-let _photos = null; const _photoReq = {};
-function photoStore(){
-  if (!_photos) { try { _photos = JSON.parse(localStorage.getItem(LS_PHOTOS) || '{}') || {}; } catch(_) { _photos = {}; } }
-  return _photos;
-}
-function photoSave(){ try { localStorage.setItem(LS_PHOTOS, JSON.stringify(_photos)); } catch(_) {} }
-function photoPick(iata, seed){
-  const c = photoStore()[iata];
-  if (!c || !c.urls || !c.urls.length) return '';
-  let h = 0; for (const ch of iata + '|' + (seed || '')) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
-  return c.urls[h % c.urls.length];
-}
-function fetchPexelsPhotos(iata) {
-  if (!PEXELS_KEY || /^__.*__$/.test(PEXELS_KEY) || !navigator.onLine) return Promise.resolve(null);
-  const st = photoStore(), c = st[iata];
-  if (c && c.urls && c.urls.length && Date.now() - c.at < PHOTO_TTL) return Promise.resolve(c.urls);
-  if ((st._backoff || 0) > Date.now()) return Promise.resolve(c ? c.urls : null);
-  if (_photoReq[iata]) return _photoReq[iata];
-  var query = PEXELS_QUERIES[iata];
-  if (!query && AIRPORTS[iata]) query = AIRPORTS[iata].split('—')[0].split('–')[0].trim();
-  if (!query) query = iata + ' city';
-  return (_photoReq[iata] = (async () => {
-    try {
-      const r = await fetch('https://api.pexels.com/v1/search?query=' + encodeURIComponent(query) + '&orientation=landscape&per_page=15',
-        { headers: { Authorization: PEXELS_KEY }, signal: AbortSignal.timeout(8000) });
-      if (r.status === 429) { st._backoff = Date.now() + PHOTO_BACKOFF; photoSave(); return c ? c.urls : null; }
-      if (!r.ok) return c ? c.urls : null;
-      const data = await r.json();
-      const urls = (data.photos || []).map(p => p.src && (p.src.landscape || p.src.large)).filter(Boolean);
-      if (!urls.length) return c ? c.urls : null;
-      st[iata] = { urls, at: Date.now() }; photoSave();
-      return urls;
-    } catch(e) { return c ? c.urls : null; }
-    finally { delete _photoReq[iata]; }
-  })());
-}
-// Server photo cache (tools/photos.py → photos/index.json + photos/<IATA>/*.jpg):
-// the normal source. The browser Pexels lookup above is only a fallback for a
-// city the server doesn't have yet.
+// Server photo cache (tools/photos.py → photos/index.json + photos/<IATA>/*.jpg),
+// the only source: the Pexels key stays on the server. A city the server doesn't
+// have yet simply shows no photo until the next hourly run.
 const LS_PHOTO_IDX = 'schedule_photo_index';
-let _photoIdx = null, _photoUse = {}, _photoIdxTried = false;
+let _photoIdx = null, _photoUse = {};
 function photoIndex(){
   if (!_photoIdx) { try { _photoIdx = JSON.parse(localStorage.getItem(LS_PHOTO_IDX) || '{}') || {}; } catch(_) { _photoIdx = {}; } }
   return _photoIdx;
@@ -1346,7 +1312,6 @@ async function photoIndexLoad(){
     try { localStorage.setItem(LS_PHOTO_IDX, txt); } catch(_) {}
     if (JSON.stringify(_photoIdx) !== before && allEvents.length) render();
   } catch(_) {}
-  finally { if (!_photoIdxTried) { _photoIdxTried = true; loadCardPhotos(); } }
 }
 // A different photo for each card of the same city: start from a per-city,
 // per-month offset and step through the set in card order (reset every render,
@@ -1359,28 +1324,13 @@ function photoFor(iata){
     const p = set[(h + (k - 1) * 7) % set.length];   // stride 7: neighbours look less alike
     return { url: 'photos/' + p.f, by: p.by || '' };
   }
-  const u = photoPick(iata, curYear + '-' + curMonth + '-' + ((_photoUse[iata] = (_photoUse[iata] || 0) + 1)));
-  return u ? { url: u, by: '' } : null;
+  return null;
 }
 function photoAttrs(iata){
   const p = photoFor(iata);
   if (!p) return { cls: '', attrs: '' };
   const u = esc(p.url.replace(/'/g, '%27'));
   return { cls: ' loaded', attrs: ` data-src="${u}" style="background-image:url('${u}')"${p.by ? ` aria-label="Photo: ${esc(p.by)} / Pexels"` : ''}` };
-}
-
-function loadCardPhotos() {
-  document.querySelectorAll('.card-photo-bg[data-dest]').forEach(async function(bg) {
-    const iata = bg.dataset.dest;
-    if (!iata || iata === '---' || bg.dataset.src) return;      // server photo already set at render
-    if (!_photoIdxTried || (photoIndex()[iata] && photoIndex()[iata].photos)) return;   // wait for the server index first
-    // Fallback: city not in the server cache yet → one browser lookup, cached 30 days.
-    const urls = await fetchPexelsPhotos(iata);
-    if (!urls || !urls.length) return;
-    const url = urls[Math.floor(Math.random() * urls.length)];
-    const ok = await new Promise(res => { const im = new Image(); im.onload = () => res(true); im.onerror = () => res(false); im.src = url; });
-    if (ok) { bg.style.backgroundImage = "url('" + url.replace(/'/g, '%27') + "')"; bg.classList.add('loaded'); }
-  });
 }
 
 /* ── ICS PARSING ─────────────────────────────────────────────── */
@@ -1540,7 +1490,7 @@ function updateTzBar() {
     var o = opts[i];
     var isOn = o.label === displayTzLbl;
     var title = 'UTC' + (o.offset >= 0 ? '+' : '') + o.offset;
-    html += '<button class="tz-seg-btn' + (isOn ? ' on' : '') + '" onclick="setTz(\'' + o.label + '\')" title="' + title + '">' + o.label + '</button>';
+    html += '<button class="tz-seg-btn' + (isOn ? ' on' : '') + '" onclick="setTz(\'' + jsq(o.label) + '\')" title="' + title + '">' + esc(o.label) + '</button>';
   }
   seg.innerHTML = html;
 }
@@ -2258,7 +2208,6 @@ function render() {
     ${view==='list' ? renderList(evs) : view==='calendar' ? renderCal(evs) : view==='expiries' ? renderExpiries() : renderChanges()}
   `;
 
-  loadCardPhotos();
   updateWarnDock();
   if (view === 'list') fdEnsure(evs);
   fdRefocus();
@@ -2601,7 +2550,7 @@ function cardHOT(e){
   const ds=fmtTzD(e.dtstart), de=fmtTzD(e.dtend);
   const dateRange=ds===de?ds:ds+' → '+de;
   const isRest=e.type==='REST';
-  const tipsOpen = city && tipOpen.has(city+'_'+(e.dtstart?e.dtstart.getTime():'0'));
+  const tipsOpen = city && tipOpen.has(tipCid(e,city));
   const sub=spanTimesHTML(e.dtstart,e.dtend)+`<span class="t-dim">${esc(dateRange)}</span>`;
   return tileHTML({kind:'hot',icon:isRest?'moon':'bed',past,photo:city,extraCls:tipsOpen?' tips-open':'',
     kindHTML:isRest?'Rest':'Hotel rest',ttlHTML:cityTitleHTML(city),subHTML:sub,dur,
@@ -2609,8 +2558,10 @@ function cardHOT(e){
 }
 // Foldable stopover-tips section for a HOT card (collapsed by default). `cid` is
 // unique per card (city + departure time) so repeated cities don't collide.
+// Letters/digits only: it is used in element ids and inline handlers.
+const tipCid = (e,city) => String(city).replace(/[^A-Za-z0-9]/g, '_') + '_' + (e && e.dtstart ? e.dtstart.getTime() : '0');
 function tipsSectionHTML(e,city){
-  const cid = city + '_' + (e && e.dtstart ? e.dtstart.getTime() : '0');
+  const cid = tipCid(e,city);
   const n=tipCount(city), open=tipOpen.has(cid);
   const badge = n ? (n+' '+(n>1?'tips':'tip')) : 'add one';
   return `<div class="tips-wrap">
@@ -2817,13 +2768,13 @@ function expTitleHTML(x, full){
 }
 function expBannerHTML(x){
   const d = x.days;
-  return `<div class="cur-banner exp-banner cur-${x.level}" id="expB_${x.id}" role="status">
+  return `<div class="cur-banner exp-banner cur-${x.level}" id="expB_${esc(x.id)}" role="status">
     <div class="cur-top">
       <div class="cur-ic">${ICON[x.K.icon]}</div>
       <div>
         <div class="cur-kind">${d < 0 ? 'Expired' : d === 0 ? 'Expires today' : 'Expiry'}</div>
         <div class="cur-ttl">${expTitleHTML(x)}</div>
-        <div class="cur-sub">${d < 0 ? 'Expired' : 'Valid until'} <span class="mono">${fmtDMY(x.day)}</span>${d >= 0 && d < 30 ? '<span class="exp-renew"> · time to renew</span>' : ''}<button class="exp-edit" onclick="expOpen('${x.id}')">Edit</button></div>
+        <div class="cur-sub">${d < 0 ? 'Expired' : 'Valid until'} <span class="mono">${fmtDMY(x.day)}</span>${d >= 0 && d < 30 ? '<span class="exp-renew"> · time to renew</span>' : ''}<button class="exp-edit" onclick="expOpen('${jsq(x.id)}')">Edit</button></div>
       </div>
       <div class="cur-days"><div class="cur-days-n">${Math.abs(d)}</div><div class="cur-days-l">${daysLbl(d)}</div></div>
     </div>
@@ -2917,7 +2868,7 @@ function renderExpiries(){
       <div class="scr-txt">Add your medical, type ratings, passports… A banner shows up on the expiry date in the roster, and a reminder at the bottom of the screen from 30 days before.</div>
       ${expKindsHTML('', 'expOpen')}
     </div>`);
-  const cards = L.map(x => `<div class="card tile exp-card cur-${x.level}" onclick="expOpen('${x.id}')" role="button" tabindex="0" onkeydown="if(event.key==='Enter')expOpen('${x.id}')">
+  const cards = L.map(x => `<div class="card tile exp-card cur-${x.level}" onclick="expOpen('${jsq(x.id)}')" role="button" tabindex="0" onkeydown="if(event.key==='Enter')expOpen('${jsq(x.id)}')">
       <div class="tile-row">
         <div class="tile-ic">${ICON[x.K.icon]}</div>
         <div class="tile-main">
@@ -3158,9 +3109,9 @@ function ldgStepHTML(id, n){
   return `<div class="ldg-row${n ? ' on' : ''}">
     <span class="ldg-lbl">${ICON.land} Landings</span>
     <div class="ldg-step">
-      <button type="button" onclick="stepLandings('${id}',-1)" aria-label="One landing less"${n ? '' : ' disabled'}>−</button>
+      <button type="button" onclick="stepLandings('${jsq(id)}',-1)" aria-label="One landing less"${n ? '' : ' disabled'}>−</button>
       <span class="ldg-n" aria-live="polite">${n}</span>
-      <button type="button" onclick="stepLandings('${id}',1)" aria-label="One landing more">+</button>
+      <button type="button" onclick="stepLandings('${jsq(id)}',1)" aria-label="One landing more">+</button>
     </div>
   </div>`;
 }
@@ -3212,7 +3163,7 @@ function renderCal(evs){
     for(const x of exps) if(!lv||LEVEL_RANK[x.level]>LEVEL_RANK[lv]) lv=x.level;
     const tip=[isCur?`Landing currency limit — ${CUR_DAYS} days from ${fmtDM(_cur.anchor.day)}`:'',...exps.map(x=>`${x.K.label}${x.a?' '+expMask(x.k,x.a):''} expires`)].filter(Boolean).join(' · ');
     const go=isCur?'cur':exps.length?exps[0].id:'';
-    html+=`<div class="cday${isToday?' today':''}${hasEv?' has-ev':''}${lv?' cur-day cur-'+lv:''}"${lv?` title="${esc(tip)}" onclick="if(event.target===this)warnGo('${go}')"`:''}>
+    html+=`<div class="cday${isToday?' today':''}${hasEv?' has-ev':''}${lv?' cur-day cur-'+lv:''}"${lv?` title="${esc(tip)}" onclick="if(event.target===this)warnGo('${jsq(go)}')"`:''}>
       <div class="cdn">${d}</div>
       ${dayEvs.slice(0,3).map(e=>{
         const label=e.type==='FLT'?e.flight
@@ -3397,7 +3348,7 @@ function buildEntity(e) {
 
 function openLogten(entities) {
   const pkg = { metadata: LT_META, entities };
-  window.location.href = 'logtenprox://v2/addEntities/package=' + JSON.stringify(pkg);
+  window.location.href = 'logtenprox://v2/addEntities/package=' + JSON.stringify(pkg).replace(/[%#&+?]/g, encodeURIComponent);
 }
 
 /* ── CREWLOUNGE PILOTLOG ─────────────────────────────────────── */
@@ -3474,7 +3425,11 @@ function buildPlogRow(e) {
 }
 
 function downloadCSV(headers, rows, filename) {
-  const cell = v => { v = String(v ?? ''); return /[",\n]/.test(v) ? '"'+v.replace(/"/g,'""')+'"' : v; };
+  const cell = v => {
+    v = String(v ?? '');
+    if (/^[=+@\t\r]|^-(?![\d.:]*$)/.test(v)) v = "'" + v;   // a spreadsheet must not read it as a formula
+    return /[",\n]/.test(v) ? '"'+v.replace(/"/g,'""')+'"' : v;
+  };
   const csv  = [headers.join(',')]
     .concat(rows.map(r => headers.map(h => cell(r[h])).join(',')))
     .join('\r\n') + '\r\n';
@@ -3733,8 +3688,11 @@ async function load(){
     } else { dbg.direct={status:r.status}; }
   }catch(e){ dbg.direct={error:String(e)}; }
 
-  const proxyUrl=PROXY+encodeURIComponent(bust(url));
-  if(!text){
+  const relay=relayUrl(url);
+  const proxyUrls=(relay?[bust(relay)]:[]).concat([PROXY+encodeURIComponent(bust(url))]);
+  for(const proxyUrl of proxyUrls){
+    if(text) break;
+    const isRelay=proxyUrl!==proxyUrls[proxyUrls.length-1];
     try{
       const ctrl=new AbortController();
       const tid=setTimeout(()=>ctrl.abort(),20000);
@@ -3742,10 +3700,12 @@ async function load(){
       clearTimeout(tid);
       if(r.ok){
         const t=await r.text();
-        dbg.proxy={status:r.status,bytes:t.length,events:countEvs(t),complete:isComplete(t),tail:lastLines(t)};
+        dbg.proxy={via:isRelay?'relay':'corsproxy',status:r.status,bytes:t.length,events:countEvs(t),complete:isComplete(t),tail:lastLines(t)};
         if(isComplete(t)) text=t;
-      } else { dbg.proxy={status:r.status}; }
-    }catch(e){ dbg.proxy={error:String(e)}; }
+      } else { dbg.proxy={via:isRelay?'relay':'corsproxy',status:r.status}; }
+      if(isRelay && (r.status===404 || r.status===403)) continue;   // relay not deployed: fall back
+    }catch(e){ dbg.proxy={via:isRelay?'relay':'corsproxy',error:String(e)}; }
+    break;
   }
 
   const is503 = (dbg.direct && dbg.direct.status === 503) || (dbg.proxy && dbg.proxy.status === 503);
@@ -3946,7 +3906,11 @@ function setBrandOffline(offline){
     updateActiveBadge();
   }
 }
-function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
+// A value inside a quoted JS string of an inline handler (onclick="f('…')"): the browser
+// HTML-decodes the attribute BEFORE running it, so esc() alone can't stop a ' breaking out.
+// Escape for JS first, then for HTML. Use it for every data value put in an on…= handler.
+function jsq(s){return esc(String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/[\r\n\u2028\u2029]/g,' '));}
 function hhmmToMs(hhmm){
   if(!hhmm||hhmm.toLowerCase()==='n/a') return null;
   const p=hhmm.split(':'); const h=parseInt(p[0],10); const m=parseInt(p[1]||0,10);
@@ -4184,14 +4148,15 @@ function fdKey(e){
 }
 const fdMonth = key => key.slice(-10, -3);
 function fdFile(m){
-  if (!_fd[m]) { try { _fd[m] = JSON.parse(localStorage.getItem(LS_FD + '_' + fdCompany() + '_' + m) || '{}') || {}; } catch(_) { _fd[m] = {}; } }
+  if (!_fd[m]) { try { _fd[m] = fdObj(JSON.parse(localStorage.getItem(LS_FD + '_' + fdCompany() + '_' + m) || '{}')); } catch(_) { _fd[m] = {}; } }
   return _fd[m];
 }
 function fdCache(m){ try { localStorage.setItem(LS_FD + '_' + fdCompany() + '_' + m, JSON.stringify(_fd[m] || {})); } catch(_) {} }
 // The shared record, sanitized (the file is world-writable for the app: trust nothing).
 const FD_ISO = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}Z$/;
+const fdObj = x => x && typeof x === 'object' && !Array.isArray(x) ? x : {};   // a broken file reads as empty
 function fdRec(e){
-  const r = fdFile(fdMonth(fdKey(e)))[fdKey(e)] || {}, out = {};
+  const r = fdObj(fdFile(fdMonth(fdKey(e)))[fdKey(e)]), out = {};
   if (FD_ISO.test(r.to || ''))  out.to  = new Date(r.to.replace('Z', ':00Z'));
   if (FD_ISO.test(r.ldg || '')) out.ldg = new Date(r.ldg.replace('Z', ':00Z'));
   if (/^[A-Z0-9 /-]{2,10}$/.test(r.app || '')) out.app = r.app;
@@ -4213,7 +4178,7 @@ async function fdLoad(m, force){
     const r = await fetch(fdUrl(m), { cache: 'no-store' });
     if (!r.ok && r.status !== 404) return;
     const txt = r.ok ? await r.text() : '';
-    const srv = txt.trim() ? JSON.parse(txt) : {};
+    const srv = txt.trim() ? fdObj(JSON.parse(txt)) : {};
     // Our own unsent edits stay on top of what the server has.
     for (const q of fdQueue()) if (q.m === m) fdPatch(srv, q.key, q.patch);
     const before = JSON.stringify(fdFile(m));
@@ -4222,7 +4187,7 @@ async function fdLoad(m, force){
   } catch(err) { console.warn('[Flights] load failed:', err && err.message); }
 }
 function fdPatch(store, key, patch){
-  const r = Object.assign({}, store[key] || {});
+  const r = Object.assign({}, fdObj(store[key]));
   for (const k in patch) { if (patch[k] == null) delete r[k]; else r[k] = patch[k]; }
   r.t = Date.now();
   if (Object.keys(r).length > 1) store[key] = r; else delete store[key];
@@ -4247,7 +4212,7 @@ function fdFlush(){
       const g = await fetch(fdUrl(m), { cache: 'no-store' });
       if (!g.ok && g.status !== 404) throw new Error('GET ' + g.status);
       const txt = g.ok ? await g.text() : '';
-      const store = txt.trim() ? JSON.parse(txt) : {};
+      let store = {}; try { store = fdObj(JSON.parse(txt || '{}')); } catch(_) {}   // corrupt file: rewrite it
       for (const x of mine) fdPatch(store, x.key, x.patch);
       const p = await fetch(fdUrl(m), { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(store) });
       if (!p.ok) throw new Error('PUT ' + p.status);
@@ -4297,6 +4262,7 @@ function fdOpen(id, kind){
     ? { kind, key, to: fdFmtDraft(fdDigits(r.to)), ldg: fdFmtDraft(fdDigits(r.ldg)), err: '', focus: r.to ? '' : 'fdTo' }
     : { kind, key, app: r.app || '', rwy: (r.rwy || '').replace(/[LCR]$/, ''), side: (/[LCR]$/.exec(r.rwy || '') || [''])[0], err: '', focus: '' };
   render();
+  fdRevealSoon();
 }
 function fdTLEditorHTML(e, id){
   const E = _fdEdit;
@@ -4304,7 +4270,7 @@ function fdTLEditorHTML(e, id){
   const R = fdRefs(e);
   const q = (fld, base, ns, sign) => base ? ns.map(n => `<button type="button" onclick="fdQuick('${id}','${fld}',${sign * n})">${sign > 0 ? '+' : '−'}${n}</button>`).join('') : '';
   const inp = (fld, idn, ph, ref) => `<input id="${idn}" class="fd-in" value="${esc(E[fld])}" placeholder="${ph}" inputmode="numeric" pattern="[0-9]*" autocomplete="off" enterkeyhint="${fld === 'to' ? 'next' : 'done'}" aria-label="${fld === 'to' ? 'Takeoff' : 'Landing'} time, ${fdTz()}"
-      oninput="fdTypeTime(this,'${fld}','${id}')" onfocus="_fdEdit&&(_fdEdit.focus=this.id)" onkeydown="if(event.key==='Enter'){event.preventDefault();${fld === 'to' ? "document.getElementById('fdLdg').focus()" : `fdSaveTL('${id}')`}}">`;
+      oninput="fdTypeTime(this,'${fld}','${id}')" onfocus="_fdEdit&&(_fdEdit.focus=this.id);fdRevealSoon()" onkeydown="if(event.key==='Enter'){event.preventDefault();${fld === 'to' ? "document.getElementById('fdLdg').focus()" : `fdSaveTL('${id}')`}}">`;
   return `<div class="fd-ed" onclick="event.stopPropagation()">
     <div class="fd-hd"><span class="fd-ttl">Takeoff &amp; landing · <span class="mono">${esc(fdTz())}</span></span><span class="fd-note">${ICON.users}Shared with everyone on this flight</span></div>
     <div class="fd-grid">
@@ -4380,7 +4346,7 @@ function fdAppOnlyHTML(e, id){
 function fdRecentRwys(apt, key){
   const seen = {};
   for (const m in _fd) for (const k in _fd[m]) {
-    const r = _fd[m][k];
+    const r = fdObj(_fd[m][k]);
     if (k !== key && k.split('_')[1]?.slice(-3) === apt && /^\d{2}[LCR]?$/.test(r.rwy || '')) seen[r.rwy] = (seen[r.rwy] || 0) + 1;
   }
   return Object.keys(seen).sort((a, b) => seen[b] - seen[a]).slice(0, 4);
@@ -4394,9 +4360,9 @@ function fdAppEditorHTML(e, id){
     <div class="fd-apps">${FD_APPS.map(a => `<button type="button" class="${E.app === a ? 'on' : ''}" onclick="fdPick('app','${a}')">${a}</button>`).join('')}</div>
     <div class="fd-rwy">
       <div class="fd-f${E.err === 'rwy' ? ' bad' : ''}"><span class="fd-lbl">RWY</span><input id="fdRwy" class="fd-in" value="${esc(E.rwy)}" placeholder="--" inputmode="numeric" pattern="[0-9]*" maxlength="2" autocomplete="off" enterkeyhint="done" aria-label="Runway number"
-        oninput="this.value=this.value.replace(/\D/g,'').slice(0,2);_fdEdit.rwy=this.value;_fdEdit.err='';this.closest('.fd-f').classList.remove('bad')" onfocus="_fdEdit&&(_fdEdit.focus=this.id)" onkeydown="if(event.key==='Enter'){event.preventDefault();fdSaveApp('${id}')}"></div>
+        oninput="this.value=this.value.replace(/\D/g,'').slice(0,2);_fdEdit.rwy=this.value;_fdEdit.err='';this.closest('.fd-f').classList.remove('bad')" onfocus="_fdEdit&&(_fdEdit.focus=this.id);fdRevealSoon()" onkeydown="if(event.key==='Enter'){event.preventDefault();fdSaveApp('${id}')}"></div>
       <div class="fd-seg">${['L', 'C', 'R'].map(x => `<button type="button" class="${E.side === x ? 'on' : ''}" onclick="fdPick('side','${x}')">${x}</button>`).join('')}</div>
-      ${recent.length ? `<div class="fd-recent"><span class="k">Recent</span>${recent.map(r => `<button type="button" onclick="fdPick('rwyFull','${r}')">${r}</button>`).join('')}</div>` : ''}
+      ${recent.length ? `<div class="fd-recent"><span class="k">Recent</span>${recent.map(r => `<button type="button" onclick="fdPick('rwyFull','${jsq(r)}')">${esc(r)}</button>`).join('')}</div>` : ''}
     </div>
     ${E.msg ? `<div class="fd-err">${esc(E.msg)}</div>` : ''}
     <div class="fd-acts">
@@ -4424,6 +4390,26 @@ function fdSaveApp(id){
   if (!E.rwy && E.side) { E.err = 'rwy'; E.msg = 'Runway number missing.'; E.focus = 'fdRwy'; render(); return; }
   fdSave(e, { app: E.app ? E.app.toUpperCase() : null, rwy: E.rwy ? (E.rwy + E.side).toUpperCase() : null });
 }
+// iPhone: the keyboard covers the bottom of the screen and Safari doesn't bring the
+// takeoff/landing or approach form above it. Scroll so the open form sits between the
+// sticky bars at the top and the keyboard (visualViewport = the part still visible).
+function fdReveal(){
+  const ed = document.querySelector('.fd-ed'); if (!ed) return;
+  const vv = window.visualViewport, vTop = vv ? vv.offsetTop : 0, vH = vv ? vv.height : window.innerHeight;
+  let covered = document.querySelector('.tz-bar')?.offsetHeight || 0;
+  const node = ed.closest('.day')?.querySelector('.day-node');          // sticky date row on phones
+  if (node && getComputedStyle(node).position === 'sticky') covered += node.offsetHeight;
+  const r = ed.getBoundingClientRect(), pad = 10;
+  const minTop = vTop + covered + pad, maxBottom = vTop + vH - pad;
+  let dy = r.bottom > maxBottom ? r.bottom - maxBottom : 0;            // lift it above the keyboard…
+  if (r.top - dy < minTop) dy = r.top - minTop;                         // …but never under the top bars
+  if (Math.abs(dy) > 2) window.scrollBy({ top: dy, behavior: 'smooth' });
+}
+// Now, and again once the keyboard has finished sliding in.
+function fdRevealSoon(){ requestAnimationFrame(fdReveal); setTimeout(fdReveal, 350); }
+if (window.visualViewport) visualViewport.addEventListener('resize', () => {
+  if (document.activeElement?.classList.contains('fd-in')) fdReveal();
+});
 // After a render, put the caret back where the pilot was typing.
 function fdRefocus(){
   const f = _fdEdit && _fdEdit.focus && document.getElementById(_fdEdit.focus);
@@ -4449,7 +4435,7 @@ function fpToggle(id){
 // own file and nothing is shared, and the same user differs across devices.
 function tipsUrl(){
   var src=getActiveSource();
-  var company=companyFromUrl(src?src.url:'') || 'shared';
+  var company=(companyFromUrl(src?src.url:'') || 'shared').replace(/[^a-z0-9-]/g,'').slice(0,40) || 'shared';
   return TIP_BASE + 'tips_' + company + '.json';
 }
 function tipCacheKey(){ var src=getActiveSource(); return LS_TIP_CACHE + '_' + (companyFromUrl(src?src.url:'')||'shared'); }
@@ -4520,8 +4506,30 @@ function tipHasContributed(){
 }
 function tipCount(city){ var s=tipStore[city]; return s&&s.tips?s.tips.length:0; }
 
+// The tips file is world-writable: keep only well-formed entries, so a broken or hostile
+// file can't break the page for everyone (output is escaped as well). Saving writes the
+// cleaned copy back, so one save also repairs the file.
+function tipsClean(raw){
+  var out={}, str=function(v,n){ return typeof v==='string' ? v.slice(0,n) : ''; },
+      num=function(v){ return typeof v==='number' && isFinite(v) && v>0 ? Math.floor(v) : 0; };
+  if(!raw || typeof raw!=='object' || Array.isArray(raw)) return out;
+  Object.keys(raw).forEach(function(city){
+    var v=raw[city];
+    if(!city || city.length>60 || city==='__proto__' || !v || !Array.isArray(v.tips)) return;
+    var tips=v.tips.filter(function(t){
+      return t && typeof t==='object' && typeof t.id==='string' && /^t_[a-z0-9]{1,20}$/.test(t.id);
+    }).slice(0,500).map(function(t){
+      return { id:t.id, cat:TIP_CAT[t.cat] ? t.cat : 'other',
+        title:str(t.title,TIP_TITLELEN), text:str(t.text,TIP_MAXLEN),
+        by:/^[A-Z0-9]{1,8}$/.test(t.by||'') ? t.by : '', byName:str(t.byName,80),
+        ts:num(t.ts), edited:num(t.edited) };
+    }).filter(function(t){ return t.title || t.text; });
+    if(tips.length) out[city]={tips:tips};
+  });
+  return out;
+}
 function tipsLoadCache(){
-  try{ var c=localStorage.getItem(tipCacheKey()); tipStore=c?(JSON.parse(c)||{}):{}; }
+  try{ var c=localStorage.getItem(tipCacheKey()); tipStore=c?tipsClean(JSON.parse(c)):{}; }
   catch(_){ tipStore={}; }
 }
 // Background load of the shared tips file (silent; falls back to cache offline / on error).
@@ -4533,7 +4541,7 @@ async function tipsLoad(){
     if(!r.ok){ tipsLoadCache(); return; }
     tipEtag=r.headers.get('ETag');
     var txt=await r.text();
-    tipStore = txt.trim()? JSON.parse(txt) : {};
+    tipStore = txt.trim()? tipsClean(JSON.parse(txt)) : {};
     try{ localStorage.setItem(tipCacheKey(), txt); }catch(_){}
     if(allEvents.length) render();
   }catch(_){ tipsLoadCache(); }
@@ -4545,7 +4553,7 @@ async function tipsSave(mutate){
   var store;
   try{
     var g=await fetch(tipsUrl(),{cache:'no-cache'});
-    if(g.ok){ var t=await g.text(); store=t.trim()?JSON.parse(t):{}; }
+    if(g.ok){ var t=await g.text(); store=t.trim()?tipsClean(JSON.parse(t)):{}; }
     else if(g.status===404){ store={}; }
     else { store=JSON.parse(JSON.stringify(tipStore||{})); }   // server hiccup → local copy
   }catch(_){ store=JSON.parse(JSON.stringify(tipStore||{})); }
@@ -4611,8 +4619,8 @@ function tipEditFormHTML(city,t,cid){
     +'<input type="text" class="tip-title-input" id="tipetitle_'+cid+'_'+t.id+'" maxlength="'+TIP_TITLELEN+'" value="'+esc(t.title||'')+'" placeholder="Title — e.g. Best rooftop bar">'
     +'<textarea class="tip-input" id="tipetxt_'+cid+'_'+t.id+'" maxlength="'+TIP_MAXLEN+'" rows="3" placeholder="Details">'+esc(t.text||'')+'</textarea>'
     +'<div class="tip-edit-actions">'
-      +'<button class="tip-cancel-btn" onclick="tipCancelEdit(\''+cid+'\')">Cancel</button>'
-      +'<button class="tip-save-btn" onclick="tipSaveEdit(\''+esc(city)+'\',\''+t.id+'\',\''+cid+'\')">Save changes</button>'
+      +'<button class="tip-cancel-btn" onclick="tipCancelEdit(\''+jsq(cid)+'\')">Cancel</button>'
+      +'<button class="tip-save-btn" onclick="tipSaveEdit(\''+jsq(city)+'\',\''+jsq(t.id)+'\',\''+jsq(cid)+'\')">Save changes</button>'
     +'</div>'
   +'</div>';
 }
@@ -4622,8 +4630,8 @@ function tipItemHTML(city,t,cid){
   var when = t.ts ? fmtAge(Date.now()-t.ts*1000) : '';
   if(t.edited) when += ' · edited';
   var actions = canEdit
-    ? '<span class="tip-actions"><button class="tip-act" onclick="tipEdit(\''+esc(city)+'\',\''+t.id+'\',\''+cid+'\')">Edit</button>'
-      +'<button class="tip-act tip-del" onclick="tipDelete(\''+esc(city)+'\',\''+t.id+'\',\''+cid+'\')">Delete</button></span>'
+    ? '<span class="tip-actions"><button class="tip-act" onclick="tipEdit(\''+jsq(city)+'\',\''+jsq(t.id)+'\',\''+jsq(cid)+'\')">Edit</button>'
+      +'<button class="tip-act tip-del" onclick="tipDelete(\''+jsq(city)+'\',\''+jsq(t.id)+'\',\''+jsq(cid)+'\')">Delete</button></span>'
     : '';
   return '<div class="tip-item">'
     +(t.title?'<div class="tip-title">'+esc(t.title)+'</div>':'')
@@ -4644,7 +4652,7 @@ function tipFormHTML(city,cid){
     +'</div>'
     +'<input type="text" class="tip-title-input" id="tiptitle_'+cid+'" maxlength="'+TIP_TITLELEN+'" placeholder="Title — e.g. Best rooftop bar">'
     +'<textarea class="tip-input" id="tiptxt_'+cid+'" maxlength="'+TIP_MAXLEN+'" rows="3" placeholder="Details about '+esc(city)+'…"></textarea>'
-    +'<div class="tip-form-actions"><button class="tip-save-btn" id="tipbtn_'+cid+'" onclick="tipAdd(\''+esc(city)+'\',\''+cid+'\')">Add tip</button></div>'
+    +'<div class="tip-form-actions"><button class="tip-save-btn" id="tipbtn_'+cid+'" onclick="tipAdd(\''+jsq(city)+'\',\''+jsq(cid)+'\')">Add tip</button></div>'
   +'</div>';
 }
 function tipsBlockHTML(city,cid){
